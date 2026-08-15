@@ -8,7 +8,7 @@ import {
   loadCapability,
 } from '../src/schema/capability.js';
 
-const GOLD = 'capabilities/member.readSavingsBalance@1.0.0.json';
+const GOLD = 'tests/fixtures/member.readSavingsBalance.gold.json';
 
 describe('capability artifact', () => {
   it('the gold artifact parses and its content hash verifies', () => {

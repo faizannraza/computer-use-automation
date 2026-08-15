@@ -24,9 +24,7 @@
     },
     "evidenceRef": "evidence/discovery/20260815-182337-5eqq",
     "approval": {
-      "state": "approved",
-      "by": "Muhammad Faizan Raza",
-      "at": "2026-08-15T23:28:30.119Z"
+      "state": "draft"
     }
   },
   "params": {
@@ -514,6 +512,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "0eb113e450d5744196bc56c12db4b7c4195f1061ff1c240a695045bd7b5364a7"
+    "contentHash": "a6f054ba31e49dfba9a4c74f0bead1c2783d12de9204bce3efd7eefdcd6cf99b"
   }
 }

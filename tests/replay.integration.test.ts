@@ -20,7 +20,7 @@ let server: Server;
 let base: string;
 let policy: Policy;
 
-const { artifact, verified } = loadCapability('capabilities/member.readSavingsBalance@1.0.0.json');
+const { artifact, verified } = loadCapability('tests/fixtures/member.readSavingsBalance.gold.json');
 
 function resolved(): ResolvedCapability {
   return { artifact, bindings: { baseUrl: base } };

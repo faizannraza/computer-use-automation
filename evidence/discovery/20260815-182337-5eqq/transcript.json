@@ -1,0 +1,547 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "text",
+        "text": "TASK:\nSign in to MockCore Teller. Look up member 12345 and read the current balance of their REGULAR SAVINGS account from the member's accounts table into an output named 'savingsBalance'. After reading the balance, probe one exceptional state: search for member number 99999 (which does not exist) and declare the not-found behavior as business outcome MEMBER_NOT_FOUND with a marker you can see on screen. Then declare_done with capability_id 'member.readSavingsBalance'.\n\nPARAMETERS:\n- memberId (internal): Caller-supplied parameter 'memberId'. — value: \"12345\"\n- operatorId (internal): Resolved from the environment (MOCK_CU_USER) at invocation time; never stored in the artifact. — value: \"teller1\"\n- operatorPassword (secret): Resolved from the environment (MOCK_CU_PASS) at invocation time; never stored in the artifact. — value: (secret — reference with param, never typed literally)\n\nThe application is served at http://localhost:4173. The browser is currently blank — begin by navigating to the application."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "EpoCCokBCBAYAipAKtmrnhbniAaG5jzM5NIqVZX3Ea1/rsxD5fnONnvZTW1E6mAToFnni8t4TLqsMPV8bZvuWPaYCD3dhaYPQSi58TIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjcSDO1EiX9HligLd33KEhoMTPcLnG9pDnWqfTx9IjCYF6DdbUGqotUXY2hxHS1ciA4R0DSgmbr46CT9SkAIrrq9nkvdXrZFk7oDfvH39e4qPhaQFINLQt4lCBkcZD2jJJ5W5dQhfBYn205CIN1SxmFzXvre9xPnPpg8eoDRUqjVsqK18c7kmbY5gnDrY0r0GAE="
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01FZj1raz2hccS7spBj6wFSS",
+        "name": "navigate",
+        "input": {
+          "url": "http://localhost:4173",
+          "intent": "Open the MockCore Teller application to begin sign-in."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01FZj1raz2hccS7spBj6wFSS",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #2]\nlocation: http://localhost:4173/login\ntitle: MockCore Teller — Sign In\nelements (7):\n  [0] textbox \"Operator ID\"\n  [1] textbox \"Password\"\n  [2] button \"Sign In\" row=\"|\"\n  [3] rowheader \"MockCore™ Teller — Operator Sign In\"\n  [4] rowheader \"Operator ID\" row=\"Operator ID |\"\n  [5] rowheader \"Password\" row=\"Password |\"\n  [6] cell \"Unauthorized access is prohibited. Activity is monitored.\"\nvisible text: MockCore™ Teller — Operator Sign In Operator ID Password Unauthorized access is prohibited. Activity is monitored."
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01CNEJpSs1kUHkpjaZ7K9dGo",
+        "name": "type",
+        "input": {
+          "ref": 0,
+          "intent": "Enter the operator ID for sign-in.",
+          "param": "operatorId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01CNEJpSs1kUHkpjaZ7K9dGo",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorId} into [0]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01Xp2mM2aPfsiFL36cQpdGzq",
+        "name": "type",
+        "input": {
+          "ref": 1,
+          "intent": "Enter the operator password for sign-in.",
+          "param": "operatorPassword"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Xp2mM2aPfsiFL36cQpdGzq",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorPassword} into [1]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01PBGXLXvLJcKRGvDr3YQUNV",
+        "name": "click",
+        "input": {
+          "ref": 2,
+          "intent": "Submit the sign-in form."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01PBGXLXvLJcKRGvDr3YQUNV",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #5]\nlocation: http://localhost:4173/\ntitle: MockCore Teller v7.2.14\nelements (21):\n  [0] rowheader \"MockCore™ Teller\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [1] cell \"Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [2] link \"Home\" frame=menu\n  [3] link \"Member Search\" frame=menu\n  [4] link \"Sign Out\" frame=menu\n  [5] rowheader \"Main Menu\" frame=menu\n  [6] cell \"Transactions\" frame=menu\n  [7] cell \"Reports\" frame=menu\n  [8] cell \"Batch Operations\" frame=menu\n  [9] rowheader \"Session\" frame=menu\n  [10] rowheader \"Home\" row=\"Home | Operator: teller1\" frame=work\n  [11] cell \"Operator: teller1\" row=\"Home | Operator: teller1\" frame=work\n  [12] rowheader \"Announcements\" frame=work\n  [13] cell \"2026-02-19\" row=\"2026-02-19 | Core maintenance window Sunday 02:00–04:00 Pacific. Expect brief in\" frame=work\n  [14] cell \"Core maintenance window Sunday 02:00–04:00 Pacific. Expect brief interruptions.\" row=\"2026-02-19 | Core maintenance window Sunday 02:00–04:00 Pacific. Expect brief in\" frame=work\n  [15] cell \"2026-02-12\" row=\"2026-02-12 | Reminder: verify member identity before disclosing account informat\" frame=work\n  [16] cell \"Reminder: verify member identity before disclosing account information.\" row=\"2026-02-12 | Reminder: verify member identity before disclosing account informat\" frame=work\n  [17] cell \"2026-02-03\" row=\"2026-02-03 | New sub-account nicknames are limited to 20 characters.\" frame=work\n  [18] cell \"New sub-account nicknames are limited to 20 characters.\" row=\"2026-02-03 | New sub-account nicknames are limited to 20 characters.\" frame=work\n  [19] rowheader \"MockCore™ Teller v7.2.14 — build 20260219\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\n  [20] cell \"Session region: US-WEST\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\nvisible text: [frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [frame work] Home Operator: teller1 Announcements 2026-02-19 Core maintenance window Sunday 02:00–04:00 Pacific. Expect brief interruptions. 2026-02-12 Reminder: verify member identity before disclosing account information. 2026-02-03 New sub-account nicknames are limited to 20 characters. Select a function from the menu to begin. MockCore™ Teller v7.2.14 — build 20260219 Session region: US-WEST"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Signed in successfully. Now navigate to Member Search."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01Az2tc256HD2nHRNteeG3EG",
+        "name": "click",
+        "input": {
+          "ref": 3,
+          "intent": "Open the Member Search screen."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Az2tc256HD2nHRNteeG3EG",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #6]\nlocation: http://localhost:4173/\ntitle: MockCore Teller v7.2.14\nelements (18):\n  [0] rowheader \"MockCore™ Teller\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [1] cell \"Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [2] link \"Home\" frame=menu\n  [3] link \"Member Search\" frame=menu\n  [4] link \"Sign Out\" frame=menu\n  [5] rowheader \"Main Menu\" frame=menu\n  [6] cell \"Transactions\" frame=menu\n  [7] cell \"Reports\" frame=menu\n  [8] cell \"Batch Operations\" frame=menu\n  [9] rowheader \"Session\" frame=menu\n  [10] textbox \"Member No. or Name\" frame=work\n  [11] button \"Search\" row=\"Member No. or Name | |\" frame=work\n  [12] rowheader \"Member Search\" row=\"Member Search | Operator: teller1\" frame=work\n  [13] cell \"Operator: teller1\" row=\"Member Search | Operator: teller1\" frame=work\n  [14] rowheader \"Member No. or Name\" row=\"Member No. or Name | |\" frame=work\n  [15] cell \"Enter an exact member number, or part of a name.\" frame=work\n  [16] rowheader \"MockCore™ Teller v7.2.14 — build 20260219\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\n  [17] cell \"Session region: US-WEST\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\nvisible text: [frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [frame work] Member Search Operator: teller1 Member No. or Name Enter an exact member number, or part of a name. MockCore™ Teller v7.2.14 — build 20260219 Session region: US-WEST"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01TV5mrQMqHtepEKjwGry6Wy",
+        "name": "type",
+        "input": {
+          "ref": 10,
+          "intent": "Enter member number to search.",
+          "param": "memberId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01TV5mrQMqHtepEKjwGry6Wy",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:memberId} into [10]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01G8r5z8mM5KRQRDqfhRDsF3",
+        "name": "click",
+        "input": {
+          "ref": 11,
+          "intent": "Search for the member."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01G8r5z8mM5KRQRDqfhRDsF3",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #8]\nlocation: http://localhost:4173/\ntitle: MockCore Teller v7.2.14\nelements (26):\n  [0] rowheader \"MockCore™ Teller\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [1] cell \"Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [2] link \"Home\" frame=menu\n  [3] link \"Member Search\" frame=menu\n  [4] link \"Sign Out\" frame=menu\n  [5] rowheader \"Main Menu\" frame=menu\n  [6] cell \"Transactions\" frame=menu\n  [7] cell \"Reports\" frame=menu\n  [8] cell \"Batch Operations\" frame=menu\n  [9] rowheader \"Session\" frame=menu\n  [10] textbox \"Member No. or Name\" value=\"12345\" frame=work\n  [11] button \"Search\" row=\"Member No. or Name | |\" frame=work\n  [12] link \"12345\" row=\"12345 | Alexis Testmember | 1987-03-14 | GOOD\" frame=work\n  [13] rowheader \"Member Search\" row=\"Member Search | Operator: teller1\" frame=work\n  [14] cell \"Operator: teller1\" row=\"Member Search | Operator: teller1\" frame=work\n  [15] rowheader \"Member No. or Name\" row=\"Member No. or Name | |\" frame=work\n  [16] cell \"Enter an exact member number, or part of a name.\" frame=work\n  [17] columnheader \"Member No.\" frame=work\n  [18] columnheader \"Name\" frame=work\n  [19] columnheader \"Date of Birth\" frame=work\n  [20] columnheader \"Standing\" frame=work\n  [21] cell \"Alexis Testmember\" col=\"Name\" row=\"12345 | Alexis Testmember | 1987-03-14 | GOOD\" frame=work\n  [22] cell \"1987-03-14\" col=\"Date of Birth\" row=\"12345 | Alexis Testmember | 1987-03-14 | GOOD\" frame=work\n  [23] cell \"GOOD\" col=\"Standing\" row=\"12345 | Alexis Testmember | 1987-03-14 | GOOD\" frame=work\n  [24] rowheader \"MockCore™ Teller v7.2.14 — build 20260219\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\n  [25] cell \"Session region: US-WEST\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\nvisible text: [frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [frame work] Member Search Operator: teller1 Member No. or Name Enter an exact member number, or part of a name. Member No. Name Date of Birth Standing 12345 Alexis Testmember 1987-03-14 GOOD MockCore™ Teller v7.2.14 — build 20260219 Session region: US-WEST"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01NTtYPNFGNPJmRVbZvjQSqa",
+        "name": "click",
+        "input": {
+          "ref": 12,
+          "intent": "Open the member 12345 detail page."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01NTtYPNFGNPJmRVbZvjQSqa",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #9]\nlocation: http://localhost:4173/\ntitle: MockCore Teller v7.2.14\nelements (45):\n  [0] rowheader \"MockCore™ Teller\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [1] cell \"Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [2] link \"Home\" frame=menu\n  [3] link \"Member Search\" frame=menu\n  [4] link \"Sign Out\" frame=menu\n  [5] rowheader \"Main Menu\" frame=menu\n  [6] cell \"Transactions\" frame=menu\n  [7] cell \"Reports\" frame=menu\n  [8] cell \"Batch Operations\" frame=menu\n  [9] rowheader \"Session\" frame=menu\n  [10] link \"Open Sub-Account\" row=\"Open Sub-Account | Back to Search\" frame=work\n  [11] link \"Back to Search\" row=\"Open Sub-Account | Back to Search\" frame=work\n  [12] rowheader \"Member Details\" row=\"Member Details | Operator: teller1\" frame=work\n  [13] cell \"Operator: teller1\" row=\"Member Details | Operator: teller1\" frame=work\n  [14] rowheader \"Member Information\" frame=work\n  [15] rowheader \"Member No.\" row=\"Member No. | 12345 | Name | Alexis Testmember\" frame=work\n  [16] cell \"12345\" row=\"Member No. | 12345 | Name | Alexis Testmember\" frame=work\n  [17] rowheader \"Name\" row=\"Member No. | 12345 | Name | Alexis Testmember\" frame=work\n  [18] cell \"Alexis Testmember\" row=\"Member No. | 12345 | Name | Alexis Testmember\" frame=work\n  [19] rowheader \"Date of Birth\" row=\"Date of Birth | 1987-03-14 | Standing | GOOD\" frame=work\n  [20] cell \"1987-03-14\" row=\"Date of Birth | 1987-03-14 | Standing | GOOD\" frame=work\n  [21] rowheader \"Standing\" row=\"Date of Birth | 1987-03-14 | Standing | GOOD\" frame=work\n  [22] cell \"GOOD\" row=\"Date of Birth | 1987-03-14 | Standing | GOOD\" frame=work\n  [23] rowheader \"Address\" row=\"Address | 482 Sample Ave, Demoville, CA 90000 | Phone | (555) 010-4821\" frame=work\n  [24] cell \"482 Sample Ave, Demoville, CA 90000\" row=\"Address | 482 Sample Ave, Demoville, CA 90000 | Phone | (555) 010-4821\" frame=work\n  [25] rowheader \"Phone\" row=\"Address | 482 Sample Ave, Demoville, CA 90000 | Phone | (555) 010-4821\" frame=work\n  [26] cell \"(555) 010-4821\" row=\"Address | 482 Sample Ave, Demoville, CA 90000 | Phone | (555) 010-4821\" frame=work\n  [27] rowheader \"Accounts\" col=\"Suffix\" frame=work\n  [28] columnheader \"Suffix\" frame=work\n  [29] columnheader \"Type\" frame=work\n  [30] columnheader \"Nickname\" frame=work\n  [31] columnheader \"Balance\" frame=work\n  [32] columnheader \"Opened\" frame=work\n  [33] cell \"S00\" col=\"Suffix\" row=\"S00 | REGULAR SAVINGS | Primary Savings | $4,821.97 | 2011-06-02\" frame=work\n  [34] cell \"REGULAR SAVINGS\" col=\"Type\" row=\"S00 | REGULAR SAVINGS | Primary Savings | $4,821.97 | 2011-06-02\" frame=work\n  [35] cell \"Primary Savings\" col=\"Nickname\" row=\"S00 | REGULAR SAVINGS | Primary Savings | $4,821.97 | 2011-06-02\" frame=work\n  [36] cell \"$4,821.97\" col=\"Balance\" row=\"S00 | REGULAR SAVINGS | Primary Savings | $4,821.97 | 2011-06-02\" frame=work\n  [37] cell \"2011-06-02\" col=\"Opened\" row=\"S00 | REGULAR SAVINGS | Primary Savings | $4,821.97 | 2011-06-02\" frame=work\n  [38] cell \"S01\" col=\"Suffix\" row=\"S01 | CHECKING | Everyday Checking | $312.40 | 2012-01-19\" frame=work\n  [39] cell \"CHECKING\" col=\"Type\" row=\"S01 | CHECKING | Everyday Checking | $312.40 | 2012-01-19\" frame=work\n  [40] cell \"Everyday Checking\" col=\"Nickname\" row=\"S01 | CHECKING | Everyday Checking | $312.40 | 2012-01-19\" frame=work\n  [41] cell \"$312.40\" col=\"Balance\" row=\"S01 | CHECKING | Everyday Checking | $312.40 | 2012-01-19\" frame=work\n  [42] cell \"2012-01-19\" col=\"Opened\" row=\"S01 | CHECKING | Everyday Checking | $312.40 | 2012-01-19\" frame=work\n  [43] rowheader \"MockCore™ Teller v7.2.14 — build 20260219\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\n  [44] cell \"Session region: US-WEST\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\nvisible text: [frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [frame work] Member Details Operator: teller1 Member Information Member No. 12345 Name Alexis Testmember Date of Birth 1987-03-14 Standing GOOD Address 482 Sample Ave, Demoville, CA 90000 Phone (555) 010-4821 Accounts Suffix Type Nickname Balance Opened S00 REGULAR SAVINGS Primary Savings $4,821.97 2011-06-02 S01 CHECKING Everyday Checking $312.40 2012-01-19 Open Sub-Account Back to Search MockCore™ Teller v7.2.14 — build 20260219 Session region: US-WEST"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "The REGULAR SAVINGS row (S00) balance is $4,821.97. Let me read it."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_016LRibAfEmaUwkvh8mTHTMX",
+        "name": "read",
+        "input": {
+          "ref": 36,
+          "output_name": "savingsBalance",
+          "intent": "Read the REGULAR SAVINGS (S00) account balance."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_016LRibAfEmaUwkvh8mTHTMX",
+        "content": [
+          {
+            "type": "text",
+            "text": "Read \"$4,821.97\" as output 'savingsBalance'."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Now let me probe the not-found state for member 99999."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_013JwcsYS5qX8EH9RUazyBQG",
+        "name": "begin_probe",
+        "input": {
+          "outcome_code": "MEMBER_NOT_FOUND",
+          "intent": "Probe how the system behaves for a nonexistent member 99999."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_013JwcsYS5qX8EH9RUazyBQG",
+        "content": [
+          {
+            "type": "text",
+            "text": "Probe started for MEMBER_NOT_FOUND. Actions until declare_outcome are excluded from the replayable flow."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01QDoZbChkin5gE8zKQCrj9T",
+        "name": "click",
+        "input": {
+          "ref": 3,
+          "intent": "Return to Member Search to search for the nonexistent member."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01QDoZbChkin5gE8zKQCrj9T",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #10]\nlocation: http://localhost:4173/\ntitle: MockCore Teller v7.2.14\nelements (18):\n  [0] rowheader \"MockCore™ Teller\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [1] cell \"Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [2] link \"Home\" frame=menu\n  [3] link \"Member Search\" frame=menu\n  [4] link \"Sign Out\" frame=menu\n  [5] rowheader \"Main Menu\" frame=menu\n  [6] cell \"Transactions\" frame=menu\n  [7] cell \"Reports\" frame=menu\n  [8] cell \"Batch Operations\" frame=menu\n  [9] rowheader \"Session\" frame=menu\n  [10] textbox \"Member No. or Name\" frame=work\n  [11] button \"Search\" row=\"Member No. or Name | |\" frame=work\n  [12] rowheader \"Member Search\" row=\"Member Search | Operator: teller1\" frame=work\n  [13] cell \"Operator: teller1\" row=\"Member Search | Operator: teller1\" frame=work\n  [14] rowheader \"Member No. or Name\" row=\"Member No. or Name | |\" frame=work\n  [15] cell \"Enter an exact member number, or part of a name.\" frame=work\n  [16] rowheader \"MockCore™ Teller v7.2.14 — build 20260219\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\n  [17] cell \"Session region: US-WEST\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\nvisible text: [frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [frame work] Member Search Operator: teller1 Member No. or Name Enter an exact member number, or part of a name. MockCore™ Teller v7.2.14 — build 20260219 Session region: US-WEST"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01MSC6Tr4LKSQWa6TdyTrV46",
+        "name": "type",
+        "input": {
+          "ref": 10,
+          "intent": "Enter nonexistent member number 99999.",
+          "text": "99999"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01MSC6Tr4LKSQWa6TdyTrV46",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered \"99999\" into [10]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01BrQLp9fbRtCbCYhJb4f2d7",
+        "name": "click",
+        "input": {
+          "ref": 11,
+          "intent": "Search for the nonexistent member."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01BrQLp9fbRtCbCYhJb4f2d7",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #12]\nlocation: http://localhost:4173/\ntitle: MockCore Teller v7.2.14\nelements (18):\n  [0] rowheader \"MockCore™ Teller\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [1] cell \"Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union\" row=\"MockCore™ Teller | Signed in: teller1 | Institution: 0001 — Demo Federal Credit \" frame=banner\n  [2] link \"Home\" frame=menu\n  [3] link \"Member Search\" frame=menu\n  [4] link \"Sign Out\" frame=menu\n  [5] rowheader \"Main Menu\" frame=menu\n  [6] cell \"Transactions\" frame=menu\n  [7] cell \"Reports\" frame=menu\n  [8] cell \"Batch Operations\" frame=menu\n  [9] rowheader \"Session\" frame=menu\n  [10] textbox \"Member No. or Name\" value=\"99999\" frame=work\n  [11] button \"Search\" row=\"Member No. or Name | |\" frame=work\n  [12] rowheader \"Member Search\" row=\"Member Search | Operator: teller1\" frame=work\n  [13] cell \"Operator: teller1\" row=\"Member Search | Operator: teller1\" frame=work\n  [14] rowheader \"Member No. or Name\" row=\"Member No. or Name | |\" frame=work\n  [15] cell \"Enter an exact member number, or part of a name.\" frame=work\n  [16] rowheader \"MockCore™ Teller v7.2.14 — build 20260219\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\n  [17] cell \"Session region: US-WEST\" row=\"MockCore™ Teller v7.2.14 — build 20260219 | Session region: US-WEST\" frame=work\nvisible text: [frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [frame work] Member Search Operator: teller1 Member No. or Name Enter an exact member number, or part of a name. No members matched your search. MockCore™ Teller v7.2.14 — build 20260219 Session region: US-WEST"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "The message \"No members matched your search.\" is visible."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01RhyE9xES18aZowQUQUEcBr",
+        "name": "declare_outcome",
+        "input": {
+          "code": "MEMBER_NOT_FOUND",
+          "description": "When searching for a member number that does not exist (e.g. 99999), the Member Search returns no result rows and displays a message indicating no match. This is the not-found state.",
+          "marker": "No members matched your search."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01RhyE9xES18aZowQUQUEcBr",
+        "content": [
+          {
+            "type": "text",
+            "text": "Outcome MEMBER_NOT_FOUND declared (marker verified visible)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01AhtEqZZGnzHinV9Eaq5NSt",
+        "name": "declare_done",
+        "input": {
+          "capability_id": "member.readSavingsBalance",
+          "title": "Read Member REGULAR SAVINGS Balance",
+          "description": "Signs into MockCore Teller with the operator credentials, searches for a member by number (memberId), opens the member detail page, and reads the REGULAR SAVINGS (suffix S00) account balance from the accounts table into output 'savingsBalance'. Requires memberId plus operator credentials. Returns savingsBalance (e.g. \"$4,821.97\"). Exceptional outcome MEMBER_NOT_FOUND occurs when the member number does not exist, shown by the message \"No members matched your search.\""
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01AhtEqZZGnzHinV9Eaq5NSt",
+        "content": [
+          {
+            "type": "text",
+            "text": "Recorded. Compiling the artifact."
+          }
+        ]
+      }
+    ]
+  }
+]

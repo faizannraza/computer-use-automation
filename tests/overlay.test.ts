@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { loadCapability } from '../src/schema/capability.js';
 import { TenantOverlaySchema, applyOverlay, satisfiesCaret } from '../src/schema/overlay.js';
 
-const { artifact } = loadCapability('capabilities/member.readSavingsBalance@1.0.0.json');
+const { artifact } = loadCapability('tests/fixtures/member.readSavingsBalance.gold.json');
 
 const overlay = TenantOverlaySchema.parse({
   tenantId: 'tenant-x',

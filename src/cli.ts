@@ -2,7 +2,9 @@
 /**
  * cu — the command-line entrypoint.
  *
+ *   cu discover --goal "..." --param k=v ...        LLM-driven discovery → compiled draft artifact
  *   cu replay --capability <file> --param k=v ...   deterministic replay (no LLM)
+ *   cu approve <file> --by "name"                   mark a reviewed artifact approved (re-hashes)
  *   cu validate <file>                              schema + integrity check
  *   cu hash <file>                                  (re)compute integrity.contentHash
  *
@@ -12,17 +14,26 @@
 import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
+import { runDiscovery } from './discovery/agent.js';
+import type { OutputHint } from './discovery/compile.js';
 import { loadPolicy } from './policy/policy.js';
 import { replayCapability } from './replay/engine.js';
-import { CapabilityArtifactSchema, computeContentHash, loadCapability } from './schema/capability.js';
+import { CapabilityArtifactSchema, ParamSpecSchema, computeContentHash, loadCapability } from './schema/capability.js';
+import type { ParamSpec, Sensitivity } from './schema/capability.js';
 import { applyOverlay, loadOverlay } from './schema/overlay.js';
 import type { ResolvedCapability } from './schema/overlay.js';
 
 const [command, ...rest] = process.argv.slice(2);
 
 switch (command) {
+  case 'discover':
+    await discoverCmd(rest);
+    break;
   case 'replay':
     await replayCmd(rest);
+    break;
+  case 'approve':
+    approveCmd(rest);
     break;
   case 'validate':
     validateCmd(rest);
@@ -31,8 +42,124 @@ switch (command) {
     hashCmd(rest);
     break;
   default:
-    console.error('usage: cu <replay|validate|hash> ...');
+    console.error('usage: cu <discover|replay|approve|validate|hash> ...');
     process.exit(64);
+}
+
+async function discoverCmd(argv: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      goal: { type: 'string' },
+      // --param memberId=12345:internal    (caller-supplied, value inline)
+      param: { type: 'string', multiple: true },
+      // --env-param operatorPassword=MOCK_CU_PASS:secret  (resolved from env)
+      'env-param': { type: 'string', multiple: true },
+      // --output savingsBalance:money:pii  (type/sensitivity hints for declared outputs)
+      output: { type: 'string', multiple: true },
+      'base-url': { type: 'string', default: 'http://localhost:4173' },
+      policy: { type: 'string', default: 'policies/default.policy.json' },
+      headed: { type: 'boolean', default: false },
+      'max-turns': { type: 'string', default: '30' },
+      'evidence-dir': { type: 'string', default: 'evidence' },
+      'save-dir': { type: 'string', default: 'capabilities' },
+      'artifact-version': { type: 'string', default: '1.0.0' },
+      model: { type: 'string' },
+    },
+  });
+  if (!values.goal) {
+    console.error('discover requires --goal "..."');
+    process.exit(64);
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('discover requires ANTHROPIC_API_KEY (put it in .env — see .env.example)');
+    process.exit(64);
+  }
+
+  const paramSpecs: Record<string, ParamSpec> = {};
+  const paramValues: Record<string, string> = {};
+  for (const spec of values.param ?? []) {
+    const m = /^([a-zA-Z][a-zA-Z0-9]*)=([^:]*)(?::(none|internal|pii|secret))?$/.exec(spec);
+    if (!m) {
+      console.error(`--param expects name=value[:sensitivity], got '${spec}'`);
+      process.exit(64);
+    }
+    const [, name, value, sensitivity] = m;
+    paramValues[name!] = value!;
+    paramSpecs[name!] = ParamSpecSchema.parse({
+      type: 'string',
+      description: `Caller-supplied parameter '${name}'.`,
+      sensitivity: (sensitivity as Sensitivity | undefined) ?? 'none',
+      source: 'caller',
+      ...(/^\d+$/.test(value!) ? { pattern: '^[0-9]+$' } : {}),
+      ...((sensitivity ?? 'none') === 'none' || sensitivity === 'internal' ? { example: value } : {}),
+    });
+  }
+  for (const spec of values['env-param'] ?? []) {
+    const m = /^([a-zA-Z][a-zA-Z0-9]*)=([A-Z0-9_]+)(?::(none|internal|pii|secret))?$/.exec(spec);
+    if (!m) {
+      console.error(`--env-param expects name=ENV_VAR[:sensitivity], got '${spec}'`);
+      process.exit(64);
+    }
+    const [, name, env, sensitivity] = m;
+    paramSpecs[name!] = ParamSpecSchema.parse({
+      type: 'string',
+      description: `Resolved from the environment (${env}) at invocation time; never stored in the artifact.`,
+      sensitivity: (sensitivity as Sensitivity | undefined) ?? 'internal',
+      source: 'env',
+      env,
+    });
+  }
+  const outputHints: Record<string, OutputHint> = {};
+  for (const spec of values.output ?? []) {
+    const [name, type, sensitivity] = spec.split(':');
+    const hint: OutputHint = {};
+    if (type) hint.type = type as Exclude<OutputHint['type'], undefined>;
+    if (sensitivity) hint.sensitivity = sensitivity as Sensitivity;
+    outputHints[name!] = hint;
+  }
+
+  console.error(`[discover] goal: ${values.goal}`);
+  console.error(`[discover] model turns cap: ${values['max-turns']} — this performs a REAL LLM run`);
+  const result = await runDiscovery({
+    goal: values.goal,
+    paramSpecs,
+    paramValues,
+    outputHints,
+    policy: loadPolicy(values.policy!),
+    baseUrl: values['base-url']!,
+    headed: values.headed!,
+    maxTurns: Number(values['max-turns']),
+    evidenceBaseDir: values['evidence-dir']!,
+    saveDir: values['save-dir']!,
+    artifactVersion: values['artifact-version']!,
+    ...(values.model ? { model: values.model } : {}),
+  });
+  console.error(`\n[${result.status.toUpperCase()}] discovery run ${result.runId}`);
+  console.error(`  evidence: ${result.evidenceDir}`);
+  console.error(`  usage: ${result.usage.turns} turns, ${result.usage.inputTokens} in / ${result.usage.outputTokens} out tokens`);
+  if (result.artifactPath) console.error(`  artifact: ${result.artifactPath} (draft — review, then \`cu approve\`)`);
+  if (result.reason) console.error(`  reason: ${result.reason}`);
+  console.log(JSON.stringify(result, null, 2));
+  process.exit(result.status === 'compiled' ? 0 : 2);
+}
+
+function approveCmd(argv: string[]): void {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: { by: { type: 'string' } },
+  });
+  const file = positionals[0];
+  if (!file || !values.by) {
+    console.error('usage: cu approve <artifact.json> --by "reviewer name"');
+    process.exit(64);
+  }
+  const artifact = CapabilityArtifactSchema.parse(JSON.parse(readFileSync(file, 'utf8')));
+  artifact.provenance.approval = { state: 'approved', by: values.by, at: new Date().toISOString() };
+  artifact.integrity.contentHash = computeContentHash(artifact);
+  writeFileSync(file, JSON.stringify(artifact, null, 2) + '\n');
+  console.log(`approved by ${values.by}; integrity.contentHash = ${artifact.integrity.contentHash}`);
 }
 
 async function replayCmd(argv: string[]): Promise<void> {

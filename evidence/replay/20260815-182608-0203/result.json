@@ -1,0 +1,87 @@
+{
+  "capabilityId": "member.readSavingsBalance",
+  "version": "1.0.0",
+  "runId": "20260815-182608-0203",
+  "evidenceDir": "evidence/replay/20260815-182608-0203",
+  "startedAt": "2026-08-15T23:26:08.192Z",
+  "status": "success",
+  "outputs": {
+    "savingsBalance": "***50"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID for sign-in.",
+      "status": "ok",
+      "ms": 95,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator password for sign-in.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the sign-in form.",
+      "status": "ok",
+      "ms": 420,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open the Member Search screen.",
+      "status": "ok",
+      "ms": 408,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter member number to search.",
+      "status": "ok",
+      "ms": 92,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member.",
+      "status": "ok",
+      "ms": 400,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Open the member 12345 detail page.",
+      "status": "ok",
+      "ms": 392,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Read the REGULAR SAVINGS (S00) account balance.",
+      "status": "ok",
+      "ms": 75,
+      "strategyIndex": 0,
+      "strategy": "tableCell",
+      "score": 0.9500000000000001
+    }
+  ],
+  "recoveriesUsed": [],
+  "finishedAt": "2026-08-15T23:26:10.822Z"
+}
