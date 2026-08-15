@@ -1,0 +1,17 @@
+# Secrets — never committed
+.env
+
+# Dependencies & build output
+node_modules/
+dist/
+
+# Local scratch
+*.log
+.DS_Store
+
+# Playwright browser downloads are machine-local
+/test-results/
+
+# Evidence is a deliverable and IS committed (see /evidence/),
+# but raw scratch runs from local experimentation are not:
+/evidence/_scratch/
