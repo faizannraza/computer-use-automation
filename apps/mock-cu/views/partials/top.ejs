@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><%= title %></title>
+<link rel="stylesheet" href="/static/legacy.css">
+</head>
+<body class="scr">
+<% if (typeof nativeDialogText !== 'undefined' && nativeDialogText) { %>
+<script>window.confirm(<%- JSON.stringify(nativeDialogText) %>);</script>
+<% } %>
+<table class="hdr" cellspacing="0" cellpadding="0" width="100%"><tr>
+<td class="c1"><%= heading %></td>
+<td class="c2" align="right"><% if (typeof user !== 'undefined' && user) { %>Operator: <%= user %><% } %></td>
+</tr></table>

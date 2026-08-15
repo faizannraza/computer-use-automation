@@ -1,0 +1,7 @@
+<%- include('partials/top', { heading: 'Error' }) %>
+<table class="frm" cellspacing="0" cellpadding="6" align="center">
+<tr><td class="th deny">System Message (<%= code %>)</td></tr>
+<tr><td><%= message %></td></tr>
+<tr><td align="center"><a class="btn" href="/members/search">Back to Member Search</a></td></tr>
+</table>
+<%- include('partials/bottom') %>

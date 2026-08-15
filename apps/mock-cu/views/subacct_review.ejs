@@ -1,0 +1,19 @@
+<%- include('partials/top', { heading: 'Review Sub-Account' }) %>
+<table class="frm" cellspacing="0" cellpadding="4" align="center">
+<tr><td class="th" colspan="2">Review &mdash; Please Verify Before Confirming</td></tr>
+<tr><td class="lbl">Member</td><td><%= member.id %> &mdash; <%= member.name %></td></tr>
+<tr><td class="lbl">Account Type</td><td><%= values.cmbType %></td></tr>
+<tr><td class="lbl">Nickname</td><td><%= values.txtNickname %></td></tr>
+<tr><td class="lbl">Initial Deposit</td><td><%= depositDisplay %></td></tr>
+<tr><td colspan="2"><span class="warn">Confirming will open the sub-account and post the initial deposit. This action cannot be undone from this screen.</span></td></tr>
+<tr><td></td><td>
+<form method="post" action="/members/<%= member.id %>/subaccounts/confirm" style="display:inline">
+<input type="hidden" name="cmbType" value="<%= values.cmbType %>">
+<input type="hidden" name="txtNickname" value="<%= values.txtNickname %>">
+<input type="hidden" name="txtDeposit" value="<%= values.txtDeposit %>">
+<input type="submit" class="btn" value="Confirm Open">
+</form>
+&nbsp;<a class="btn" href="/members/<%= member.id %>">Cancel</a>
+</td></tr>
+</table>
+<%- include('partials/bottom') %>

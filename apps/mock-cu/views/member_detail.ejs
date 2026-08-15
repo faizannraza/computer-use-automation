@@ -1,0 +1,28 @@
+<%- include('partials/top', { heading: 'Member Details' }) %>
+<table class="frm" cellspacing="0" cellpadding="4" width="96%" align="center">
+<tr><td class="th" colspan="4">Member Information</td></tr>
+<tr><td class="lbl">Member No.</td><td><%= member.id %></td><td class="lbl">Name</td><td><%= member.name %></td></tr>
+<tr><td class="lbl">Date of Birth</td><td><%= member.dob %></td><td class="lbl">Standing</td><td><%= member.standing %></td></tr>
+<tr><td class="lbl">Address</td><td><%= member.address %></td><td class="lbl">Phone</td><td><%= member.phone %></td></tr>
+</table>
+<br>
+<table class="tbl" cellspacing="0" cellpadding="4" width="96%" align="center">
+<tr><td class="th" colspan="5">Accounts</td></tr>
+<tr><td class="th">Suffix</td><td class="th">Type</td><td class="th">Nickname</td><td class="th">Balance</td><td class="th">Opened</td></tr>
+<% for (const a of member.accounts) { %>
+<tr>
+  <td><%= a.suffix %></td>
+  <td><%= a.type %></td>
+  <td><%= a.nickname %></td>
+  <td align="right"><%= formatMoney(a.balanceCents) %></td>
+  <td><%= a.openedOn %></td>
+</tr>
+<% } %>
+</table>
+<table class="acts" cellspacing="0" cellpadding="4" align="center">
+<tr>
+  <td><a class="btn" href="/members/<%= member.id %>/subaccounts/new">Open Sub-Account</a></td>
+  <td><a class="btn" href="/members/search">Back to Search</a></td>
+</tr>
+</table>
+<%- include('partials/bottom') %>

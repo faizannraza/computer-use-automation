@@ -1,0 +1,24 @@
+<%- include('partials/top', { heading: 'Supervisor Authorization Required' }) %>
+<table class="frm" cellspacing="0" cellpadding="4" align="center">
+<tr><td class="th deny" colspan="2">Supervisor Authorization Required (Code: PRM-4031)</td></tr>
+<tr><td colspan="2">Your operator profile does not permit opening sub-accounts without supervisor approval.
+A supervisor must enter their PIN to authorize this transaction.</td></tr>
+<% if (error) { %>
+<tr><td colspan="2"><span class="err"><%= error %></span></td></tr>
+<% } %>
+<tr><td class="lbl">Member</td><td><%= member.id %> &mdash; <%= member.name %></td></tr>
+<tr><td class="lbl">Account Type</td><td><%= values.cmbType %></td></tr>
+<tr><td class="lbl">Initial Deposit</td><td><%= depositDisplay %></td></tr>
+<form method="post" action="/members/<%= member.id %>/subaccounts/override">
+<input type="hidden" name="cmbType" value="<%= values.cmbType %>">
+<input type="hidden" name="txtNickname" value="<%= values.txtNickname %>">
+<input type="hidden" name="txtDeposit" value="<%= values.txtDeposit %>">
+<tr>
+  <td class="lbl"><label for="pin">Supervisor PIN</label></td>
+  <td><input type="password" name="txtPin" id="pin" size="8"></td>
+</tr>
+<tr><td></td><td><input type="submit" class="btn" value="Authorize"></td></tr>
+</form>
+<tr><td colspan="2"><a class="btn" href="/members/<%= member.id %>">Cancel Transaction</a></td></tr>
+</table>
+<%- include('partials/bottom') %>

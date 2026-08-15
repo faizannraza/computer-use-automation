@@ -1,0 +1,31 @@
+<%- include('partials/top', { heading: 'Open Sub-Account' }) %>
+<table class="frm" cellspacing="0" cellpadding="4" align="center">
+<tr><td class="th" colspan="2">Open Sub-Account &mdash; Member <%= member.id %> (<%= member.name %>)</td></tr>
+<% if (errors.length > 0) { %>
+<tr><td colspan="2">
+<% for (const e of errors) { %><span class="err"><%= e %></span><br><% } %>
+</td></tr>
+<% } %>
+<form method="post" action="/members/<%= member.id %>/subaccounts/review">
+<tr>
+  <td class="lbl"><label for="t">Account Type</label></td>
+  <td><select name="cmbType" id="t">
+    <option value=""></option>
+    <% for (const t of accountTypes) { %>
+    <option value="<%= t %>" <%= values.cmbType === t ? 'selected' : '' %>><%= t %></option>
+    <% } %>
+  </select></td>
+</tr>
+<tr>
+  <td class="lbl"><label for="n">Nickname</label></td>
+  <td><input type="text" name="txtNickname" id="n" size="24" value="<%= values.txtNickname %>"></td>
+</tr>
+<tr>
+  <td class="lbl"><label for="d">Initial Deposit</label></td>
+  <td><input type="text" name="txtDeposit" id="d" size="10" value="<%= values.txtDeposit %>"> <span class="fine">Minimum $25.00</span></td>
+</tr>
+<tr><td></td><td><input type="submit" class="btn" value="Continue"></td></tr>
+</form>
+<tr><td colspan="2" class="fine">Funds are drawn from the teller drawer at posting.</td></tr>
+</table>
+<%- include('partials/bottom') %>

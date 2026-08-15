@@ -1,0 +1,30 @@
+<%- include('partials/top', { heading: 'Member Search' }) %>
+<table class="frm" cellspacing="0" cellpadding="4" align="center">
+<form method="post" action="/members/search">
+<tr>
+  <td class="lbl"><label for="q">Member No. or Name</label></td>
+  <td><input type="text" name="txtQuery" id="q" size="26" value="<%= query ?? '' %>"></td>
+  <td><input type="submit" class="btn" value="Search"></td>
+  <% if (duplicateButton) { %><td><input type="submit" class="btn" value="Search"></td><% } %>
+</tr>
+</form>
+<tr><td colspan="3" class="fine">Enter an exact member number, or part of a name.</td></tr>
+</table>
+<% if (results !== null) { %>
+  <% if (results.length === 0) { %>
+  <p class="msg" align="center">No members matched your search.</p>
+  <% } else { %>
+  <table class="tbl" cellspacing="0" cellpadding="4" width="96%" align="center">
+  <tr><td class="th">Member No.</td><td class="th">Name</td><td class="th">Date of Birth</td><td class="th">Standing</td></tr>
+  <% for (const m of results) { %>
+  <tr>
+    <td><a href="/members/<%= m.id %>"><%= m.id %></a></td>
+    <td><%= m.name %></td>
+    <td><%= m.dob %></td>
+    <td><%= m.standing %></td>
+  </tr>
+  <% } %>
+  </table>
+  <% } %>
+<% } %>
+<%- include('partials/bottom') %>
