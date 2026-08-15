@@ -17,6 +17,13 @@ export interface FrameHint {
   urlPattern?: string;
 }
 
+/** One hop of an observed element's actual frame path (top → innermost). */
+export interface FramePathEntry {
+  name?: string;
+  /** Concrete document URL — matched against FrameHint.urlPattern. */
+  url: string;
+}
+
 /** One perceivable, potentially-actionable element in the current observation. */
 export interface ObservedElement {
   /** Index into the current observation's element list. Stable only within one observation. */
@@ -30,13 +37,15 @@ export interface ObservedElement {
   /** Associated label text when distinct from the accessible name. */
   label?: string;
   /** Frame path from the top of the surface to this element's frame. */
-  framePath: FrameHint[];
+  framePath: FramePathEntry[];
   /** Bounding box as percentages of the viewport (0–100), for review/drift evidence — never used for resolution. */
   bboxPct?: { x: number; y: number; w: number; h: number };
   /** True if the element can be acted on (clicked, typed into, chosen). */
   interactive: boolean;
-  /** Nearby anchor text (e.g. row header, preceding label) to disambiguate repeated controls. */
+  /** Nearby anchor text (row text, preceding label) to disambiguate repeated controls. */
   nearText?: string;
+  /** For table cells: the column header this cell sits under, if detectable. */
+  colHeader?: string;
   /** For options/selects: the choices offered. */
   options?: string[];
 }
@@ -84,6 +93,11 @@ export type SemanticAction =
   | { kind: 'choose'; ref: number; option: string }
   | { kind: 'read'; ref: number }
   | { kind: 'answerDialog'; accept: boolean; promptText?: string };
+
+/** What an action returns: read actions yield the extracted value. */
+export interface ActResultValue {
+  readValue?: string;
+}
 
 /** Risk classification for actions/steps — drives policy handling. */
 export type RiskClass = 'read' | 'reversible' | 'irreversible';
