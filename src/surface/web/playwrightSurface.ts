@@ -92,8 +92,15 @@ export class PlaywrightWebSurface implements Surface {
       let collected;
       try {
         collected = await collectFrame(frame);
-      } catch {
-        continue; // frame navigated away mid-walk — the next observe() sees it
+      } catch (err) {
+        // A frame that detached/navigated mid-walk is a benign race — skip
+        // it; the next observe() sees the new state. Anything else (walker
+        // bug, transform artifact) must surface loudly, not as a silently
+        // empty observation.
+        if (frame.isDetached()) continue;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/navigat|context was destroyed|detached/i.test(msg)) continue;
+        throw new Error(`element walker failed in frame '${frame.name() || frame.url()}': ${msg}`);
       }
       const framePath = framePathOf(frame);
       if (frame === this.page.mainFrame()) title = collected.title;

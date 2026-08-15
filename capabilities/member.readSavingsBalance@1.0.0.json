@@ -1,0 +1,467 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.readSavingsBalance",
+    "version": "1.0.0",
+    "title": "Read a member's regular savings balance",
+    "description": "Looks up a member by member number in MockCore Teller and returns the current balance of their S00 regular savings share. Read-only. Returns the MEMBER_NOT_FOUND outcome when the member number does not exist on the system.",
+    "app": {
+      "appId": "mockcore-teller",
+      "vendor": "MockCore",
+      "uiVersionObserved": "v7.2.14"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/login"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-15T00:00:00Z",
+    "recordedBy": {
+      "kind": "hand-authored"
+    },
+    "approval": {
+      "state": "approved",
+      "by": "engineering review",
+      "at": "2026-08-15T00:00:00Z"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "string",
+      "description": "The member number to look up.",
+      "required": true,
+      "pattern": "^[0-9]{3,10}$",
+      "example": "12345",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Teller operator ID used to sign in. Resolved from the environment, never stored.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MOCK_CU_USER"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Teller password. Resolved from the environment at invocation time; secret values are never serialized into artifacts, logs, or evidence.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MOCK_CU_PASS"
+    }
+  },
+  "outputs": {
+    "savingsBalance": {
+      "type": "money",
+      "description": "Current balance of the member's S00 REGULAR SAVINGS share, as displayed (e.g. \"$4,821.97\").",
+      "sensitivity": "pii",
+      "source": {
+        "stepId": "s8",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "No member matched the given member number. A legitimate business result the caller must handle — not a failure.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "No members matched your search."
+      },
+      "terminal": true,
+      "outputs": {}
+    }
+  ],
+  "recoveries": [
+    {
+      "code": "SESSION_TIMEOUT",
+      "description": "The operator session expired mid-flow; the app bounced to the sign-in screen. Recover by restarting the run from the entrypoint (safe: this flow is read-only).",
+      "when": {
+        "c": "textPresent",
+        "pattern": "Your session has expired"
+      },
+      "handler": {
+        "kind": "restartRun"
+      },
+      "maxAttempts": 2
+    },
+    {
+      "code": "KNOWN_INTERSTITIAL",
+      "description": "The system-notice interstitial appeared instead of the requested screen. Dismiss it via its Continue control.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "System Notice"
+      },
+      "handler": {
+        "kind": "dismiss",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Continue",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "maxAttempts": 2
+    }
+  ],
+  "anomalies": [
+    {
+      "code": "APP_ERROR",
+      "description": "MockCore rendered its application-error screen (ERR-5000).",
+      "when": {
+        "c": "textPresent",
+        "pattern": "ERR-5000"
+      }
+    }
+  ],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "activate",
+      "setValue",
+      "read"
+    ],
+    "maxRisk": "reversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter the operator ID on the sign-in screen",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "Operator Sign In"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter the operator password",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Sign in and land on the teller home screen",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign In",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Announcements"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 10000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Search from the main menu",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "menu"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No. or Name"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter the member number in the search field",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Member No. or Name"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Run the search and wait for the results table (or the no-match message)",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "structural",
+              "surface": "web",
+              "css": "input[type=submit][value=Search]"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Standing"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": [
+        "MEMBER_NOT_FOUND"
+      ]
+    },
+    {
+      "id": "s7",
+      "intent": "Open the matching member's detail screen from the results row",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "self",
+              "targetRole": "link"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member Information"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Read the S00 regular-savings balance from the accounts table",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "tableCell",
+              "rowAnchor": {
+                "text": "REGULAR SAVINGS"
+              },
+              "columnHeader": "Balance"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "into": "savingsBalance"
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "Accounts"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "Member Information"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "{memberId}"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "REGULAR SAVINGS"
+    }
+  ],
+  "integrity": {
+    "contentHash": "84b04d45a1b8c65509b61883df7d1c329470c648b11c06b924d8c3267de35f28"
+  }
+}
