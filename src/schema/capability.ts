@@ -87,6 +87,10 @@ export const RecoveryHandlerSchema = z.discriminatedUnion('kind', [
   // Start the whole run over (entrypoint onwards) — e.g. session expiry.
   // The engine refuses this if any completed step was irreversible.
   z.object({ kind: z.literal('restartRun') }).strict(),
+  // Bring a human into the loop: this state can only be cleared by a person
+  // acting on the live session (e.g. supervisor authorization). With no
+  // operator attached, the run ends as 'escalated' rather than guessing.
+  z.object({ kind: z.literal('escalate'), suggestion: z.string() }).strict(),
 ]);
 
 export const RecoverySpecSchema = z

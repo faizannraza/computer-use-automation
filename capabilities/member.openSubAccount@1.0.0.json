@@ -1,0 +1,798 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.openSubAccount",
+    "version": "1.0.0",
+    "title": "Open a new sub-account for a member",
+    "description": "Opens a new sub-account (share) for an existing member in MockCore Teller: search, open the member, fill the sub-account form, review, and confirm. The confirm step is IRREVERSIBLE (posts the opening deposit) and is policy-gated: under the default policy it requires human approval. If the teller lacks permission, the app demands supervisor authorization — a human-only action that escalates to an operator on the live session. Returns the confirmation number and the new account suffix.",
+    "app": {
+      "appId": "mockcore-teller",
+      "vendor": "MockCore",
+      "uiVersionObserved": "v7.2.14"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/login"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-15T00:00:00Z",
+    "recordedBy": {
+      "kind": "hand-authored"
+    },
+    "approval": {
+      "state": "approved",
+      "by": "engineering review",
+      "at": "2026-08-15T00:00:00Z"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "string",
+      "description": "The member number to open the sub-account for.",
+      "required": true,
+      "pattern": "^[0-9]{3,10}$",
+      "example": "12345",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "acctType": {
+      "type": "enum",
+      "description": "The share type to open.",
+      "required": true,
+      "values": [
+        "REGULAR SAVINGS",
+        "CHECKING",
+        "MONEY MARKET",
+        "HOLIDAY CLUB"
+      ],
+      "example": "HOLIDAY CLUB",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "nickname": {
+      "type": "string",
+      "description": "Display nickname for the new sub-account (1-20 characters).",
+      "required": true,
+      "example": "Vacation Fund",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "initialDeposit": {
+      "type": "money",
+      "description": "Opening deposit in dollars (minimum $25.00), e.g. '50.00'.",
+      "required": true,
+      "pattern": "^[0-9][0-9,]*(\\.[0-9]{2})?$",
+      "example": "50.00",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Teller operator ID used to sign in. Resolved from the environment, never stored.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MOCK_CU_USER"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Teller password. Resolved from the environment at invocation time; never serialized.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MOCK_CU_PASS"
+    }
+  },
+  "outputs": {
+    "confirmationNo": {
+      "type": "string",
+      "description": "The confirmation number issued for the opened sub-account.",
+      "sensitivity": "internal",
+      "source": {
+        "stepId": "s14",
+        "transform": "trim"
+      }
+    },
+    "newSuffix": {
+      "type": "string",
+      "description": "The share suffix assigned to the new sub-account (e.g. S02).",
+      "sensitivity": "none",
+      "source": {
+        "stepId": "s15",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "No member matched the given member number. A legitimate business result the caller must handle — not a failure.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "No members matched your search."
+      },
+      "terminal": true,
+      "outputs": {}
+    },
+    {
+      "code": "VALIDATION_REJECTED",
+      "description": "The application rejected the sub-account details (bad deposit, nickname, or type). The caller must correct the inputs; nothing was opened.",
+      "when": {
+        "c": "any",
+        "of": [
+          {
+            "c": "textPresent",
+            "pattern": "Initial deposit must be at least"
+          },
+          {
+            "c": "textPresent",
+            "pattern": "Nickname is required"
+          },
+          {
+            "c": "textPresent",
+            "pattern": "Select a valid account type"
+          }
+        ]
+      },
+      "terminal": true,
+      "outputs": {}
+    }
+  ],
+  "recoveries": [
+    {
+      "code": "SESSION_TIMEOUT",
+      "description": "The operator session expired mid-flow. Restart from the entrypoint — the engine refuses this once an irreversible step has completed.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "Your session has expired"
+      },
+      "handler": {
+        "kind": "restartRun"
+      },
+      "maxAttempts": 2
+    },
+    {
+      "code": "KNOWN_INTERSTITIAL",
+      "description": "The system-notice interstitial appeared instead of the requested screen. Dismiss it via its Continue control.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "System Notice"
+      },
+      "handler": {
+        "kind": "dismiss",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Continue",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "maxAttempts": 2
+    },
+    {
+      "code": "SUPERVISOR_AUTH_REQUIRED",
+      "description": "The app demands supervisor authorization (PRM-4031) before the sub-account can be opened. Only a person with the supervisor PIN can clear this on the live session.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "Supervisor Authorization Required"
+      },
+      "handler": {
+        "kind": "escalate",
+        "suggestion": "A supervisor must enter their PIN on the authorization screen in the live window and click Authorize. When the confirmation screen appears, resolve with 'resume'."
+      },
+      "maxAttempts": 1
+    }
+  ],
+  "anomalies": [
+    {
+      "code": "APP_ERROR",
+      "description": "MockCore rendered its application-error screen (ERR-5000).",
+      "when": {
+        "c": "textPresent",
+        "pattern": "ERR-5000"
+      }
+    }
+  ],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "activate",
+      "setValue",
+      "choose",
+      "read"
+    ],
+    "maxRisk": "irreversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter the operator ID on the sign-in screen",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "Operator Sign In"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter the operator password",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Sign in and land on the teller home screen",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign In",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Announcements"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 10000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Search from the main menu",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "menu"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No. or Name"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter the member number in the search field",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Member No. or Name"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Run the search and wait for the results table (or the no-match message)",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Standing"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": [
+        "MEMBER_NOT_FOUND"
+      ]
+    },
+    {
+      "id": "s7",
+      "intent": "Open the matching member's detail screen from the results row",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "self",
+              "targetRole": "link"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member Information"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Open the new sub-account form for this member",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Open Sub-Account",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Account Type"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    },
+    {
+      "id": "s9",
+      "intent": "Choose the account type to open",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Account Type"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "option": {
+          "param": "acctType"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s10",
+      "intent": "Enter the sub-account nickname",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Nickname"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "nickname"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s11",
+      "intent": "Enter the initial deposit amount",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Initial Deposit"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "value": {
+          "param": "initialDeposit"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s12",
+      "intent": "Continue to the review screen (validation happens here)",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Continue",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Please Verify Before Confirming"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": [
+        "VALIDATION_REJECTED"
+      ]
+    },
+    {
+      "id": "s13",
+      "intent": "Confirm opening the sub-account (IRREVERSIBLE: posts the opening deposit)",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Confirm Open",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "Please Verify Before Confirming"
+        }
+      ],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Sub-Account Opened Successfully"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 12000,
+        "pollMs": 250
+      },
+      "risk": "irreversible",
+      "onDetect": []
+    },
+    {
+      "id": "s14",
+      "intent": "Read the confirmation number from the confirmation screen",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "textAnchor",
+              "text": "Confirmation No.",
+              "relation": "near",
+              "targetRole": "cell"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "into": "confirmationNo"
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "Sub-Account Opened Successfully"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    },
+    {
+      "id": "s15",
+      "intent": "Read the new share suffix from the confirmation screen",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [
+            {
+              "name": "work"
+            }
+          ],
+          "strategies": [
+            {
+              "s": "textAnchor",
+              "text": "New Suffix",
+              "relation": "near",
+              "targetRole": "cell"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          }
+        },
+        "into": "newSuffix"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "Sub-Account Opened Successfully"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Confirmation No."
+    }
+  ],
+  "integrity": {
+    "contentHash": "37b573a6902b00da340d2661a8e80a58785c34bbeb7d3846949212647a642807"
+  }
+}

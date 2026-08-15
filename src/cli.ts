@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { runDiscovery } from './discovery/agent.js';
 import type { OutputHint } from './discovery/compile.js';
+import { TerminalOperator } from './hitl/terminalOperator.js';
 import { loadPolicy } from './policy/policy.js';
 import { replayCapability } from './replay/engine.js';
 import { CapabilityArtifactSchema, ParamSpecSchema, computeContentHash, loadCapability } from './schema/capability.js';
@@ -172,6 +173,9 @@ async function replayCmd(argv: string[]): Promise<void> {
       policy: { type: 'string', default: 'policies/default.policy.json' },
       tenant: { type: 'string' },
       headed: { type: 'boolean', default: false },
+      // Human-in-the-loop: escalations pause the run, print the intervention
+      // to this terminal, and hand you the live browser window. Forces --headed.
+      hitl: { type: 'boolean', default: false },
       'allow-draft': { type: 'boolean', default: false },
       'evidence-dir': { type: 'string', default: 'evidence' },
       // Test-harness convenience: arms a fault on the MOCK APP before the run
@@ -218,13 +222,17 @@ async function replayCmd(argv: string[]): Promise<void> {
     console.error(`[harness] armed fault ${fault} (${mode})`);
   }
 
+  if (values.hitl && !values.headed) {
+    console.error('[hitl] forcing --headed: the human operator needs to see the live session');
+  }
   const result = await replayCapability(resolved, {
     policy: loadPolicy(values.policy!),
     paramValues,
     verified,
     allowDraft: values['allow-draft']!,
-    headed: values.headed!,
+    headed: values.headed! || values.hitl!,
     evidenceBaseDir: values['evidence-dir']!,
+    ...(values.hitl ? { operator: new TerminalOperator() } : {}),
   });
 
   // Human summary → stderr; machine-readable result → stdout (the caller

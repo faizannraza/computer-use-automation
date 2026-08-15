@@ -43,6 +43,57 @@ export interface RecoveryUse {
   attempts: number;
 }
 
+// ---------- human-in-the-loop contract ----------
+
+export type InterventionKind =
+  /** An irreversible action awaits a human decision before it is performed. */
+  | 'approve_risky'
+  /** The run hit a state only a human can clear (e.g. supervisor authorization). */
+  | 'human_action_required'
+  /** Discovery/replay is stuck with no declared handling. */
+  | 'agent_stuck';
+
+export type OperatorAction = 'approve' | 'resume' | 'abort';
+
+/** Everything a human operator needs to act: what, where, why, and the live state. */
+export interface InterventionRequest {
+  id: string;
+  at: string;
+  kind: InterventionKind;
+  capabilityId: string;
+  version: string;
+  runId: string;
+  stepId?: string;
+  stepIntent?: string;
+  /** Why the automation stopped. */
+  reason: string;
+  /** What the operator is expected to do. */
+  suggestedResolution: string;
+  /** Which resolutions are meaningful for this intervention. */
+  options: OperatorAction[];
+  observationSummary: string;
+  screenshotRef?: string;
+}
+
+export interface OperatorResolution {
+  action: OperatorAction;
+  note?: string;
+  at: string;
+}
+
+/** What ends up in the replay result + evidence about each intervention. */
+export interface InterventionRecord {
+  id: string;
+  kind: InterventionKind;
+  stepId?: string;
+  reason: string;
+  resolution: OperatorAction;
+  note?: string;
+  /** Number of human actions captured on the live session during the handoff. */
+  humanActions: number;
+  heldForMs: number;
+}
+
 interface ResultBase {
   capabilityId: string;
   version: string;
@@ -50,6 +101,8 @@ interface ResultBase {
   evidenceDir: string;
   stepsRun: StepTrace[];
   recoveriesUsed: RecoveryUse[];
+  /** Human handoffs that occurred during the run (empty when fully unattended). */
+  interventions: InterventionRecord[];
   startedAt: string;
   finishedAt: string;
 }
@@ -57,5 +110,8 @@ interface ResultBase {
 export type ReplayResult =
   | (ResultBase & { status: 'success'; outputs: Record<string, string> })
   | (ResultBase & { status: 'business_outcome'; code: string; message: string; outputs: Record<string, string> })
-  | (ResultBase & { status: 'escalated'; interventionId: string; reason: string; resolution: string })
+  /** The run ENDED at an escalation (aborted, or no operator was available).
+   * A run that escalated and then resumed to completion reports success /
+   * business_outcome with the handoff in `interventions`. */
+  | (ResultBase & { status: 'escalated'; interventionId: string; reason: string; resolution: 'aborted_by_operator' | 'no_operator_available' })
   | (ResultBase & { status: 'failed'; failure: ReplayFailure });

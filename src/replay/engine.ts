@@ -20,9 +20,11 @@ import { RunLog } from '../evidence/runLog.js';
 import { ActionGate, PolicyViolation } from '../policy/actionGate.js';
 import type { Policy } from '../policy/policy.js';
 import { Redactor, maskValue } from '../policy/redact.js';
+import { SessionController } from '../hitl/sessionController.js';
+import type { Operator } from '../hitl/sessionController.js';
 import type { Binding, CapabilityArtifact, Step } from '../schema/capability.js';
 import type { ResolvedCapability } from '../schema/overlay.js';
-import type { RecoveryUse, ReplayFailure, ReplayResult, StepTrace } from '../schema/result.js';
+import type { InterventionRequest, RecoveryUse, ReplayFailure, ReplayResult, StepTrace } from '../schema/result.js';
 import type { Surface } from '../surface/surface.js';
 import { PlaywrightWebSurface } from '../surface/web/playwrightSurface.js';
 import { evaluateAll, evaluateCondition, renderConditions, summarizeObservation } from './detectors.js';
@@ -36,12 +38,30 @@ export interface ReplayOptions {
   allowDraft?: boolean;
   headed?: boolean;
   evidenceBaseDir?: string;
+  /**
+   * Human-in-the-loop operator. When present, escalations pause the run and
+   * hand the LIVE session to the operator; when absent, a run that needs a
+   * human ends as status 'escalated' / 'no_operator_available' — it never
+   * guesses its way past a decision a person should make.
+   */
+  operator?: Operator;
 }
 
 /** Internal control-flow: abort the run with a typed failure. */
 class Halt extends Error {
   constructor(readonly failure: Omit<ReplayFailure, 'screenshotRef'>) {
     super(`${failure.class}: ${failure.expected}`);
+  }
+}
+
+/** Internal control-flow: the run ends at an escalation. */
+class EscalationHalt extends Error {
+  constructor(
+    readonly interventionId: string,
+    readonly reason: string,
+    readonly resolution: 'aborted_by_operator' | 'no_operator_available',
+  ) {
+    super(`escalated: ${reason}`);
   }
 }
 
@@ -94,7 +114,15 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
     return result;
   };
   const earlyFail = (failure: ReplayFailure): ReplayResult =>
-    finish({ ...base, status: 'failed', failure, stepsRun: [], recoveriesUsed: [], finishedAt: new Date().toISOString() });
+    finish({
+      ...base,
+      status: 'failed',
+      failure,
+      stepsRun: [],
+      recoveriesUsed: [],
+      interventions: [],
+      finishedAt: new Date().toISOString(),
+    });
 
   log.event('run_start', {
     capability: `${artifact.capability.id}@${artifact.capability.version}`,
@@ -139,15 +167,33 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
 
   const subst = { ...bindings, ...params };
   const surface = await PlaywrightWebSurface.launch({ headed: opts.headed ?? false });
+  // The controller owns the control token; the gate checks it on EVERY
+  // action, so the automation physically cannot act during a human handoff.
+  const controller = opts.operator ? new SessionController(surface, log, opts.operator) : undefined;
   const gate = new ActionGate(opts.policy, surface, {
+    getHolder: () => controller?.holder() ?? 'agent',
     onEvent: (e) =>
       log.event('gate', { kind: e.action.kind, decision: e.decision, location: e.location, risk: e.context.risk }),
   });
 
   try {
-    return finish(await run(artifact, subst, surface, gate, log, redactor, opts, base));
+    return finish(await run(artifact, subst, surface, gate, controller, log, redactor, opts, base));
   } catch (err) {
     const obs = surface.lastObservation();
+    const interventions = controller?.records ?? [];
+    if (err instanceof EscalationHalt) {
+      return finish({
+        ...base,
+        status: 'escalated',
+        interventionId: err.interventionId,
+        reason: err.reason,
+        resolution: err.resolution,
+        stepsRun: [],
+        recoveriesUsed: [],
+        interventions,
+        finishedAt: new Date().toISOString(),
+      });
+    }
     const failure: ReplayFailure =
       err instanceof Halt
         ? { ...err.failure, ...shotRef(log, 'failure', obs) }
@@ -164,7 +210,15 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
               observed: err instanceof Error ? err.message : String(err),
               ...shotRef(log, 'failure', obs),
             };
-    return finish({ ...base, status: 'failed', failure, stepsRun: [], recoveriesUsed: [], finishedAt: new Date().toISOString() });
+    return finish({
+      ...base,
+      status: 'failed',
+      failure,
+      stepsRun: [],
+      recoveriesUsed: [],
+      interventions,
+      finishedAt: new Date().toISOString(),
+    });
   } finally {
     await surface.close();
   }
@@ -182,6 +236,7 @@ async function run(
   subst: Record<string, string>,
   surface: Surface,
   gate: ActionGate,
+  controller: SessionController | undefined,
   log: RunLog,
   redactor: Redactor,
   opts: ReplayOptions,
@@ -192,6 +247,60 @@ async function run(
   const recoveryUse = new Map<string, number>();
   const recoveriesUsed = (): RecoveryUse[] =>
     [...recoveryUse.entries()].map(([code, attempts]) => ({ code, attempts }));
+  const interventions = () => controller?.records ?? [];
+
+  /** Route an intervention to the operator (or end the run if there is none). */
+  const escalate = async (
+    req: Pick<InterventionRequest, 'kind' | 'reason' | 'suggestedResolution' | 'options'> & {
+      stepId?: string;
+      stepIntent?: string;
+    },
+  ) => {
+    const obs = surface.lastObservation();
+    if (!controller) {
+      log.event('escalation_unattended', { kind: req.kind, reason: req.reason });
+      throw new EscalationHalt('none', req.reason, 'no_operator_available');
+    }
+    const shot = log.screenshot('intervention', obs?.screenshot);
+    const resolution = await controller.escalate({
+      ...req,
+      capabilityId: base.capabilityId,
+      version: base.version,
+      runId: base.runId,
+      observationSummary: obs ? summarizeObservation(obs) : '(no observation)',
+      ...(shot !== undefined ? { screenshotRef: shot } : {}),
+    });
+    if (resolution.action === 'abort') {
+      const last = controller.records[controller.records.length - 1]!;
+      throw new EscalationHalt(last.id, req.reason, 'aborted_by_operator');
+    }
+    return resolution;
+  };
+
+  /**
+   * Gate execution with the risky-action escalation path: an irreversible
+   * action under policy mode 'escalate' pauses for a human decision; on
+   * 'approve' the same action executes exactly once with approval attached.
+   */
+  const gatedExecute = async (action: SemanticAction, step: Step) => {
+    try {
+      return await gate.execute(action, { risk: step.risk });
+    } catch (err) {
+      if (err instanceof PolicyViolation && err.code === 'RISK_NEEDS_ESCALATION') {
+        await escalate({
+          kind: 'approve_risky',
+          stepId: step.id,
+          stepIntent: step.intent,
+          reason: err.message,
+          suggestedResolution:
+            'Review the pending irreversible action in the live window. approve = the automation performs it; abort = stop the run.',
+          options: ['approve', 'abort'],
+        });
+        return await gate.execute(action, { risk: step.risk, approved: true });
+      }
+      throw err;
+    }
+  };
 
   /**
    * Scan the artifact's known recoverable conditions against the current
@@ -201,6 +310,7 @@ async function run(
   const tryRecoveries = async (
     obs: Observation,
     completedRisk: RiskClass[],
+    step?: Step,
   ): Promise<'applied' | 'restart' | 'none'> => {
     for (const rec of artifact.recoveries) {
       const when = substituteDeep(rec.when, subst);
@@ -231,6 +341,20 @@ async function run(
         case 'answerDialog':
           await gate.execute({ kind: 'answerDialog', accept: rec.handler.accept }, { risk: 'reversible' });
           return 'applied';
+        case 'escalate': {
+          // This state can only be cleared by a person on the live session.
+          // After they resume, we re-enter classification — the step's own
+          // postcondition verifies the human's work.
+          await escalate({
+            kind: 'human_action_required',
+            reason: `${rec.code}: ${rec.description}`,
+            suggestedResolution: rec.handler.suggestion,
+            options: ['resume', 'abort'],
+            ...(step !== undefined ? { stepId: step.id, stepIntent: step.intent } : {}),
+          });
+          await surface.settle();
+          return 'applied';
+        }
         case 'restartRun': {
           if (completedRisk.includes('irreversible')) {
             throw new Halt({
@@ -276,7 +400,7 @@ async function run(
       //    that landed between steps).
       obs = await surface.observe();
       if (!(await evaluateAll(step.pre, obs))) {
-        const r = await tryRecoveries(obs, completedRisk);
+        const r = await tryRecoveries(obs, completedRisk, step);
         if (r === 'restart') continue outer;
         if (r === 'applied') obs = await surface.observe();
         if (!(await evaluateAll(step.pre, obs))) {
@@ -293,11 +417,11 @@ async function run(
       //    ambiguity is a refusal, never retried into a guess).
       let readValue: string | undefined;
       if (step.action.kind === 'navigate') {
-        await gate.execute({ kind: 'navigate', url: step.action.url }, { risk: step.risk });
+        await gatedExecute({ kind: 'navigate', url: step.action.url }, step);
       } else if (step.action.kind !== 'assert') {
         let res = await surface.resolve(step.action.target);
         if (!res.ok && res.reason === 'not_found') {
-          const r = await tryRecoveries(obs, completedRisk);
+          const r = await tryRecoveries(obs, completedRisk, step);
           if (r === 'restart') continue outer;
           if (r === 'applied') {
             await surface.observe();
@@ -317,9 +441,10 @@ async function run(
         trace.score = res.score;
         log.event('resolved', { stepId: step.id, strategyIndex: res.strategyIndex, strategy: res.strategy, score: res.score });
 
-        // 3. Act through the gate — the only path to the surface.
+        // 3. Act through the gate — the only path to the surface. Irreversible
+        //    actions pause here for human approval under policy mode 'escalate'.
         const action = buildAction(step, res.ref, subst);
-        const actResult = await gate.execute(action, { risk: step.risk });
+        const actResult = await gatedExecute(action, step);
         readValue = actResult.readValue;
       }
 
@@ -356,12 +481,13 @@ async function run(
               outputs: outcome.outputs,
               stepsRun: traces,
               recoveriesUsed: recoveriesUsed(),
+              interventions: interventions(),
               finishedAt: new Date().toISOString(),
             };
           }
         }
 
-        const r = await tryRecoveries(obs, completedRisk);
+        const r = await tryRecoveries(obs, completedRisk, step);
         if (r === 'restart') continue outer;
         if (r === 'applied') continue classify;
 
@@ -419,6 +545,7 @@ async function run(
       outputs,
       stepsRun: traces,
       recoveriesUsed: recoveriesUsed(),
+      interventions: interventions(),
       finishedAt: new Date().toISOString(),
     };
   }
