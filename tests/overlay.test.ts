@@ -81,4 +81,34 @@ describe('satisfiesCaret', () => {
     expect(satisfiesCaret('1.1.0', '^1.2.0')).toBe(false);
     expect(satisfiesCaret('2.0.0', '^1')).toBe(false);
   });
+
+  it('follows npm semver semantics for 0.x ranges (minor is the pivot)', () => {
+    expect(satisfiesCaret('0.2.5', '^0.2.3')).toBe(true);
+    expect(satisfiesCaret('0.3.0', '^0.2.3')).toBe(false); // 0.x minors break
+    expect(satisfiesCaret('0.0.3', '^0.0.3')).toBe(true);
+    expect(satisfiesCaret('0.0.4', '^0.0.3')).toBe(false); // ^0.0.x is exact
+    expect(satisfiesCaret('0.9.0', '^0')).toBe(true);
+  });
+});
+
+describe('overlay code collisions', () => {
+  it('rejects an addRecovery whose code the artifact already declares', () => {
+    const dup = TenantOverlaySchema.parse({
+      tenantId: 't',
+      extends: { capabilityId: 'member.readSavingsBalance', versionRange: '^1' },
+      bindings: { baseUrl: 'http://x' },
+      patches: [
+        {
+          op: 'addRecovery',
+          recovery: {
+            code: 'SESSION_TIMEOUT', // gold already declares this recovery
+            description: 'dup',
+            when: { c: 'textPresent', pattern: 'x' },
+            handler: { kind: 'restartRun' },
+          },
+        },
+      ],
+    });
+    expect(() => applyOverlay(artifact, dup)).toThrow(/duplicates a code/);
+  });
 });

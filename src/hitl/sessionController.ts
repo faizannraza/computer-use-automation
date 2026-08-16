@@ -3,7 +3,9 @@
  *
  * The control-transfer model:
  *   AGENT_ACTIVE --escalate()--> HUMAN_ACTIVE --resolution--> AGENT_ACTIVE
- *                                              --abort------> (run ends)
+ *                                              --abort------> (run ends via
+ *                                                              the engine's
+ *                                                              escalated result)
  *
  * The token is not advisory: the ActionGate calls holder() on every single
  * action, so while a handoff is open the automation PHYSICALLY cannot act —
@@ -40,7 +42,7 @@ export interface OperatorSessionAccess {
   page: PlaywrightWebSurface['page'];
 }
 
-export type SessionState = 'AGENT_ACTIVE' | 'HUMAN_ACTIVE' | 'TERMINATED';
+export type SessionState = 'AGENT_ACTIVE' | 'HUMAN_ACTIVE';
 
 export class SessionController {
   private state: SessionState = 'AGENT_ACTIVE';
@@ -62,10 +64,6 @@ export class SessionController {
 
   holder(): ControlHolder {
     return this.state === 'HUMAN_ACTIVE' ? 'human' : 'agent';
-  }
-
-  currentState(): SessionState {
-    return this.state;
   }
 
   /**
@@ -111,9 +109,5 @@ export class SessionController {
     this.records.push(record);
     this.log.event('intervention_resolved', { ...record });
     return { ...resolution, at: new Date().toISOString() };
-  }
-
-  terminate(): void {
-    this.state = 'TERMINATED';
   }
 }

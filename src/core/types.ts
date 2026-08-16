@@ -9,14 +9,6 @@
  * engine extend from a web surface to legacy web or desktop surfaces.
  */
 
-/** Where an element lives when the surface is composed of frames/windows. */
-export interface FrameHint {
-  /** Frame name attribute (web) or window/pane title (desktop). */
-  name?: string;
-  /** Pattern matched against the frame's document URL (web only). */
-  urlPattern?: string;
-}
-
 /** One hop of an observed element's actual frame path (top → innermost). */
 export interface FramePathEntry {
   name?: string;

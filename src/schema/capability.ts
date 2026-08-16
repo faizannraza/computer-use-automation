@@ -49,6 +49,21 @@ export const ParamSpecSchema = z
   .refine((p) => p.source !== 'env' || p.env !== undefined, { message: "source 'env' requires the env var name" })
   .refine((p) => !(p.source === 'caller' && p.sensitivity === 'secret'), {
     message: 'secret params must come from the environment, never from a serialized call',
+  })
+  .refine(
+    (p) => {
+      if (p.pattern === undefined) return true;
+      try {
+        new RegExp(p.pattern);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: 'pattern must be a valid regular expression' },
+  )
+  .refine((p) => p.type !== 'enum' || (p.values !== undefined && p.values.length > 0), {
+    message: "type 'enum' requires a non-empty values list",
   });
 
 export const OutputSpecSchema = z
@@ -262,7 +277,56 @@ export const CapabilityArtifactSchema = z
       const src = a.steps.find((s) => s.id === out.source.stepId);
       if (!src || src.action.kind !== 'read') {
         ctx.addIssue({ code: 'custom', message: `output '${name}' must source from a read step (got '${out.source.stepId}')` });
+      } else if (src.action.into !== name) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `output '${name}' sources step '${src.id}', but that step reads into '${src.action.into}' — the output would never be produced`,
+        });
       }
+    }
+    // Detector codes are engine keys (attempt counters, onDetect lookups):
+    // they must be unique across outcomes, recoveries, AND anomalies.
+    const allCodes = [
+      ...a.outcomes.map((o) => o.code),
+      ...a.recoveries.map((r) => r.code),
+      ...a.anomalies.map((x) => x.code),
+    ];
+    if (new Set(allCodes).size !== allCodes.length) {
+      ctx.addIssue({ code: 'custom', message: 'outcome/recovery/anomaly codes must be unique across the artifact' });
+    }
+    // The policy block is a self-declaration the engine's pre-flight guard
+    // trusts — so the schema verifies it against the steps.
+    const usedKinds = new Set(
+      a.steps.map((s) => s.action.kind).filter((k): k is Exclude<typeof k, 'assert'> => k !== 'assert'),
+    );
+    for (const kind of usedKinds) {
+      if (!a.policy.actionsUsed.includes(kind)) {
+        ctx.addIssue({ code: 'custom', message: `policy.actionsUsed omits '${kind}', which the steps use` });
+      }
+    }
+    const riskRank = { read: 0, reversible: 1, irreversible: 2 } as const;
+    const maxStepRisk = a.steps.reduce((m, s) => Math.max(m, riskRank[s.risk]), 0);
+    if (riskRank[a.policy.maxRisk] < maxStepRisk) {
+      ctx.addIssue({ code: 'custom', message: 'policy.maxRisk understates the riskiest step' });
+    }
+    // Every {placeholder} in executable fields must resolve from declared
+    // params or the reserved baseUrl binding — a typo'd placeholder must be
+    // a load-time error, never a mid-run failure after mutations.
+    const executable = JSON.stringify({
+      entrypoint: a.capability.entrypoint,
+      steps: a.steps,
+      successCriteria: a.successCriteria,
+      outcomes: a.outcomes.map((o) => o.when),
+      recoveries: a.recoveries,
+      anomalies: a.anomalies,
+    });
+    const declared = new Set([...Object.keys(a.params), 'baseUrl']);
+    const unknown = new Set<string>();
+    for (const m of executable.matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g)) {
+      if (!declared.has(m[1]!)) unknown.add(m[1]!);
+    }
+    for (const name of unknown) {
+      ctx.addIssue({ code: 'custom', message: `placeholder {${name}} does not resolve from declared params or baseUrl` });
     }
   });
 

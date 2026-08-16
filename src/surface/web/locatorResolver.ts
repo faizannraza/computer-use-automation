@@ -16,6 +16,7 @@
 import type { Observation, ObservedElement } from '../../core/types.js';
 import type { FrameHint, Locator, TargetRef } from '../../schema/locators.js';
 import type { CandidateInfo, Resolution, ResolutionFailure } from '../surface.js';
+import { globToRegExp } from '../../core/template.js';
 
 /** How close two scores can be before we refuse to pick between them. */
 const AMBIGUITY_EPSILON = 0.1;
@@ -29,11 +30,6 @@ interface Candidate {
 }
 
 const norm = (s: string): string => s.replace(/\s+/g, ' ').trim().toLowerCase();
-
-function globToRegExp(pattern: string): RegExp {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
-  return new RegExp(`^${escaped}$`);
-}
 
 /** Frame hints match against the TAIL of the element's actual frame path (innermost frames). */
 export function frameMatches(hints: FrameHint[], el: ObservedElement): boolean {

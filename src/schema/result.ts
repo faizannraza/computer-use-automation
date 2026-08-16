@@ -104,9 +104,11 @@ interface ResultBase {
   /** Human handoffs that occurred during the run (empty when fully unattended). */
   interventions: InterventionRecord[];
   /**
-   * True if any irreversible step completed before this result was produced.
-   * The retry-decision signal for calling agents: a 'failed' result with
-   * irreversibleCompleted=true must NOT be blindly re-invoked.
+   * True if any irreversible action was DISPATCHED during the run — counted
+   * the moment it passes the gate, not when its checkpoint confirms, because
+   * the side effect may have taken place regardless of what the UI showed
+   * afterwards. The retry-decision signal for calling agents: a 'failed'
+   * result with irreversibleCompleted=true must NOT be blindly re-invoked.
    */
   irreversibleCompleted: boolean;
   startedAt: string;

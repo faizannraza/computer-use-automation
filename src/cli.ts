@@ -27,6 +27,15 @@ import type { ResolvedCapability } from './schema/overlay.js';
 
 const [command, ...rest] = process.argv.slice(2);
 
+try {
+  await dispatch();
+} catch (err) {
+  // One boundary for operator-facing errors: message, not stack trace.
+  console.error(`error: ${err instanceof Error ? err.message : String(err)}`);
+  process.exit(70);
+}
+
+async function dispatch(): Promise<void> {
 switch (command) {
   case 'discover':
     await discoverCmd(rest);
@@ -49,6 +58,7 @@ switch (command) {
   default:
     console.error('usage: cu <discover|replay|catalog|approve|validate|hash> ...');
     process.exit(64);
+}
 }
 
 /**
@@ -164,12 +174,20 @@ async function discoverCmd(argv: string[]): Promise<void> {
     });
   }
   const outputHints: Record<string, OutputHint> = {};
+  const OUTPUT_TYPES = ['string', 'integer', 'money'];
+  const SENSITIVITIES = ['none', 'internal', 'pii', 'secret'];
   for (const spec of values.output ?? []) {
     const [name, type, sensitivity] = spec.split(':');
+    // Validated strictly: a typo'd sensitivity here would silently disable
+    // redaction of an extracted value — and only surface after a paid run.
+    if (!name || (type && !OUTPUT_TYPES.includes(type)) || (sensitivity && !SENSITIVITIES.includes(sensitivity))) {
+      console.error(`--output expects name[:${OUTPUT_TYPES.join('|')}[:${SENSITIVITIES.join('|')}]], got '${spec}'`);
+      process.exit(64);
+    }
     const hint: OutputHint = {};
     if (type) hint.type = type as Exclude<OutputHint['type'], undefined>;
     if (sensitivity) hint.sensitivity = sensitivity as Sensitivity;
-    outputHints[name!] = hint;
+    outputHints[name] = hint;
   }
 
   console.error(`[discover] goal: ${values.goal}`);

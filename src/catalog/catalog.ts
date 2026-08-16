@@ -36,8 +36,15 @@ export interface CatalogEntry {
 export function buildCatalog(dir = 'capabilities'): CatalogEntry[] {
   const entries: CatalogEntry[] = [];
   for (const file of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
-    const { artifact } = loadCapability(path.join(dir, file));
-    entries.push(toEntry(artifact, path.join(dir, file)));
+    const full = path.join(dir, file);
+    try {
+      const { artifact } = loadCapability(full);
+      entries.push(toEntry(artifact, full));
+    } catch (err) {
+      // The catalog is an agent-facing surface: a broken artifact must fail
+      // loudly AND name itself, not brick the listing with a bare stack.
+      throw new Error(`invalid capability artifact '${full}': ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
   return entries;
 }

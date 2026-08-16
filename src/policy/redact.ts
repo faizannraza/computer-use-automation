@@ -30,8 +30,17 @@ export class Redactor {
   /** Register a sensitive value; every future write is scrubbed of it. */
   register(name: string, value: string, sensitivity: Sensitivity): void {
     if (sensitivity === 'none' || sensitivity === 'internal') return;
-    if (value.length === 0) return;
-    this.subs.push({ needle: value, replacement: maskValue(name, value, sensitivity) });
+    // Values shorter than 4 chars would over-redact unrelated evidence text
+    // (timestamps, ids); such values are masked at explicit call sites only.
+    if (value.length < 4) return;
+    const replacement = maskValue(name, value, sensitivity);
+    this.subs.push({ needle: value, replacement });
+    // Writes are JSON-serialized, which escapes quotes/backslashes/newlines —
+    // register the escaped form too so such values cannot slip through.
+    const escaped = JSON.stringify(value).slice(1, -1);
+    if (escaped !== value) {
+      this.subs.push({ needle: escaped, replacement: JSON.stringify(replacement).slice(1, -1) });
+    }
     // Longest needles first so substrings of other secrets don't mangle them.
     this.subs.sort((a, b) => b.needle.length - a.needle.length);
   }

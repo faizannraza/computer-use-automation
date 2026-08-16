@@ -124,6 +124,36 @@ describe('engine classification branches', () => {
   }, 60_000);
 });
 
+describe('irreversible dispatch semantics', () => {
+  it('a dispatched irreversible action counts even when its checkpoint then fails', async () => {
+    const a = variant((x) => {
+      x.steps = x.steps.filter((s) => ['s1', 's2', 's3'].includes(s.id));
+      const s3 = x.steps.find((s) => s.id === 's3')!;
+      s3.risk = 'irreversible';
+      s3.post = [{ c: 'textPresent', pattern: 'THIS_MARKER_NEVER_APPEARS' }];
+      s3.wait = { timeoutMs: 1500, pollMs: 200 };
+      x.policy.maxRisk = 'irreversible';
+      x.successCriteria = [];
+      x.outputs = {};
+    });
+    const autoApprove = {
+      async handle() {
+        return { action: 'approve' as const };
+      },
+    };
+    const result = await replayCapability(
+      { artifact: a, bindings: { baseUrl: base } },
+      { ...opts(), operator: autoApprove },
+    );
+    expect(result.status).toBe('failed');
+    if (result.status !== 'failed') return;
+    expect(result.failure.class).toBe('POSTCONDITION_TIMEOUT');
+    // The click left the gate: the side effect may exist even though the
+    // checkpoint failed — a retry decision must know that.
+    expect(result.irreversibleCompleted).toBe(true);
+  }, 60_000);
+});
+
 describe('refuse-restart-after-irreversible (the double-execution guard)', () => {
   it('a restartRun recovery after a completed irreversible step is refused, never re-run', async () => {
     // Synthetic flow: sign-in is marked irreversible (stand-in for a posting

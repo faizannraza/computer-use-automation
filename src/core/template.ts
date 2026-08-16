@@ -28,3 +28,10 @@ export function substituteDeep<T>(value: T, subst: Record<string, string>): T {
   }
   return value;
 }
+
+/** Convert a glob-ish pattern (`*`, `?`) to an anchored, case-sensitive RegExp.
+ * The single pattern language for urlMatches conditions and frame hints. */
+export function globToRegExp(pattern: string): RegExp {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
+  return new RegExp(`^${escaped}$`);
+}

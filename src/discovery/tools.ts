@@ -35,7 +35,7 @@ export const DISCOVERY_TOOLS: ToolDef[] = [
   {
     name: 'observe',
     description:
-      'Take a fresh look at the surface: element map (with refs), visible text, current location, any open dialog, and a screenshot. Use when you need to re-orient; every acting tool already returns the resulting observation.',
+      'Take a fresh look at the surface: element map (with refs), visible text, current location, any open dialog, and a screenshot. click, navigate, and answer_dialog return the resulting observation automatically; type, choose, and read return short confirmations and leave refs unchanged — call observe when you want a fresh look.',
     strict: true,
     input_schema: { type: 'object', properties: {}, required: [], additionalProperties: false },
   },

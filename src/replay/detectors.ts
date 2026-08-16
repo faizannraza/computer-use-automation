@@ -8,15 +8,11 @@
 import type { Observation } from '../core/types.js';
 import type { Condition } from '../schema/conditions.js';
 import { resolveTarget } from '../surface/web/locatorResolver.js';
+import { globToRegExp } from '../core/template.js';
 
 function textMatches(haystack: string, pattern: string, regex: boolean | undefined): boolean {
   if (regex) return new RegExp(pattern, 'i').test(haystack);
   return haystack.toLowerCase().includes(pattern.toLowerCase());
-}
-
-function globToRegExp(pattern: string): RegExp {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
-  return new RegExp(`^${escaped}$`);
 }
 
 export async function evaluateCondition(cond: Condition, obs: Observation): Promise<boolean> {

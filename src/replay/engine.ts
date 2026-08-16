@@ -34,7 +34,6 @@ export interface ReplayOptions {
   paramValues: Record<string, string>;
   /** From loadCapability(): content-hash verification result. */
   verified?: boolean;
-  allowUnverified?: boolean;
   allowDraft?: boolean;
   headed?: boolean;
   evidenceBaseDir?: string;
@@ -152,7 +151,7 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
   }
 
   // ---- Pre-flight guards: integrity, approval, policy fit. ----
-  if (opts.verified === false && !opts.allowUnverified) {
+  if (opts.verified === false) {
     return earlyFail({
       class: 'POLICY_BLOCKED',
       expected: 'artifact content hash to match integrity.contentHash',
@@ -355,7 +354,11 @@ async function run(
             log.event('recovery_dismiss_unresolved', { code: rec.code, detail: res.detail });
             return 'none';
           }
-          await gate.execute({ kind: 'activate', ref: res.ref }, { risk: 'reversible' });
+          const dismissEl = surface.lastObservation()?.elements.find((e) => e.ref === res.ref);
+          await gate.execute(
+            { kind: 'activate', ref: res.ref },
+            { risk: 'reversible', frameUrl: dismissEl?.framePath[dismissEl.framePath.length - 1]?.url },
+          );
           await surface.settle();
           return 'applied';
         }
@@ -470,6 +473,14 @@ async function run(
         const targetEl = surface.lastObservation()?.elements.find((e) => e.ref === res.ref);
         const frameUrl = targetEl?.framePath[targetEl.framePath.length - 1]?.url;
         const actResult = await gatedExecute(action, step, frameUrl);
+        // Irreversible side effects are counted at DISPATCH, not at checkpoint
+        // confirmation: once the action left the gate it may have taken effect
+        // regardless of what the postcondition later says. This is what makes
+        // the restart guard and the caller's retry signal conservative.
+        if (step.risk === 'irreversible') {
+          state.irreversibleCompleted = true;
+          completedRisk.push('irreversible');
+        }
         readValue = actResult.readValue;
       }
 
@@ -484,7 +495,7 @@ async function run(
       }
 
       // 4. Wait & classify: post > outcomes > recoveries > anomalies > timeout.
-      const deadline = Date.now() + step.wait.timeoutMs;
+      let deadline = Date.now() + step.wait.timeoutMs;
       classify: while (true) {
         obs = await surface.observe();
 
@@ -515,7 +526,12 @@ async function run(
 
         const r = await tryRecoveries(obs, completedRisk, step);
         if (r === 'restart') continue outer;
-        if (r === 'applied') continue classify;
+        if (r === 'applied') {
+          // A recovery (possibly a minutes-long human handoff) consumed real
+          // time; the step deserves its full wait budget again afterwards.
+          deadline = Date.now() + step.wait.timeoutMs;
+          continue classify;
+        }
 
         for (const anomaly of artifact.anomalies) {
           if (await evaluateCondition(substituteDeep(anomaly.when, subst), obs)) {
@@ -549,8 +565,7 @@ async function run(
       trace.status = 'ok';
       trace.ms = Date.now() - t0;
       traces.push(trace);
-      completedRisk.push(step.risk);
-      if (step.risk === 'irreversible') state.irreversibleCompleted = true;
+      if (step.risk !== 'irreversible') completedRisk.push(step.risk); // irreversible counted at dispatch
       log.event('step_ok', { stepId: step.id, ms: trace.ms });
       log.screenshot(`after-${step.id}`, obs.screenshot);
     }

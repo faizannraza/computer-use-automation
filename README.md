@@ -24,7 +24,7 @@ cp .env.example .env        # defaults work as-is for everything except discover
 **Keys/config:** only `cu discover` (the LLM-driven discovery run) needs `ANTHROPIC_API_KEY` in `.env`. **Everything else — the mock app, deterministic replay, the catalog, human-in-the-loop, and the entire test suite — runs fully offline with no key**, because the production path never calls a model. The committed artifact under `capabilities/` was produced by a real discovery run (its evidence is in `evidence/discovery/`), so you can exercise replay without re-running discovery.
 
 ```bash
-npm test                    # 94 tests: schema, resolver, gate, engine, compiler, HITL — all local
+npm test                    # 104 tests: schema, resolver, gate, engine, compiler, HITL — all local
 ```
 
 ## Demo path
@@ -111,7 +111,7 @@ capabilities/       shipped artifacts (readSavingsBalance is LLM-discovered; ope
 tenants/            tenant overlay example (bindings + additive patches)
 policies/           the default allowlist/risk policy
 evidence/           discovery + replay runs (see evidence/README.md for the index)
-tests/              94 tests (~20 s) incl. live end-to-end scenarios against the mock app;
+tests/              104 tests (~20 s) incl. live end-to-end scenarios against the mock app;
                     fixtures/ holds a hand-authored gold artifact used only as
                     test fixture and compiler diff baseline
 REPORT.md           design write-up

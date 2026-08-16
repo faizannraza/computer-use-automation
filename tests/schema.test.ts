@@ -52,6 +52,48 @@ describe('capability artifact', () => {
     expect(() => CapabilityArtifactSchema.parse(bad)).toThrow(/unknown outcome/);
   });
 
+  it('rejects duplicate outcome/recovery/anomaly codes (engine keys)', () => {
+    const { artifact } = loadCapability(GOLD);
+    const bad = structuredClone(artifact);
+    bad.anomalies.push({ code: 'SESSION_TIMEOUT', description: 'dup of a recovery code', when: { c: 'textPresent', pattern: 'x' } });
+    expect(() => CapabilityArtifactSchema.parse(bad)).toThrow(/codes must be unique/);
+  });
+
+  it('rejects outputs whose source read step writes a different name', () => {
+    const { artifact } = loadCapability(GOLD);
+    const bad = structuredClone(artifact);
+    const readStep = bad.steps.find((st) => st.action.kind === 'read')!;
+    if (readStep.action.kind === 'read') readStep.action.into = 'savingsBalance';
+    bad.outputs['other'] = { ...bad.outputs['savingsBalance']! };
+    expect(() => CapabilityArtifactSchema.parse(bad)).toThrow(/would never be produced/);
+  });
+
+  it('rejects policy self-declarations that understate the steps', () => {
+    const { artifact } = loadCapability(GOLD);
+    const noKind = structuredClone(artifact);
+    noKind.policy.actionsUsed = noKind.policy.actionsUsed.filter((a) => a !== 'setValue');
+    expect(() => CapabilityArtifactSchema.parse(noKind)).toThrow(/actionsUsed omits/);
+    const lowRisk = structuredClone(artifact);
+    lowRisk.policy.maxRisk = 'read';
+    expect(() => CapabilityArtifactSchema.parse(lowRisk)).toThrow(/understates/);
+  });
+
+  it('rejects template placeholders that resolve from nothing (typo protection)', () => {
+    const { artifact } = loadCapability(GOLD);
+    const bad = structuredClone(artifact);
+    bad.successCriteria.push({ c: 'textPresent', pattern: 'Member {membrId}' });
+    expect(() => CapabilityArtifactSchema.parse(bad)).toThrow(/\{membrId\} does not resolve/);
+  });
+
+  it('rejects params with uncompilable regex patterns and enums without values', () => {
+    expect(() =>
+      ParamSpecSchema.parse({ type: 'string', description: 'x', pattern: '([', sensitivity: 'none', source: 'caller' }),
+    ).toThrow(/valid regular expression/);
+    expect(() => ParamSpecSchema.parse({ type: 'enum', description: 'x', sensitivity: 'none', source: 'caller' })).toThrow(
+      /requires a non-empty values/,
+    );
+  });
+
   it('rejects outputs that do not source from a read step', () => {
     const { artifact } = loadCapability(GOLD);
     const bad = structuredClone(artifact) as { outputs: Record<string, { source: { stepId: string } }> };

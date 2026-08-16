@@ -138,8 +138,4 @@ export class Recorder {
   get(): DiscoveryTrace {
     return this.trace;
   }
-
-  spine(): RecordedAction[] {
-    return this.trace.actions.filter((a) => !a.probe);
-  }
 }

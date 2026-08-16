@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { findMemberById, formatMoney, searchMembers } from '../data/seed.js';
-import { consumeNativeDialog, peekFault } from '../faults.js';
+import { consumeNativeDialog, triggerFault } from '../faults.js';
 import { currentUser } from '../session.js';
 
 export const membersRouter = Router();
@@ -11,7 +11,7 @@ membersRouter.get('/search', (req, res) => {
     user: currentUser(req),
     query: null,
     results: null,
-    duplicateButton: Boolean(peekFault('duplicate_button')),
+    duplicateButton: Boolean(triggerFault('duplicate_button')),
     nativeDialogText: consumeNativeDialog(),
   });
 });
@@ -25,7 +25,7 @@ membersRouter.post('/search', (req, res) => {
     user: currentUser(req),
     query,
     results: searchMembers(query),
-    duplicateButton: Boolean(peekFault('duplicate_button')),
+    duplicateButton: Boolean(triggerFault('duplicate_button')),
     nativeDialogText: consumeNativeDialog(),
   });
 });

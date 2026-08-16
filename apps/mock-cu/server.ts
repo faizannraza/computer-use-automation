@@ -6,6 +6,7 @@
  *
  * It exists so every scenario in /evidence/ is reproducible offline.
  */
+import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';

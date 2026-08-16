@@ -34,9 +34,15 @@ export class TerminalOperator implements Operator {
       ].join('\n'),
     );
     const rl = readline.createInterface({ input: process.stdin, output: process.stderr });
+    // stdin EOF (Ctrl+D, or a non-interactive pipe) must resolve the
+    // intervention as an abort — a handoff that can never be answered must
+    // not hang the run forever with no result written.
+    const closed = new Promise<null>((resolve) => rl.once('close', () => resolve(null)));
     try {
       for (;;) {
-        const answer = (await rl.question(`resolution (${req.options.join('/')}) [+ optional note]: `)).trim();
+        const raw = await Promise.race([rl.question(`resolution (${req.options.join('/')}) [+ optional note]: `), closed]);
+        if (raw === null) return { action: 'abort', note: 'operator input stream closed (EOF) — aborting' };
+        const answer = raw.trim();
         const [word, ...noteParts] = answer.split(/\s+/);
         const action = word?.toLowerCase() as OperatorAction;
         if (req.options.includes(action)) {

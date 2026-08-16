@@ -18,6 +18,7 @@ import { Redactor, maskValue } from '../policy/redact.js';
 import type { ParamSpec } from '../schema/capability.js';
 import type { Observation } from '../core/types.js';
 import { PlaywrightWebSurface } from '../surface/web/playwrightSurface.js';
+import { CapabilityArtifactSchema, computeContentHash } from '../schema/capability.js';
 import { compileTrace } from './compile.js';
 import type { OutputHint } from './compile.js';
 import { Recorder, digestOf, recordedElementOf } from './recorder.js';
@@ -137,7 +138,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
         max_tokens: 8000,
         system: SYSTEM_PROMPT,
         thinking: { type: 'adaptive' },
-        tools: DISCOVERY_TOOLS satisfies Anthropic.Messages.Tool[] as Anthropic.Messages.Tool[],
+        tools: DISCOVERY_TOOLS as Anthropic.Messages.Tool[],
         tool_choice: { type: 'auto', disable_parallel_tool_use: true },
         messages,
       });
@@ -225,26 +226,24 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
     log.event('run_result', { status: 'error', reason });
     return { status: 'error', runId: log.runId, evidenceDir: log.dir, reason, usage };
   }
-  const { artifact, report } = compiled;
+  const { artifact: compiledArtifact, report } = compiled;
+  // Redaction must happen BEFORE hashing: redact the artifact object (a
+  // safety net in case any registered sensitive value leaked into
+  // model-authored prose), then recompute the content hash so the shipped
+  // file is integrity-consistent.
+  const artifact = CapabilityArtifactSchema.parse(JSON.parse(redactor.apply(JSON.stringify(compiledArtifact))));
+  artifact.integrity.contentHash = computeContentHash(artifact);
   log.writeJson('compile-report', report);
   log.writeJson('artifact', artifact);
   const artifactPath = path.join(
     opts.saveDir ?? 'capabilities',
     `${artifact.capability.id}@${artifact.capability.version}.json`,
   );
-  // The shipped artifact passes through the redactor too: if any registered
-  // sensitive value leaked into model-authored prose (title, description,
-  // intents), it is masked here rather than persisted.
-  writeFileSync(artifactPath, redactor.apply(JSON.stringify(artifact, null, 2)) + '\n');
+  writeFileSync(artifactPath, JSON.stringify(artifact, null, 2) + '\n');
   log.event('run_result', { status: 'compiled', artifactPath, usage });
   return { status: 'compiled', runId: log.runId, evidenceDir: log.dir, artifactPath, usage };
 
   // -------------------------------------------------------------------------
-
-  async function observeAndRecordable(): Promise<Observation> {
-    const obs = await surface.observe();
-    return obs;
-  }
 
   interface ToolOutcome {
     blocks: ({ type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/png'; data: string } })[];
@@ -260,15 +259,15 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
     try {
       switch (name) {
         case 'observe': {
-          const obs = await observeAndRecordable();
+          const obs = await surface.observe();
           log.screenshot('observe', obs.screenshot);
           return { blocks: renderObservationBlocks(obs) };
         }
         case 'navigate': {
-          const before = digestOf(surface.lastObservation() ?? (await observeAndRecordable()));
+          const before = digestOf(surface.lastObservation() ?? (await surface.observe()));
           await gate.execute({ kind: 'navigate', url: String(input['url']) }, { risk: 'read' });
           await surface.settle();
-          const obs = await observeAndRecordable();
+          const obs = await surface.observe();
           const shot = log.screenshot('navigate', obs.screenshot);
           recorder.record({
             kind: 'navigate',
@@ -289,7 +288,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
             { risk: irreversible ? 'irreversible' : 'reversible', frameUrl: frameUrlOf(el) },
           );
           await surface.settle();
-          const obs = await observeAndRecordable();
+          const obs = await surface.observe();
           const shot = log.screenshot('click', obs.screenshot);
           recorder.record({
             kind: 'activate',
@@ -321,15 +320,17 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
             { kind: 'setValue', ref: el.ref, value },
             { risk: 'reversible', frameUrl: frameUrlOf(el) },
           );
-          const obs = await observeAndRecordable();
+          // No re-observe: typing does not navigate, so refs stay valid — and
+          // the model was promised exactly that (see the observe tool's docs).
+          const digest = digestOf(beforeObs);
           recorder.record({
             kind: 'setValue',
             intent: String(input['intent']),
             risk: 'reversible',
             element: recordedElementOf(el),
             value: paramName !== undefined ? { param: paramName } : { literal: literal! },
-            before: digestOf(beforeObs),
-            after: digestOf(obs),
+            before: digest,
+            after: digest,
           });
           return textOut(paramName !== undefined ? `Entered {param:${paramName}} into [${el.ref}].` : `Entered ${JSON.stringify(literal)} into [${el.ref}].`);
         }
@@ -340,15 +341,15 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
             { kind: 'choose', ref: el.ref, option },
             { risk: 'reversible', frameUrl: frameUrlOf(el) },
           );
-          const obs = await observeAndRecordable();
+          const digest = digestOf(beforeObs);
           recorder.record({
             kind: 'choose',
             intent: String(input['intent']),
             risk: 'reversible',
             element: recordedElementOf(el),
             option: { literal: option },
-            before: digestOf(beforeObs),
-            after: digestOf(obs),
+            before: digest,
+            after: digest,
           });
           return textOut(`Chose ${JSON.stringify(option)} in [${el.ref}].`);
         }
@@ -386,11 +387,11 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
           return textOut(`Read ${JSON.stringify(res.readValue ?? '')} as output '${outputName}'.`);
         }
         case 'answer_dialog': {
-          const before = digestOf(surface.lastObservation() ?? (await observeAndRecordable()));
+          const before = digestOf(surface.lastObservation() ?? (await surface.observe()));
           const accept = input['accept'] === true;
           await gate.execute({ kind: 'answerDialog', accept }, { risk: 'reversible' });
           await surface.settle();
-          const obs = await observeAndRecordable();
+          const obs = await surface.observe();
           recorder.record({
             kind: 'answerDialog',
             intent: String(input['intent']),
@@ -411,7 +412,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
           const code = String(input['code']);
           const marker = String(input['marker']);
           if (!OUTCOME_CODE_RE.test(code)) return textOut('code must be SCREAMING_SNAKE.', true);
-          const obs = surface.lastObservation() ?? (await observeAndRecordable());
+          const obs = surface.lastObservation() ?? (await surface.observe());
           if (!obs.visibleText.toLowerCase().includes(marker.toLowerCase())) {
             return textOut(`Marker ${JSON.stringify(marker)} is NOT visible on the current screen — declare only states you are observing.`, true);
           }

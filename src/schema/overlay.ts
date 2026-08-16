@@ -52,7 +52,17 @@ export interface ResolvedCapability {
 export function satisfiesCaret(version: string, range: string): boolean {
   const base = range.slice(1).split('.').map(Number);
   const v = version.split('.').map(Number);
-  if (v[0] !== (base[0] ?? 0)) return false;
+  if ((v[0] ?? 0) !== (base[0] ?? 0)) return false;
+  if ((base[0] ?? 0) === 0) {
+    // npm semver semantics for 0.x: the leftmost non-zero segment is the
+    // compatibility pivot — ^0.2.3 admits 0.2.x >= 0.2.3 but NOT 0.3.0,
+    // and ^0.0.3 admits only 0.0.3.
+    if (base.length === 1) return true; // "^0"
+    if ((v[1] ?? 0) !== (base[1] ?? 0)) return false;
+    if (base.length === 2) return true; // "^0.2"
+    if ((base[1] ?? 0) === 0) return (v[2] ?? 0) === (base[2] ?? 0);
+    return (v[2] ?? 0) >= (base[2] ?? 0);
+  }
   for (let i = 1; i < 3; i++) {
     const want = base[i];
     if (want === undefined) return true; // "^1" — any 1.x.x
@@ -84,9 +94,18 @@ export function applyOverlay(artifact: CapabilityArtifact, overlay: TenantOverla
         step.action.target.strategies.unshift(patch.locator);
         break;
       }
-      case 'addRecovery':
+      case 'addRecovery': {
+        const codes = new Set([
+          ...patched.outcomes.map((o) => o.code),
+          ...patched.recoveries.map((r) => r.code),
+          ...patched.anomalies.map((x) => x.code),
+        ]);
+        if (codes.has(patch.recovery.code)) {
+          throw new Error(`overlay recovery '${patch.recovery.code}' duplicates a code already declared by the artifact`);
+        }
         patched.recoveries.push(patch.recovery);
         break;
+      }
       case 'overrideWait': {
         const step = patched.steps.find((s) => s.id === patch.stepId);
         if (!step) throw new Error(`overlay patch targets unknown step '${patch.stepId}'`);
