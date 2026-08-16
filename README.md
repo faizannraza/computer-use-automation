@@ -1,6 +1,6 @@
 # Computer-Use Automation System
 
-A small but real end-to-end system that gives AI agents *hands* inside legacy back-office applications that have no API:
+An end-to-end system that lets AI agents operate legacy back-office applications that have no API:
 
 1. An **LLM-driven agent** takes a natural-language goal and operates a live UI (observe → decide → act), with every action passing through a policy gate.
 2. The successful run is **compiled — deterministically, no LLM — into a typed, versioned capability artifact**: a reviewable contract with typed inputs, typed outputs, and named business outcomes.
@@ -59,7 +59,6 @@ npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.j
 npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
   --param memberId=12345 --inject-fault duplicate_button:on
 # → status failed, TARGET_AMBIGUOUS at s6, expected/observed + both candidates + screenshot
-# (demo runs write new folders under evidence/ by design; `git clean -fd evidence/` tidies up)
 ```
 
 **Human-in-the-loop** — the risky flow: you are the operator. A headed browser opens; the terminal stops you twice (type `approve` for the irreversible confirm; then enter supervisor PIN `7391` in the browser window and type `resume`):
@@ -94,6 +93,8 @@ npm run cu -- catalog --invoke member.readSavingsBalance --param memberId=10001
 
 `replay`/`catalog` exit codes: `0` = success **or** a named business outcome (both legitimate results), `2` = failed, `3` = escalated.
 
+Demo runs write new folders under `evidence/` by design (every run leaves evidence); `git clean -fd evidence/` restores the committed set.
+
 ## Repo map
 
 ```
@@ -110,10 +111,9 @@ capabilities/       shipped artifacts (readSavingsBalance is LLM-discovered; ope
 tenants/            tenant overlay example (bindings + additive patches)
 policies/           the default allowlist/risk policy
 evidence/           discovery + replay runs (see evidence/README.md for the index)
-tests/              94 tests incl. live end-to-end scenarios against the mock app
-                    (fixtures/ holds a hand-authored "gold" artifact used as the
-                    engine test fixture and the compiler's diff baseline — the
-                    SHIPPED readSavingsBalance artifact is the LLM-discovered one)
+tests/              94 tests (~20 s) incl. live end-to-end scenarios against the mock app;
+                    fixtures/ holds a hand-authored gold artifact used only as
+                    test fixture and compiler diff baseline
 REPORT.md           design write-up
 ```
 
