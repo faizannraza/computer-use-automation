@@ -24,7 +24,7 @@ cp .env.example .env        # defaults work as-is for everything except discover
 **Keys/config:** only `cu discover` (the LLM-driven discovery run) needs `ANTHROPIC_API_KEY` in `.env`. **Everything else — the mock app, deterministic replay, the catalog, human-in-the-loop, and the entire test suite — runs fully offline with no key**, because the production path never calls a model. The committed artifact under `capabilities/` was produced by a real discovery run (its evidence is in `evidence/discovery/`), so you can exercise replay without re-running discovery.
 
 ```bash
-npm test                    # 88 tests: schema, resolver, gate, engine, compiler, HITL — all local
+npm test                    # 94 tests: schema, resolver, gate, engine, compiler, HITL — all local
 ```
 
 ## Demo path
@@ -59,6 +59,7 @@ npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.j
 npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
   --param memberId=12345 --inject-fault duplicate_button:on
 # → status failed, TARGET_AMBIGUOUS at s6, expected/observed + both candidates + screenshot
+# (demo runs write new folders under evidence/ by design; `git clean -fd evidence/` tidies up)
 ```
 
 **Human-in-the-loop** — the risky flow: you are the operator. A headed browser opens; the terminal stops you twice (type `approve` for the irreversible confirm; then enter supervisor PIN `7391` in the browser window and type `resume`):
@@ -109,7 +110,10 @@ capabilities/       shipped artifacts (readSavingsBalance is LLM-discovered; ope
 tenants/            tenant overlay example (bindings + additive patches)
 policies/           the default allowlist/risk policy
 evidence/           discovery + replay runs (see evidence/README.md for the index)
-tests/              88 tests incl. live end-to-end scenarios against the mock app
+tests/              94 tests incl. live end-to-end scenarios against the mock app
+                    (fixtures/ holds a hand-authored "gold" artifact used as the
+                    engine test fixture and the compiler's diff baseline — the
+                    SHIPPED readSavingsBalance artifact is the LLM-discovered one)
 REPORT.md           design write-up
 ```
 

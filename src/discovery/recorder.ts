@@ -41,6 +41,8 @@ export interface RecordedAction {
   readValue?: string;
   /** True while an exceptional-state probe is active — excluded from the step spine. */
   probe: boolean;
+  /** Which probe (outcome code) this action belongs to, when probe is true. */
+  probeCode?: string;
   before: StateDigest;
   after: StateDigest;
   screenshotRef?: string;
@@ -90,37 +92,39 @@ export function recordedElementOf(el: ObservedElement): RecordedElement {
 
 export class Recorder {
   private trace: DiscoveryTrace;
-  private probeActive = false;
+  private currentProbeCode: string | undefined;
   private seq = 0;
 
   constructor(goal: string) {
     this.trace = { goal, actions: [], outcomes: [] };
   }
 
-  beginProbe(): void {
-    this.probeActive = true;
+  beginProbe(outcomeCode: string): void {
+    this.currentProbeCode = outcomeCode;
   }
 
-  record(action: Omit<RecordedAction, 'seq' | 'probe'>): void {
+  record(action: Omit<RecordedAction, 'seq' | 'probe' | 'probeCode'>): void {
     this.seq += 1;
-    this.trace.actions.push({ ...action, seq: this.seq, probe: this.probeActive });
+    this.trace.actions.push({
+      ...action,
+      seq: this.seq,
+      probe: this.currentProbeCode !== undefined,
+      ...(this.currentProbeCode !== undefined ? { probeCode: this.currentProbeCode } : {}),
+    });
   }
 
-  /** Retract the last N SPINE actions (probe actions are evidence, not spine). */
+  /** Retract the last N recorded actions — trailing actions regardless of
+   * probe state (the model's "my last actions were wrong" applies to
+   * whatever it just did, probe or spine). */
   retract(n: number): number {
-    let dropped = 0;
-    for (let i = this.trace.actions.length - 1; i >= 0 && dropped < n; i--) {
-      if (!this.trace.actions[i]!.probe) {
-        this.trace.actions.splice(i, 1);
-        dropped += 1;
-      }
-    }
+    const dropped = Math.min(n, this.trace.actions.length);
+    this.trace.actions.splice(this.trace.actions.length - dropped, dropped);
     return dropped;
   }
 
   declareOutcome(outcome: DeclaredOutcome): void {
     this.trace.outcomes.push(outcome);
-    this.probeActive = false; // declaring the outcome ends the probe
+    this.currentProbeCode = undefined; // declaring the outcome ends the probe
   }
 
   finish(done: { capabilityId: string; title: string; description: string }): void {

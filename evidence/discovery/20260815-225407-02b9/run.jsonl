@@ -1,0 +1,46 @@
+{"ts":"2026-08-16T03:54:07.475Z","type":"run_start","goal":"Sign in to MockCore Teller. Look up member 12345 and read the current balance of their REGULAR SAVINGS account from the member's accounts table into an output named 'savingsBalance'. After reading the balance, probe one exceptional state: search for member number 99999 (which does not exist) and declare the not-found behavior as business outcome MEMBER_NOT_FOUND with a marker you can see on screen. Then declare_done with capability_id 'member.readSavingsBalance'.","model":"claude-opus-4-8","params":{"memberId":"12345","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-16T03:54:10.317Z","type":"llm_turn","turn":1,"stopReason":"tool_use","inputTokens":3529,"outputTokens":106}
+{"ts":"2026-08-16T03:54:10.317Z","type":"tool_use","turn":1,"tool":"navigate","input":{"url":"http://localhost:4173","intent":"Open MockCore Teller application to begin sign-in."}}
+{"ts":"2026-08-16T03:54:10.348Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-16T03:54:13.283Z","type":"llm_turn","turn":2,"stopReason":"tool_use","inputTokens":5231,"outputTokens":102}
+{"ts":"2026-08-16T03:54:13.283Z","type":"tool_use","turn":2,"tool":"type","input":{"ref":0,"intent":"Enter operator ID for sign-in.","param":"operatorId"}}
+{"ts":"2026-08-16T03:54:13.284Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:54:15.992Z","type":"llm_turn","turn":3,"stopReason":"tool_use","inputTokens":4016,"outputTokens":103}
+{"ts":"2026-08-16T03:54:15.992Z","type":"tool_use","turn":3,"tool":"type","input":{"ref":1,"intent":"Enter operator password for sign-in.","param":"operatorPassword"}}
+{"ts":"2026-08-16T03:54:15.993Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:54:18.024Z","type":"llm_turn","turn":4,"stopReason":"tool_use","inputTokens":4143,"outputTokens":76}
+{"ts":"2026-08-16T03:54:18.025Z","type":"tool_use","turn":4,"tool":"click","input":{"ref":2,"intent":"Submit sign-in credentials."}}
+{"ts":"2026-08-16T03:54:18.025Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:54:20.856Z","type":"llm_turn","turn":5,"stopReason":"tool_use","inputTokens":6740,"outputTokens":97}
+{"ts":"2026-08-16T03:54:20.856Z","type":"tool_use","turn":5,"tool":"click","input":{"ref":3,"intent":"Open Member Search to look up the member."}}
+{"ts":"2026-08-16T03:54:20.857Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:23.541Z","type":"llm_turn","turn":6,"stopReason":"tool_use","inputTokens":7661,"outputTokens":98}
+{"ts":"2026-08-16T03:54:23.542Z","type":"tool_use","turn":6,"tool":"type","input":{"ref":10,"intent":"Enter the member number to search for.","param":"memberId"}}
+{"ts":"2026-08-16T03:54:23.542Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:25.510Z","type":"llm_turn","turn":7,"stopReason":"tool_use","inputTokens":6441,"outputTokens":72}
+{"ts":"2026-08-16T03:54:25.510Z","type":"tool_use","turn":7,"tool":"click","input":{"ref":11,"intent":"Execute the member search."}}
+{"ts":"2026-08-16T03:54:25.511Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:29.052Z","type":"llm_turn","turn":8,"stopReason":"tool_use","inputTokens":9001,"outputTokens":97}
+{"ts":"2026-08-16T03:54:29.053Z","type":"tool_use","turn":8,"tool":"click","input":{"ref":12,"intent":"Open the member's profile to view their accounts."}}
+{"ts":"2026-08-16T03:54:29.053Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:32.515Z","type":"llm_turn","turn":9,"stopReason":"tool_use","inputTokens":11391,"outputTokens":148}
+{"ts":"2026-08-16T03:54:32.515Z","type":"tool_use","turn":9,"tool":"read","input":{"ref":36,"output_name":"savingsBalance","intent":"Read the REGULAR SAVINGS account balance for the member."}}
+{"ts":"2026-08-16T03:54:32.515Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:54:34.887Z","type":"llm_turn","turn":10,"stopReason":"tool_use","inputTokens":10264,"outputTokens":109}
+{"ts":"2026-08-16T03:54:34.887Z","type":"tool_use","turn":10,"tool":"click","input":{"ref":11,"intent":"Return to Member Search to probe the not-found case."}}
+{"ts":"2026-08-16T03:54:34.888Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:37.948Z","type":"llm_turn","turn":11,"stopReason":"tool_use","inputTokens":12536,"outputTokens":121}
+{"ts":"2026-08-16T03:54:37.948Z","type":"tool_use","turn":11,"tool":"begin_probe","input":{"outcome_code":"MEMBER_NOT_FOUND","intent":"Probe searching for a nonexistent member number 99999."}}
+{"ts":"2026-08-16T03:54:37.949Z","type":"probe_started","code":"MEMBER_NOT_FOUND"}
+{"ts":"2026-08-16T03:54:40.724Z","type":"llm_turn","turn":12,"stopReason":"tool_use","inputTokens":11367,"outputTokens":106}
+{"ts":"2026-08-16T03:54:40.725Z","type":"tool_use","turn":12,"tool":"type","input":{"ref":10,"intent":"Enter a nonexistent member number to trigger not-found.","text":"99999"}}
+{"ts":"2026-08-16T03:54:40.726Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:43.011Z","type":"llm_turn","turn":13,"stopReason":"tool_use","inputTokens":11491,"outputTokens":76}
+{"ts":"2026-08-16T03:54:43.011Z","type":"tool_use","turn":13,"tool":"click","input":{"ref":11,"intent":"Search for the nonexistent member."}}
+{"ts":"2026-08-16T03:54:43.012Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:54:46.472Z","type":"llm_turn","turn":14,"stopReason":"tool_use","inputTokens":13742,"outputTokens":167}
+{"ts":"2026-08-16T03:54:46.473Z","type":"tool_use","turn":14,"tool":"declare_outcome","input":{"code":"MEMBER_NOT_FOUND","description":"When searching for a member number that does not exist, the Member Search returns no results and displays a message indi…","marker":"No members matched your search."}}
+{"ts":"2026-08-16T03:54:46.473Z","type":"outcome_declared","code":"MEMBER_NOT_FOUND","marker":"No members matched your search."}
+{"ts":"2026-08-16T03:54:50.714Z","type":"llm_turn","turn":15,"stopReason":"tool_use","inputTokens":12605,"outputTokens":275}
+{"ts":"2026-08-16T03:54:50.714Z","type":"tool_use","turn":15,"tool":"declare_done","input":{"capability_id":"member.readSavingsBalance","title":"Read Member REGULAR SAVINGS Balance","description":"Signs into MockCore Teller with operator credentials, searches for a member by member number (parameter memberId), opens…"}}
+{"ts":"2026-08-16T03:54:50.769Z","type":"run_result","status":"compiled","artifactPath":"capabilities/member.readSavingsBalance@1.0.0.json","usage":{"inputTokens":130158,"outputTokens":1753,"turns":15}}

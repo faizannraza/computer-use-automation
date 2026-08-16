@@ -63,6 +63,7 @@ Rules:
 - If a native dialog opens, read its text and answer_dialog deliberately.
 - Clicks that would commit a permanent business change (posting transactions, final confirmations) must be marked irreversible=true.
 - Extract requested data with read into a well-named output.
+- Never restate sensitive on-screen values (balances, member PII) in your intents, descriptions, or outcome markers — refer to them by output name. This is regulated financial data.
 - If the task asks you to probe an exceptional state (e.g. a not-found case), call begin_probe first, perform the probe, then declare_outcome with a marker you can literally see on screen. Probe actions are excluded from the replayable flow.
 - If you took a wrong turn, navigate back on the app's own controls and use revise to retract the wrong recorded actions.
 - Finish with declare_done (capability_id like 'member.readSavingsBalance') once the goal is fully accomplished, or give_up with a precise reason if you are stuck.`;
@@ -202,25 +203,39 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   }
 
   // ---- compile ----
-  const { artifact, report } = compileTrace({
-    trace: recorder.get(),
-    paramSpecs: opts.paramSpecs,
-    callerParamValues,
-    outputHints: opts.outputHints,
-    baseUrl: opts.baseUrl,
-    model,
-    discoveryRunId: log.runId,
-    app: opts.app ?? { appId: 'mockcore-teller', vendor: 'MockCore' },
-    version: opts.artifactVersion ?? '1.0.0',
-  });
+  // The recorded trace is evidence in its own right: persist it BEFORE
+  // compiling, so a compiler defect can never destroy the record of what
+  // the (paid) discovery run actually did.
   log.writeJson('trace', recorder.get());
+  let compiled;
+  try {
+    compiled = compileTrace({
+      trace: recorder.get(),
+      paramSpecs: opts.paramSpecs,
+      callerParamValues,
+      outputHints: opts.outputHints,
+      baseUrl: opts.baseUrl,
+      model,
+      discoveryRunId: log.runId,
+      app: opts.app ?? { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: opts.artifactVersion ?? '1.0.0',
+    });
+  } catch (err) {
+    const reason = `compile failed: ${err instanceof Error ? err.message : String(err)}`;
+    log.event('run_result', { status: 'error', reason });
+    return { status: 'error', runId: log.runId, evidenceDir: log.dir, reason, usage };
+  }
+  const { artifact, report } = compiled;
   log.writeJson('compile-report', report);
   log.writeJson('artifact', artifact);
   const artifactPath = path.join(
     opts.saveDir ?? 'capabilities',
     `${artifact.capability.id}@${artifact.capability.version}.json`,
   );
-  writeFileSync(artifactPath, JSON.stringify(artifact, null, 2) + '\n');
+  // The shipped artifact passes through the redactor too: if any registered
+  // sensitive value leaked into model-authored prose (title, description,
+  // intents), it is masked here rather than persisted.
+  writeFileSync(artifactPath, redactor.apply(JSON.stringify(artifact, null, 2)) + '\n');
   log.event('run_result', { status: 'compiled', artifactPath, usage });
   return { status: 'compiled', runId: log.runId, evidenceDir: log.dir, artifactPath, usage };
 
@@ -269,7 +284,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
         case 'click': {
           const { obs: beforeObs, el } = requireRef(input);
           const irreversible = input['irreversible'] === true;
-          await gate.execute({ kind: 'activate', ref: el.ref }, { risk: irreversible ? 'irreversible' : 'reversible' });
+          await gate.execute(
+            { kind: 'activate', ref: el.ref },
+            { risk: irreversible ? 'irreversible' : 'reversible', frameUrl: frameUrlOf(el) },
+          );
           await surface.settle();
           const obs = await observeAndRecordable();
           const shot = log.screenshot('click', obs.screenshot);
@@ -299,7 +317,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
           } else {
             value = literal!;
           }
-          await gate.execute({ kind: 'setValue', ref: el.ref, value }, { risk: 'reversible' });
+          await gate.execute(
+            { kind: 'setValue', ref: el.ref, value },
+            { risk: 'reversible', frameUrl: frameUrlOf(el) },
+          );
           const obs = await observeAndRecordable();
           recorder.record({
             kind: 'setValue',
@@ -315,7 +336,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
         case 'choose': {
           const { obs: beforeObs, el } = requireRef(input);
           const option = String(input['option']);
-          await gate.execute({ kind: 'choose', ref: el.ref, option }, { risk: 'reversible' });
+          await gate.execute(
+            { kind: 'choose', ref: el.ref, option },
+            { risk: 'reversible', frameUrl: frameUrlOf(el) },
+          );
           const obs = await observeAndRecordable();
           recorder.record({
             kind: 'choose',
@@ -332,7 +356,11 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
           const { obs: beforeObs, el } = requireRef(input);
           const outputName = String(input['output_name']);
           if (!/^[a-z][a-zA-Z0-9]*$/.test(outputName)) return textOut('output_name must be lowerCamelCase.', true);
-          const res = await gate.execute({ kind: 'read', ref: el.ref }, { risk: 'read' });
+          const hintSensitivity = opts.outputHints[outputName]?.sensitivity ?? 'none';
+          const res = await gate.execute(
+            { kind: 'read', ref: el.ref },
+            { risk: 'read', frameUrl: frameUrlOf(el) },
+          );
           const digest = digestOf(beforeObs);
           recorder.record({
             kind: 'read',
@@ -344,6 +372,17 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
             before: digest,
             after: digest,
           });
+          // Sensitive extractions are registered with the redactor the moment
+          // they exist (so trace/transcript/evidence writes mask them) and are
+          // shown to the MODEL only in masked form — a value the model never
+          // sees is a value it cannot echo into descriptions or intents.
+          if ((hintSensitivity === 'pii' || hintSensitivity === 'secret') && res.readValue !== undefined && res.readValue !== '') {
+            redactor.register(outputName, res.readValue, hintSensitivity);
+            const masked = maskValue(outputName, res.readValue, hintSensitivity);
+            return textOut(
+              `Read a ${hintSensitivity}-classified value (${JSON.stringify(masked)}) as output '${outputName}'. The raw value is withheld from this transcript by policy — do not attempt to restate it from the screen.`,
+            );
+          }
           return textOut(`Read ${JSON.stringify(res.readValue ?? '')} as output '${outputName}'.`);
         }
         case 'answer_dialog': {
@@ -364,7 +403,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
         case 'begin_probe': {
           const code = String(input['outcome_code']);
           if (!OUTCOME_CODE_RE.test(code)) return textOut('outcome_code must be SCREAMING_SNAKE.', true);
-          recorder.beginProbe();
+          recorder.beginProbe(code);
           log.event('probe_started', { code });
           return textOut(`Probe started for ${code}. Actions until declare_outcome are excluded from the replayable flow.`);
         }
@@ -409,6 +448,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
       }
       return textOut(`ERROR: ${err instanceof Error ? err.message : String(err)}`, true);
     }
+  }
+
+  function frameUrlOf(el: Observation['elements'][number]): string | undefined {
+    return el.framePath[el.framePath.length - 1]?.url;
   }
 
   function requireRef(input: Record<string, unknown>): { obs: Observation; el: Observation['elements'][number] } {

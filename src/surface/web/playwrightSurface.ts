@@ -202,8 +202,27 @@ export class PlaywrightWebSurface implements Surface {
       }
       case 'activate': {
         const handle = await this.elementHandle(action.ref);
-        await handle.click({ timeout: 5000 });
-        return {};
+        // The classic legacy pattern — onclick="return confirm(...)" — opens
+        // a native dialog SYNCHRONOUSLY during the click. We hold dialogs
+        // rather than auto-answer, and a held dialog blocks page JS, so the
+        // click call itself may never resolve. Race completion against a
+        // dialog appearing: if one opened, the click landed and the dialog
+        // is simply the next observed state.
+        const clickPromise = handle.click({ timeout: 5000 }).then(
+          () => ({ ok: true as const }),
+          (e: unknown) => ({ ok: false as const, e }),
+        );
+        for (;;) {
+          if (this.heldDialog) return {}; // dialog open — click landed; observe() reports it
+          const winner = await Promise.race([
+            clickPromise,
+            new Promise<'tick'>((r) => setTimeout(() => r('tick'), 50)),
+          ]);
+          if (winner === 'tick') continue; // click still in flight (bounded by its own 5s timeout)
+          if (winner.ok) return {};
+          if (this.heldDialog) return {}; // it "failed" only because the dialog blocks the page
+          throw winner.e instanceof Error ? winner.e : new Error(String(winner.e));
+        }
       }
       case 'setValue': {
         const handle = await this.elementHandle(action.ref);

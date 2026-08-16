@@ -1,0 +1,74 @@
+{"ts":"2026-08-16T03:55:43.350Z","type":"run_start","capability":"member.openSubAccount@1.0.0","tenant":null,"params":{"memberId":"12345","acctType":"HOLIDAY CLUB","nickname":"Vacation Fund","initialDeposit":"50.00","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-16T03:55:43.476Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-16T03:55:43.684Z","type":"step_start","stepId":"s1","intent":"Enter the operator ID on the sign-in screen","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:43.714Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":0.95}
+{"ts":"2026-08-16T03:55:43.714Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:55:43.761Z","type":"step_ok","stepId":"s1","ms":77}
+{"ts":"2026-08-16T03:55:43.761Z","type":"step_start","stepId":"s2","intent":"Enter the operator password","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:43.777Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":0.95}
+{"ts":"2026-08-16T03:55:43.777Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:55:43.810Z","type":"step_ok","stepId":"s2","ms":49}
+{"ts":"2026-08-16T03:55:43.810Z","type":"step_start","stepId":"s3","intent":"Sign in and land on the teller home screen","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:43.845Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:43.845Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:55:44.233Z","type":"step_ok","stepId":"s3","ms":423}
+{"ts":"2026-08-16T03:55:44.234Z","type":"step_start","stepId":"s4","intent":"Open Member Search from the main menu","kind":"activate","risk":"read"}
+{"ts":"2026-08-16T03:55:44.268Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:44.268Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:55:44.637Z","type":"step_ok","stepId":"s4","ms":403}
+{"ts":"2026-08-16T03:55:44.638Z","type":"step_start","stepId":"s5","intent":"Enter the member number in the search field","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:44.683Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":0.95}
+{"ts":"2026-08-16T03:55:44.683Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:44.730Z","type":"step_ok","stepId":"s5","ms":92}
+{"ts":"2026-08-16T03:55:44.730Z","type":"step_start","stepId":"s6","intent":"Run the search and wait for the results table (or the no-match message)","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:44.763Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:44.764Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:45.143Z","type":"step_ok","stepId":"s6","ms":413}
+{"ts":"2026-08-16T03:55:45.143Z","type":"step_start","stepId":"s7","intent":"Open the matching member's detail screen from the results row","kind":"activate","risk":"read"}
+{"ts":"2026-08-16T03:55:45.203Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"textAnchor","score":0.9}
+{"ts":"2026-08-16T03:55:45.203Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:55:45.557Z","type":"step_ok","stepId":"s7","ms":414}
+{"ts":"2026-08-16T03:55:45.558Z","type":"step_start","stepId":"s8","intent":"Open the new sub-account form for this member","kind":"activate","risk":"read"}
+{"ts":"2026-08-16T03:55:45.601Z","type":"resolved","stepId":"s8","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:45.602Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:55:45.957Z","type":"step_ok","stepId":"s8","ms":399}
+{"ts":"2026-08-16T03:55:45.958Z","type":"step_start","stepId":"s9","intent":"Choose the account type to open","kind":"choose","risk":"reversible"}
+{"ts":"2026-08-16T03:55:45.999Z","type":"resolved","stepId":"s9","strategyIndex":0,"strategy":"labelText","score":0.95}
+{"ts":"2026-08-16T03:55:46.000Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.047Z","type":"step_ok","stepId":"s9","ms":89}
+{"ts":"2026-08-16T03:55:46.047Z","type":"step_start","stepId":"s10","intent":"Enter the sub-account nickname","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.080Z","type":"resolved","stepId":"s10","strategyIndex":0,"strategy":"labelText","score":0.95}
+{"ts":"2026-08-16T03:55:46.081Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.115Z","type":"step_ok","stepId":"s10","ms":68}
+{"ts":"2026-08-16T03:55:46.115Z","type":"step_start","stepId":"s11","intent":"Enter the initial deposit amount","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.148Z","type":"resolved","stepId":"s11","strategyIndex":0,"strategy":"labelText","score":0.95}
+{"ts":"2026-08-16T03:55:46.148Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.180Z","type":"step_ok","stepId":"s11","ms":65}
+{"ts":"2026-08-16T03:55:46.180Z","type":"step_start","stepId":"s12","intent":"Continue to the review screen (validation happens here)","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.215Z","type":"resolved","stepId":"s12","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:46.215Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:46.591Z","type":"step_ok","stepId":"s12","ms":411}
+{"ts":"2026-08-16T03:55:46.591Z","type":"step_start","stepId":"s13","intent":"Confirm opening the sub-account (IRREVERSIBLE: posts the opening deposit)","kind":"activate","risk":"irreversible"}
+{"ts":"2026-08-16T03:55:46.651Z","type":"resolved","stepId":"s13","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:46.651Z","type":"gate","kind":"activate","decision":{"allowed":false,"code":"RISK_NEEDS_ESCALATION","reason":"irreversible action requires human approval (policy mode: escalate)"},"location":"http://localhost:4173/","risk":"irreversible"}
+{"ts":"2026-08-16T03:55:46.652Z","type":"intervention_raised","id":"int-01","kind":"approve_risky","stepId":"s13","reason":"RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)"}
+{"ts":"2026-08-16T03:55:46.657Z","type":"intervention_resolved","id":"int-01","kind":"approve_risky","reason":"RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)","resolution":"approve","humanActions":0,"heldForMs":5,"stepId":"s13","note":"Scripted operator (same Operator seam as the terminal console): reviewed pending confirm, approving."}
+{"ts":"2026-08-16T03:55:46.658Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"irreversible"}
+{"ts":"2026-08-16T03:55:47.043Z","type":"recovery_applied","code":"SUPERVISOR_AUTH_REQUIRED","attempt":1,"handler":"escalate"}
+{"ts":"2026-08-16T03:55:47.043Z","type":"intervention_raised","id":"int-02","kind":"human_action_required","stepId":"s13","reason":"SUPERVISOR_AUTH_REQUIRED: The app demands supervisor authorization (PRM-4031) before the sub-account can be opened. Only a person with the supervisor PIN can clear this on the live session."}
+{"ts":"2026-08-16T03:55:47.087Z","type":"human_action","kind":"change","target":"input[password] label=\"Supervisor PIN\"","valueLength":4}
+{"ts":"2026-08-16T03:55:47.087Z","type":"human_action","kind":"click","target":"input[submit] \"Authorize\""}
+{"ts":"2026-08-16T03:55:47.088Z","type":"human_action","kind":"submit","target":"form"}
+{"ts":"2026-08-16T03:55:47.089Z","type":"intervention_resolved","id":"int-02","kind":"human_action_required","reason":"SUPERVISOR_AUTH_REQUIRED: The app demands supervisor authorization (PRM-4031) before the sub-account can be opened. Only a person with the supervisor PIN can clear this on the live session.","resolution":"resume","humanActions":3,"heldForMs":45,"stepId":"s13","note":"Scripted operator: entered the supervisor PIN on the live session and authorized."}
+{"ts":"2026-08-16T03:55:47.278Z","type":"step_ok","stepId":"s13","ms":687}
+{"ts":"2026-08-16T03:55:47.278Z","type":"step_start","stepId":"s14","intent":"Read the confirmation number from the confirmation screen","kind":"read","risk":"read"}
+{"ts":"2026-08-16T03:55:47.316Z","type":"resolved","stepId":"s14","strategyIndex":0,"strategy":"textAnchor","score":0.85}
+{"ts":"2026-08-16T03:55:47.316Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:55:47.316Z","type":"extracted","stepId":"s14","into":"confirmationNo"}
+{"ts":"2026-08-16T03:55:47.347Z","type":"step_ok","stepId":"s14","ms":69}
+{"ts":"2026-08-16T03:55:47.347Z","type":"step_start","stepId":"s15","intent":"Read the new share suffix from the confirmation screen","kind":"read","risk":"read"}
+{"ts":"2026-08-16T03:55:47.380Z","type":"resolved","stepId":"s15","strategyIndex":0,"strategy":"textAnchor","score":0.85}
+{"ts":"2026-08-16T03:55:47.380Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:55:47.380Z","type":"extracted","stepId":"s15","into":"newSuffix"}
+{"ts":"2026-08-16T03:55:47.413Z","type":"step_ok","stepId":"s15","ms":66}
+{"ts":"2026-08-16T03:55:47.447Z","type":"run_result","status":"success"}

@@ -103,6 +103,12 @@ interface ResultBase {
   recoveriesUsed: RecoveryUse[];
   /** Human handoffs that occurred during the run (empty when fully unattended). */
   interventions: InterventionRecord[];
+  /**
+   * True if any irreversible step completed before this result was produced.
+   * The retry-decision signal for calling agents: a 'failed' result with
+   * irreversibleCompleted=true must NOT be blindly re-invoked.
+   */
+  irreversibleCompleted: boolean;
   startedAt: string;
   finishedAt: string;
 }

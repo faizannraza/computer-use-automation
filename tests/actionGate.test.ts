@@ -56,6 +56,17 @@ describe('ActionGate', () => {
     ).rejects.toMatchObject({ code: 'PATH_DENIED' });
   });
 
+  it('denies element actions whose target FRAME is off-origin, even on an allowed page', async () => {
+    const { surface, act } = fakeSurface(); // page itself is on the allowed origin
+    const gate = new ActionGate(policy, surface);
+    await expect(
+      gate.execute({ kind: 'activate', ref: 3 }, { risk: 'read', frameUrl: 'https://ads.example.com/embed' }),
+    ).rejects.toMatchObject({ code: 'OFF_ORIGIN' });
+    expect(act).not.toHaveBeenCalled();
+    await gate.execute({ kind: 'activate', ref: 3 }, { risk: 'read', frameUrl: 'http://localhost:9999/nav' });
+    expect(act).toHaveBeenCalledOnce();
+  });
+
   it('denies actions while the current page has wandered off-origin', async () => {
     const { surface } = fakeSurface('https://phish.example.com/login');
     const gate = new ActionGate(policy, surface);

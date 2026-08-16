@@ -1,0 +1,71 @@
+{
+  "capabilityId": "member.readSavingsBalance",
+  "version": "1.0.0",
+  "runId": "20260815-225535-3o15",
+  "evidenceDir": "evidence/replay/20260815-225535-3o15",
+  "startedAt": "2026-08-16T03:55:35.379Z",
+  "status": "business_outcome",
+  "code": "MEMBER_NOT_FOUND",
+  "message": "When searching for a member number that does not exist, the Member Search returns no results and displays a message indicating no members matched the search criteria.",
+  "outputs": {},
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter operator ID for sign-in.",
+      "status": "ok",
+      "ms": 75,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator password for sign-in.",
+      "status": "ok",
+      "ms": 101,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit sign-in credentials.",
+      "status": "ok",
+      "ms": 414,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Search to look up the member.",
+      "status": "ok",
+      "ms": 154,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search for.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Execute the member search.",
+      "status": "ok",
+      "ms": 392,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-16T03:55:36.979Z"
+}

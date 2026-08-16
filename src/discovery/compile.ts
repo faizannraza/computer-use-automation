@@ -62,12 +62,18 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   };
 
   // ---- parameterization helpers (value matching, nothing cleverer) ----
+  // Matching is TOKEN-BOUNDED: a param value only substitutes where it is
+  // delimited by non-alphanumerics or string edges, so memberId "123" can
+  // never corrupt "S1234" or an unrelated amount.
   const paramEntries = Object.entries(inputs.callerParamValues).filter(([, v]) => v.length >= 3);
+  const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const paramize = (s: string, where: string): string => {
     let out = s;
     for (const [name, value] of paramEntries) {
-      if (out.includes(value)) {
-        out = out.split(value).join(`{${name}}`);
+      const re = new RegExp(`(^|[^A-Za-z0-9])${escapeRe(value)}(?=$|[^A-Za-z0-9])`, 'g');
+      if (re.test(out)) {
+        re.lastIndex = 0;
+        out = out.replace(re, (_m, pre: string) => `${pre}{${name}}`);
         report.parameterizations.push(`${where}: "${value}" → {${name}}`);
       }
     }
@@ -86,10 +92,19 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   const entrypointUrl = canonicalUrl(spine[0]!.url!, 'entrypoint');
 
   // ---- steps ----
+  // answerDialog actions are runtime evidence, not replayable steps: known
+  // dialogs belong in the artifact's recoveries (a reviewed decision), not
+  // silently baked into the spine.
   const steps: Step[] = [];
   const stepForAction = new Map<number, string>(); // action seq → step id
   let stepNo = 0;
   for (const action of spine.slice(1)) {
+    if (action.kind === 'answerDialog') {
+      report.notes.push(
+        `dialog answered during discovery ("${action.intent}") — excluded from the spine; declare a recovery for it after review`,
+      );
+      continue;
+    }
     stepNo += 1;
     const id = `s${stepNo}`;
     stepForAction.set(action.seq, id);
@@ -245,9 +260,11 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     outputs: {},
   }));
   for (const declared of trace.outcomes) {
+    // Attach each outcome via ITS OWN probe segment (matched by probeCode) —
+    // multiple probes in one run each ground their own detector.
     const probeTrigger = [...trace.actions]
       .reverse()
-      .find((a) => a.probe && a.kind === 'activate' && a.element !== undefined);
+      .find((a) => a.probe && a.probeCode === declared.code && a.kind === 'activate' && a.element !== undefined);
     let attached: Step | undefined;
     if (probeTrigger) {
       const stepId = [...stepForAction.entries()].find(([seq]) => {

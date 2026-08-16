@@ -62,8 +62,8 @@ const trace: DiscoveryTrace = {
       outputName: 'savingsBalance', readValue: '$4,821.97', before: detailDigest, after: detailDigest,
     }),
     // ---- probe (excluded from the spine, grounds the outcome) ----
-    act({ probe: true, kind: 'setValue', intent: 'Probe: enter unknown member', risk: 'reversible', element: { role: 'textbox', name: 'Member No. or Name', label: 'Member No. or Name', framePath: workFrame }, value: { literal: '99999' }, before: detailDigest, after: detailDigest }),
-    act({ probe: true, kind: 'activate', intent: 'Probe: search unknown member', risk: 'reversible', element: { role: 'button', name: 'Search', framePath: workFrame }, before: detailDigest, after: notFoundDigest }),
+    act({ probe: true, probeCode: 'MEMBER_NOT_FOUND', kind: 'setValue', intent: 'Probe: enter unknown member', risk: 'reversible', element: { role: 'textbox', name: 'Member No. or Name', label: 'Member No. or Name', framePath: workFrame }, value: { literal: '99999' }, before: detailDigest, after: detailDigest }),
+    act({ probe: true, probeCode: 'MEMBER_NOT_FOUND', kind: 'activate', intent: 'Probe: search unknown member', risk: 'reversible', element: { role: 'button', name: 'Search', framePath: workFrame }, before: detailDigest, after: notFoundDigest }),
   ],
   outcomes: [
     { code: 'MEMBER_NOT_FOUND', description: 'No member matched.', marker: 'No members matched your search.', observedIn: notFoundDigest },

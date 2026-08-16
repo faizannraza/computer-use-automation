@@ -1,0 +1,40 @@
+{"ts":"2026-08-16T03:55:28.380Z","type":"run_start","capability":"member.readSavingsBalance@1.0.0","tenant":null,"params":{"memberId":"12345","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-16T03:55:28.814Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-16T03:55:29.064Z","type":"step_start","stepId":"s1","intent":"Enter operator ID for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.093Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-16T03:55:29.093Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.162Z","type":"step_ok","stepId":"s1","ms":97}
+{"ts":"2026-08-16T03:55:29.162Z","type":"step_start","stepId":"s2","intent":"Enter operator password for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.193Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-16T03:55:29.193Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.225Z","type":"step_ok","stepId":"s2","ms":63}
+{"ts":"2026-08-16T03:55:29.225Z","type":"step_start","stepId":"s3","intent":"Submit sign-in credentials.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.259Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:29.259Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.648Z","type":"step_ok","stepId":"s3","ms":423}
+{"ts":"2026-08-16T03:55:29.649Z","type":"step_start","stepId":"s4","intent":"Open Member Search to look up the member.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.681Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:29.681Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.777Z","type":"step_ok","stepId":"s4","ms":128}
+{"ts":"2026-08-16T03:55:29.777Z","type":"step_start","stepId":"s5","intent":"Enter the member number to search for.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.810Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-16T03:55:29.810Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.862Z","type":"step_ok","stepId":"s5","ms":85}
+{"ts":"2026-08-16T03:55:29.862Z","type":"step_start","stepId":"s6","intent":"Execute the member search.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:29.895Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:29.895Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:30.271Z","type":"step_ok","stepId":"s6","ms":409}
+{"ts":"2026-08-16T03:55:30.272Z","type":"step_start","stepId":"s7","intent":"Open the member's profile to view their accounts.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:30.332Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:30.332Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:30.689Z","type":"step_ok","stepId":"s7","ms":417}
+{"ts":"2026-08-16T03:55:30.690Z","type":"step_start","stepId":"s8","intent":"Read the REGULAR SAVINGS account balance for the member.","kind":"read","risk":"read"}
+{"ts":"2026-08-16T03:55:30.731Z","type":"resolved","stepId":"s8","strategyIndex":0,"strategy":"tableCell","score":0.9500000000000001}
+{"ts":"2026-08-16T03:55:30.731Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-16T03:55:30.731Z","type":"extracted","stepId":"s8","into":"savingsBalance"}
+{"ts":"2026-08-16T03:55:30.762Z","type":"step_ok","stepId":"s8","ms":72}
+{"ts":"2026-08-16T03:55:30.762Z","type":"step_start","stepId":"s9","intent":"Return to Member Search to probe the not-found case.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-16T03:55:30.795Z","type":"resolved","stepId":"s9","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-16T03:55:30.796Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-16T03:55:31.134Z","type":"step_ok","stepId":"s9","ms":372}
+{"ts":"2026-08-16T03:55:31.179Z","type":"run_result","status":"success"}

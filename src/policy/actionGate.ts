@@ -29,6 +29,12 @@ export interface GateContext {
    * 'confirm') has explicitly approved this specific irreversible action.
    */
   approved?: boolean;
+  /**
+   * The document URL of the FRAME the target element lives in. Element
+   * actions dispatch into frames, and a page on an allowed origin can embed
+   * an off-origin frame — so the frame's own origin is checked too.
+   */
+  frameUrl?: string | undefined;
 }
 
 export interface GateDecision {
@@ -79,25 +85,30 @@ export class ActionGate {
     }
 
     // Where does this action land? Navigations are checked against their
-    // destination; everything else against the current location.
-    const rawUrl = action.kind === 'navigate' ? action.url : this.surface.currentLocation();
-    let url: URL;
-    try {
-      url = new URL(rawUrl);
-    } catch {
-      return deny('OFF_ORIGIN', `unparseable location '${rawUrl}'`);
-    }
-    if (!this.policy.allowedOrigins.includes(url.origin)) {
-      return deny('OFF_ORIGIN', `origin '${url.origin}' is not in the allowlist`);
-    }
-    if (this.policy.deniedPathPrefixes.some((p) => url.pathname.startsWith(p))) {
-      return deny('PATH_DENIED', `path '${url.pathname}' is explicitly denied`);
-    }
-    if (
-      this.policy.allowedPathPrefixes.length > 0 &&
-      !this.policy.allowedPathPrefixes.some((p) => url.pathname.startsWith(p))
-    ) {
-      return deny('PATH_DENIED', `path '${url.pathname}' is outside the allowed prefixes`);
+    // destination; element actions against the current top-level location
+    // AND the target element's own frame (frames can be off-origin even
+    // when the page is allowed).
+    const locations = action.kind === 'navigate' ? [action.url] : [this.surface.currentLocation()];
+    if (ctx.frameUrl !== undefined && ctx.frameUrl !== '') locations.push(ctx.frameUrl);
+    for (const rawUrl of locations) {
+      let url: URL;
+      try {
+        url = new URL(rawUrl);
+      } catch {
+        return deny('OFF_ORIGIN', `unparseable location '${rawUrl}'`);
+      }
+      if (!this.policy.allowedOrigins.includes(url.origin)) {
+        return deny('OFF_ORIGIN', `origin '${url.origin}' is not in the allowlist`);
+      }
+      if (this.policy.deniedPathPrefixes.some((p) => url.pathname.startsWith(p))) {
+        return deny('PATH_DENIED', `path '${url.pathname}' is explicitly denied`);
+      }
+      if (
+        this.policy.allowedPathPrefixes.length > 0 &&
+        !this.policy.allowedPathPrefixes.some((p) => url.pathname.startsWith(p))
+      ) {
+        return deny('PATH_DENIED', `path '${url.pathname}' is outside the allowed prefixes`);
+      }
     }
 
     if (ctx.risk === 'irreversible' && !ctx.approved) {

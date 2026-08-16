@@ -1,0 +1,98 @@
+{
+  "capabilityId": "member.readSavingsBalance",
+  "version": "1.0.0",
+  "runId": "20260815-225531-obbv",
+  "evidenceDir": "evidence/replay/20260815-225531-obbv",
+  "startedAt": "2026-08-16T03:55:31.943Z",
+  "status": "success",
+  "outputs": {
+    "savingsBalance": "***50"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter operator ID for sign-in.",
+      "status": "ok",
+      "ms": 78,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator password for sign-in.",
+      "status": "ok",
+      "ms": 49,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit sign-in credentials.",
+      "status": "ok",
+      "ms": 401,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Search to look up the member.",
+      "status": "ok",
+      "ms": 410,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search for.",
+      "status": "ok",
+      "ms": 91,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Execute the member search.",
+      "status": "ok",
+      "ms": 392,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Open the member's profile to view their accounts.",
+      "status": "ok",
+      "ms": 422,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Read the REGULAR SAVINGS account balance for the member.",
+      "status": "ok",
+      "ms": 69,
+      "strategyIndex": 0,
+      "strategy": "tableCell",
+      "score": 0.9500000000000001
+    },
+    {
+      "stepId": "s9",
+      "intent": "Return to Member Search to probe the not-found case.",
+      "status": "ok",
+      "ms": 372,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-16T03:55:34.607Z"
+}

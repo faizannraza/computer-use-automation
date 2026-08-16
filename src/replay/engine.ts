@@ -65,6 +65,22 @@ class EscalationHalt extends Error {
   }
 }
 
+/**
+ * Per-run bookkeeping shared between run() and the failure path, so failed
+ * and escalated results carry the same forensics (step traces, recoveries,
+ * whether an irreversible step already completed) as successful ones —
+ * a failure is exactly when the caller needs them most.
+ */
+interface RunState {
+  traces: StepTrace[];
+  recoveryUse: Map<string, number>;
+  irreversibleCompleted: boolean;
+}
+
+function recoveryList(use: Map<string, number>): RecoveryUse[] {
+  return [...use.entries()].map(([code, attempts]) => ({ code, attempts }));
+}
+
 const MAX_RESTARTS = 2;
 
 export async function replayCapability(resolved: ResolvedCapability, opts: ReplayOptions): Promise<ReplayResult> {
@@ -121,6 +137,7 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
       stepsRun: [],
       recoveriesUsed: [],
       interventions: [],
+      irreversibleCompleted: false,
       finishedAt: new Date().toISOString(),
     });
 
@@ -176,11 +193,18 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
       log.event('gate', { kind: e.action.kind, decision: e.decision, location: e.location, risk: e.context.risk }),
   });
 
+  const state: RunState = { traces: [], recoveryUse: new Map(), irreversibleCompleted: false };
   try {
-    return finish(await run(artifact, subst, surface, gate, controller, log, redactor, opts, base));
+    return finish(await run(artifact, subst, surface, gate, controller, log, redactor, opts, base, state));
   } catch (err) {
     const obs = surface.lastObservation();
     const interventions = controller?.records ?? [];
+    const forensics = {
+      stepsRun: state.traces,
+      recoveriesUsed: recoveryList(state.recoveryUse),
+      interventions,
+      irreversibleCompleted: state.irreversibleCompleted,
+    };
     if (err instanceof EscalationHalt) {
       return finish({
         ...base,
@@ -188,9 +212,7 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
         interventionId: err.interventionId,
         reason: err.reason,
         resolution: err.resolution,
-        stepsRun: [],
-        recoveriesUsed: [],
-        interventions,
+        ...forensics,
         finishedAt: new Date().toISOString(),
       });
     }
@@ -214,9 +236,7 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
       ...base,
       status: 'failed',
       failure,
-      stepsRun: [],
-      recoveriesUsed: [],
-      interventions,
+      ...forensics,
       finishedAt: new Date().toISOString(),
     });
   } finally {
@@ -241,12 +261,12 @@ async function run(
   redactor: Redactor,
   opts: ReplayOptions,
   base: { capabilityId: string; version: string; runId: string; evidenceDir: string; startedAt: string },
+  state: RunState,
 ): Promise<ReplayResult> {
   let recoveryBudget = opts.policy.maxRecoveryAttemptsPerRun;
   let restarts = 0;
-  const recoveryUse = new Map<string, number>();
-  const recoveriesUsed = (): RecoveryUse[] =>
-    [...recoveryUse.entries()].map(([code, attempts]) => ({ code, attempts }));
+  const recoveryUse = state.recoveryUse;
+  const recoveriesUsed = (): RecoveryUse[] => recoveryList(recoveryUse);
   const interventions = () => controller?.records ?? [];
 
   /** Route an intervention to the operator (or end the run if there is none). */
@@ -282,9 +302,10 @@ async function run(
    * action under policy mode 'escalate' pauses for a human decision; on
    * 'approve' the same action executes exactly once with approval attached.
    */
-  const gatedExecute = async (action: SemanticAction, step: Step) => {
+  const gatedExecute = async (action: SemanticAction, step: Step, frameUrl?: string) => {
+    const ctx = { risk: step.risk, ...(frameUrl !== undefined ? { frameUrl } : {}) };
     try {
-      return await gate.execute(action, { risk: step.risk });
+      return await gate.execute(action, ctx);
     } catch (err) {
       if (err instanceof PolicyViolation && err.code === 'RISK_NEEDS_ESCALATION') {
         await escalate({
@@ -296,7 +317,7 @@ async function run(
             'Review the pending irreversible action in the live window. approve = the automation performs it; abort = stop the run.',
           options: ['approve', 'abort'],
         });
-        return await gate.execute(action, { risk: step.risk, approved: true });
+        return await gate.execute(action, { ...ctx, approved: true });
       }
       throw err;
     }
@@ -381,7 +402,8 @@ async function run(
   // ---- Main loop. `restart` recoveries re-enter from the entrypoint. ----
   outer: while (true) {
     const outputs: Record<string, string> = {};
-    const traces: StepTrace[] = [];
+    state.traces.splice(0); // restart begins a fresh attempt; state keeps the array identity
+    const traces = state.traces;
     const completedRisk: RiskClass[] = [];
 
     const entryUrl = applyTemplate(artifact.capability.entrypoint.value, subst);
@@ -442,9 +464,12 @@ async function run(
         log.event('resolved', { stepId: step.id, strategyIndex: res.strategyIndex, strategy: res.strategy, score: res.score });
 
         // 3. Act through the gate — the only path to the surface. Irreversible
-        //    actions pause here for human approval under policy mode 'escalate'.
+        //    actions pause here for human approval under policy mode 'escalate';
+        //    the target's own frame origin is checked alongside the page's.
         const action = buildAction(step, res.ref, subst);
-        const actResult = await gatedExecute(action, step);
+        const targetEl = surface.lastObservation()?.elements.find((e) => e.ref === res.ref);
+        const frameUrl = targetEl?.framePath[targetEl.framePath.length - 1]?.url;
+        const actResult = await gatedExecute(action, step, frameUrl);
         readValue = actResult.readValue;
       }
 
@@ -482,6 +507,7 @@ async function run(
               stepsRun: traces,
               recoveriesUsed: recoveriesUsed(),
               interventions: interventions(),
+              irreversibleCompleted: state.irreversibleCompleted,
               finishedAt: new Date().toISOString(),
             };
           }
@@ -524,6 +550,7 @@ async function run(
       trace.ms = Date.now() - t0;
       traces.push(trace);
       completedRisk.push(step.risk);
+      if (step.risk === 'irreversible') state.irreversibleCompleted = true;
       log.event('step_ok', { stepId: step.id, ms: trace.ms });
       log.screenshot(`after-${step.id}`, obs.screenshot);
     }
@@ -546,6 +573,7 @@ async function run(
       stepsRun: traces,
       recoveriesUsed: recoveriesUsed(),
       interventions: interventions(),
+      irreversibleCompleted: state.irreversibleCompleted,
       finishedAt: new Date().toISOString(),
     };
   }
