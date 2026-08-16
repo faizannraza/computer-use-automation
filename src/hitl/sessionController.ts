@@ -8,13 +8,13 @@
  *                                                              escalated result)
  *
  * The token is not advisory: the ActionGate calls holder() on every single
- * action, so while a handoff is open the automation PHYSICALLY cannot act —
+ * action, so while a handoff is open the automation is locked out —
  * the same choke point that enforces the allowlist enforces possession.
  * There is exactly one live session (one browser context); nothing is
  * transferred to the human except control, which is why cookies, server
  * session, and page state are inherently preserved across the handoff.
  *
- * Resume verification is deliberately NOT done here: the engine re-enters
+ * Resume verification lives in the engine, not here: the engine re-enters
  * its classification loop after a handoff, so the step's own postcondition
  * (or the next escalation) judges the human's work — one verification
  * vocabulary for machine and human actions alike.

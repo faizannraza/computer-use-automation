@@ -10,7 +10,7 @@
  * without fragile AX-node → DOM-node → box-model joins across framesets.
  * A desktop surface would produce the same shape from UIA/AX APIs instead.
  *
- * The walker is shipped as a PLAIN JS SOURCE STRING, not a serialized
+ * The walker is shipped as a plain JS source string, not a serialized
  * closure: build tooling (tsx, vitest, bundlers) transforms closures and can
  * inject helper references (e.g. esbuild's `__name`) that do not exist in
  * the page and blow up evaluate() at runtime. A string is immune to every

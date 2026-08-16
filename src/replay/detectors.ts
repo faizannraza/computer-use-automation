@@ -1,10 +1,6 @@
-/**
- * Condition evaluation: ONE function decides every "is the surface in state
- * X?" question — step postconditions, outcome detectors, recovery triggers,
- * anomaly screens, success criteria. Everything sees the same Observation
- * through the same semantics, which is what makes the engine's
- * classification ordering meaningful.
- */
+/** Evaluates a Condition against an Observation. One evaluator serves step
+ * postconditions, outcome detectors, recovery triggers, anomaly screens,
+ * and success criteria. */
 import type { Observation } from '../core/types.js';
 import type { Condition } from '../schema/conditions.js';
 import { resolveTarget } from '../surface/web/locatorResolver.js';

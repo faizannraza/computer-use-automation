@@ -118,7 +118,7 @@ describe('escalation & handoff on the live session', () => {
     expect(pinEvent).toContain('"valueLength":4'); // …as length-only metadata
   }, 90_000);
 
-  it('records an operator abort as an escalated result, not a failure', async () => {
+  it('records an operator abort as an escalated result', async () => {
     const operator: Operator = {
       async handle(req): Promise<Omit<OperatorResolution, 'at'>> {
         expect(req.kind).toBe('approve_risky');

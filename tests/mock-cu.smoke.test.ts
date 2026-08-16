@@ -109,7 +109,7 @@ describe('member lookup flow', () => {
     expect(detail).toContain('$4,821.97');
   });
 
-  it('reports "no members matched" for an unknown member — a business outcome, not an error', async () => {
+  it('reports "no members matched" for an unknown member', async () => {
     const c = new Client();
     await c.login();
     const results = await (await c.postForm('/members/search', { txtQuery: '99999' })).text();

@@ -1,8 +1,5 @@
-/**
- * The ActionGate is the safety story: one choke point for allowlist, action
- * kinds, risk classes, and the HITL control token. These tests pin every
- * deny path and prove denied actions never reach the surface.
- */
+/** Pins every deny path in the gate and checks that denied actions never
+ * reach the surface. */
 import { describe, expect, it, vi } from 'vitest';
 import type { ControlHolder } from '../src/core/types.js';
 import { ActionGate, PolicyViolation } from '../src/policy/actionGate.js';
@@ -115,7 +112,7 @@ describe('ActionGate', () => {
     expect(act).toHaveBeenCalledOnce();
   });
 
-  it('is PolicyViolation with a machine-readable code, not a generic error', async () => {
+  it('throws PolicyViolation with a machine-readable code', async () => {
     const { surface } = fakeSurface();
     const gate = new ActionGate(policy, surface);
     try {

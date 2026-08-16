@@ -17,7 +17,7 @@ export class TerminalOperator implements Operator {
       [
         '',
         line,
-        `⚠  HUMAN INTERVENTION REQUIRED  [${req.id}] (${req.kind})`,
+        `** HUMAN INTERVENTION REQUIRED ** [${req.id}] (${req.kind})`,
         line,
         `capability : ${req.capabilityId}@${req.version}  (run ${req.runId})`,
         `step       : ${req.stepId ?? '—'} — ${req.stepIntent ?? ''}`,

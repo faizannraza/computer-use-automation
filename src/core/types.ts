@@ -1,7 +1,7 @@
 /**
  * Core vocabulary shared by every layer of the system.
  *
- * These types are deliberately surface-agnostic: they describe *what an
+ * These types are surface-agnostic: they describe *what an
  * operator perceives and does* (elements with roles and names, semantic
  * actions like "activate" or "set a value"), never *how* a particular
  * driver accomplishes it (CSS selectors, mouse coordinates, UIA patterns).

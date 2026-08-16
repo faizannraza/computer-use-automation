@@ -1,11 +1,11 @@
 /**
  * The deterministic replay engine — the production execution path. It
- * interprets a capability artifact with NO model in the loop: locator
+ * interprets a capability artifact with no model in the loop: locator
  * ladders resolve targets, conditions are polled, and every observed state
  * is classified in a strict priority order:
  *
  *   postcondition satisfied            → step ok, continue
- *   > expected business outcome        → return business_outcome (a result!)
+ *   > expected business outcome        → return business_outcome (a result)
  *   > known recoverable condition      → run its handler, bounded, re-enter
  *   > declared anomaly / unknown dialog→ hard failure, fast
  *   > timeout                          → POSTCONDITION_TIMEOUT with expected/observed
@@ -183,8 +183,8 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
 
   const subst = { ...bindings, ...params };
   const surface = await PlaywrightWebSurface.launch({ headed: opts.headed ?? false });
-  // The controller owns the control token; the gate checks it on EVERY
-  // action, so the automation physically cannot act during a human handoff.
+  // The controller owns the control token; the gate checks it on every
+  // action, so the automation cannot act at all during a human handoff.
   const controller = opts.operator ? new SessionController(surface, log, opts.operator) : undefined;
   const gate = new ActionGate(opts.policy, surface, {
     getHolder: () => controller?.holder() ?? 'agent',

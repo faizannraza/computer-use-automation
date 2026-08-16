@@ -1,8 +1,5 @@
-/**
- * The locator ladder is the determinism story — these tests pin its
- * behavior: ordered fallback, confident-unique wins, ambiguity is a refusal
- * (never a guess), frame filtering, and score thresholds.
- */
+/** Ladder behavior: ordered fallback, unique-confident match wins,
+ * near-ties fail hard, frame filtering, score thresholds. */
 import { describe, expect, it } from 'vitest';
 import type { Observation, ObservedElement } from '../src/core/types.js';
 import { TargetRefSchema } from '../src/schema/locators.js';

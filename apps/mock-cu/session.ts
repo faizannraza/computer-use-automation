@@ -1,7 +1,7 @@
 /**
- * Minimal cookie-session for the mock app — deliberately plain (no deps),
- * matching how legacy server-rendered apps behave: an opaque session cookie,
- * server-side state, and hard redirects to the login screen on expiry.
+ * Minimal cookie-session for the mock app, no deps. Matches how legacy
+ * server-rendered apps behave: an opaque session cookie, server-side state,
+ * and hard redirects to the login screen on expiry.
  */
 import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';

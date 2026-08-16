@@ -1,8 +1,8 @@
 /**
  * The replay result contract. The four-way top-level split is the load-
  * bearing design decision: an expected business outcome ("no such member")
- * is a DIFFERENT TYPE from a failure, so conflating them — the most common
- * design mistake in this domain — is structurally impossible.
+ * is a different type from a failure, so a caller can't confuse the two —
+ * the types don't allow it.
  */
 
 export type FailureClass =

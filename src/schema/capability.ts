@@ -3,10 +3,10 @@
  * reusable flow — the central data model of this system.
  *
  * Design principles (each is argued in REPORT.md):
- *  - It is a CONTRACT an agent can call, not a step list: typed params in,
+ *  - It is a contract an agent can call, not a step list: typed params in,
  *    typed outputs back, named business outcomes a caller must handle.
  *  - Expected business outcomes and known recoverable conditions are
- *    FIRST-CLASS top-level sections — "no such member" is a result the
+ *    first-class top-level sections — "no such member" is a result the
  *    schema can express, so replay can never misreport it as a crash.
  *  - Steps speak semantic actions and semantic target descriptors; nothing
  *    in an artifact names a driver technology (the one exception, the

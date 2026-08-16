@@ -1,5 +1,5 @@
 /**
- * The discovery agent's tool surface — deliberately narrow. The model can
+ * The discovery agent's tool surface, kept narrow. The model can
  * observe, perform the same semantic actions the replay engine performs
  * (through the same ActionGate), declare extractions and observed business
  * outcomes, retract mistakes, and finish. Strict schemas: every tool input
@@ -9,9 +9,9 @@
  *  - `type` accepts either literal text OR a param NAME. Secret params are
  *    only ever referenced by name — the harness injects the value; the model
  *    never sees it (and password field values are never observed either).
- *  - `declare_outcome` requires a text marker that is CURRENTLY VISIBLE; the
- *    harness verifies it against the live observation, so outcome detectors
- *    are grounded in evidence, never invented.
+ *  - `declare_outcome` requires a text marker that is currently visible; the
+ *    harness verifies it against the live observation, so a detector can only
+ *    encode text that was actually on screen.
  */
 
 // Minimal JSON-schema type for tool definitions (strict tool use).

@@ -6,17 +6,17 @@ runs write the event stream, screenshots, the recorded `trace.json`, the
 full (redacted, screenshot-elided) model `transcript.json`, the
 `compile-report.json`, and the compiled `artifact.json`. Secrets never
 appear anywhere in evidence (replaced at the write boundary, e.g.
-`«secret:operatorPassword»`); `pii`-classed values — including values READ
+`«secret:operatorPassword»`); `pii`-classed values — including values read
 off the page, like the savings balance — are registered with the redactor
-the moment they exist and appear only masked (`***97`). All runs below were
+as soon as they are read and appear only masked (`***97`). All runs below were
 executed against the local mock app and are reproducible with the commands
 in the root README.
 
-## Discovery (the real LLM run)
+## Discovery
 
 | Run | What it shows |
 |---|---|
-| `discovery/20260815-225407-02b9/` | **The genuine LLM-driven discovery run** (claude-opus-4-8, 15 turns). `run.jsonl` logs every model turn, tool call, and ActionGate decision; `transcript.json` is the model transcript — the balance read is returned to the model masked, and the compiled artifact passes through the redactor before hashing, so the raw value cannot reach the shipped artifact; `trace.json` is the recorded action trace (readValue stored masked); `compile-report.json` lists every parameterization and pruning decision; `artifact.json` is the compiled draft as produced by this run. The shipped copy at `capabilities/member.readSavingsBalance@1.0.0.json` is this document after human review/approval (which updates the approval block and re-hashes). Includes the exceptional-state probe (searching nonexistent member 99999) that grounded the `MEMBER_NOT_FOUND` detector in observed text. |
+| `discovery/20260815-225407-02b9/` | **The LLM-driven discovery run** (claude-opus-4-8, 15 turns). `run.jsonl` logs every model turn, tool call, and ActionGate decision; `transcript.json` is the model transcript — the balance read is returned to the model masked, and the compiled artifact passes through the redactor before hashing, so the raw value cannot reach the shipped artifact; `trace.json` is the recorded action trace (readValue stored masked); `compile-report.json` lists every parameterization and pruning decision; `artifact.json` is the compiled draft as produced by this run. The shipped copy at `capabilities/member.readSavingsBalance@1.0.0.json` is this document after human review/approval (which updates the approval block and re-hashes). Includes the exceptional-state probe (searching nonexistent member 99999) that grounded the `MEMBER_NOT_FOUND` detector in observed text. |
 
 ## Replay (deterministic — no LLM in any of these)
 
@@ -27,7 +27,7 @@ in the root README.
 | `replay/20260815-225535-3o15/` | Unknown member 99999 | `business_outcome MEMBER_NOT_FOUND` — a legitimate result the caller handles, not a failure |
 | `replay/20260815-225537-ipwa/` | **Recoverable runtime error**: session-timeout fault injected mid-flow; run executed through the `demo-fcu` tenant overlay, which adds the `SESSION_TIMEOUT` recovery to the compiled artifact | `success` after re-authentication restart; `recoveriesUsed: SESSION_TIMEOUT` |
 | `replay/20260815-225541-9hma/` | **Hard failure**: duplicate-Search-button fault (ambiguity trap) | `failed TARGET_AMBIGUOUS` at step s6 — refuses to guess; failure report names both candidates, expected vs observed, screenshot, and the step traces of everything that completed before it |
-| `replay/20260815-225543-qcc7/` | **Escalation & handoff**: risky `member.openSubAccount` flow with the permission fault armed | `success` after TWO interventions: ① the irreversible confirm paused for approval (`approve_risky`); ② supervisor authorization escalated (`human_action_required`) — the operator entered the supervisor PIN on the same live session (3 captured `human_action` events, values recorded as length only — the PIN appears nowhere), resumed, and the step's postcondition verified the human's work. See `intervention-int-01.json` / `intervention-int-02.json` for the routed context. Operator resolutions came through the same `Operator` interface the interactive terminal console implements — see `interventions[].note` in `result.json`. |
+| `replay/20260815-225543-qcc7/` | **Escalation & handoff**: risky `member.openSubAccount` flow with the permission fault armed | `success` after two interventions: first the irreversible confirm paused for approval (`approve_risky`), then supervisor authorization escalated (`human_action_required`) — the operator entered the supervisor PIN on the same live session (3 captured `human_action` events, values recorded as length only — the PIN appears nowhere), resumed, and the step's postcondition verified the human's work. See `intervention-int-01.json` / `intervention-int-02.json` for the routed context. Operator resolutions came through the same `Operator` interface the interactive terminal console implements — see `interventions[].note` in `result.json`. |
 
 ## Notes
 

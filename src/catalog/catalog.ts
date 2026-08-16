@@ -1,15 +1,7 @@
-/**
- * The agent-facing capability catalog (stretch goal): saved artifacts
- * exposed as a catalog of callable capabilities an AI agent can discover
- * and invoke by name with typed arguments.
- *
- * Each entry is derived from the artifact's own contract — params become the
- * input schema (env-sourced params are infrastructure, not caller inputs,
- * so they are excluded), outputs and outcome codes are surfaced in the
- * description so a calling agent knows what comes back and which business
- * outcomes it must handle. The tool-definition shape is the standard
- * function-calling format (name / description / JSON-schema input).
- */
+/** Saved artifacts exposed as callable tools an agent can discover and
+ * invoke by name. Params become the input schema (env-sourced params are
+ * infrastructure, not caller inputs); outputs and outcome codes go into the
+ * description so a caller knows what comes back and what to handle. */
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import type { CapabilityArtifact, ParamSpec } from '../schema/capability.js';

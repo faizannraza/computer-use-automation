@@ -1,8 +1,6 @@
-/**
- * Tenant-overlay merge: additive and narrow by construction. An overlay can
- * re-rank locators, extend waits, add recoveries, and bind values — the
- * schema gives it no way to change what a capability does.
- */
+/** Overlay merge: an overlay can re-rank locators, extend waits, add
+ * recoveries, and bind values; the schema gives it no way to change what a
+ * capability does. */
 import { describe, expect, it } from 'vitest';
 import { loadCapability } from '../src/schema/capability.js';
 import { TenantOverlaySchema, applyOverlay, satisfiesCaret } from '../src/schema/overlay.js';

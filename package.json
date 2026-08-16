@@ -2,7 +2,7 @@
   "name": "computer-use-automation",
   "version": "0.1.0",
   "private": true,
-  "description": "Computer-use automation system: LLM-driven discovery of UI flows in legacy back-office apps, compiled into typed capability artifacts and replayed deterministically with safety guardrails and human-in-the-loop escalation.",
+  "description": "LLM-discovered UI flows compiled to typed artifacts and replayed deterministically, with policy guardrails and human-in-the-loop escalation.",
   "type": "module",
   "engines": {
     "node": ">=20"

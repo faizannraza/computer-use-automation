@@ -2,18 +2,42 @@
 
 An end-to-end system that lets AI agents operate legacy back-office applications that have no API:
 
-1. An **LLM-driven agent** takes a natural-language goal and operates a live UI (observe → decide → act), with every action passing through a policy gate.
-2. The successful run is **compiled — deterministically, no LLM — into a typed, versioned capability artifact**: a reviewable contract with typed inputs, typed outputs, and named business outcomes.
-3. That artifact **replays with no model in the loop**, using a semantic locator ladder and per-step checkpoints, and classifies everything it sees: expected business outcomes ("no such member") ≠ recoverable conditions (session timeout) ≠ hard failures (ambiguous target).
-4. When the system can't safely proceed — an irreversible action awaiting a decision, a supervisor-only screen — it **escalates to a human who takes control of the same live session**, and hands control back when they're done.
+1. An **LLM-driven agent** takes a natural-language goal and operates a live UI (observe, decide, act), with every action passing through a policy gate.
+2. The successful run is compiled — deterministically, no LLM — into a **typed, versioned capability artifact**: a reviewable contract with typed inputs, typed outputs, and named business outcomes.
+3. That artifact **replays with no model in the loop**, using a semantic locator ladder and per-step checkpoints. Everything it sees gets classified: expected business outcomes ("no such member") are not recoverable conditions (session timeout), and neither is a hard failure (ambiguous target).
+4. When the system can't safely proceed — an irreversible action awaiting a decision, a supervisor-only screen — it escalates to a human who **takes control of the same live session**, then hands control back.
 
 > **The model discovers. The artifact becomes a reusable capability. Deterministic replay is how the AI agent invokes it in production.**
 
 The target application is a self-contained, intentionally *legacy-hostile* mock credit-union back office — "MockCore Teller" (framesets, table layouts, no test IDs) — with deterministic fault injection, so every scenario in [`/evidence/`](evidence/README.md) reproduces on your machine.
 
+```
+ goal (natural language)                        typed params
+        |                                            |
+        v                                            v
+  discovery agent --> recorder --> compiler --> capability artifact --> replay engine
+  (LLM in the loop)                (no LLM)     (typed, versioned,      (no LLM, ever)
+        |                                        hashed, draft/approved)      |
+        |                                                                     |
+        +-------------------+  every action, both paths  +--------------------+
+                            v                            v
+                 +--------------------------------------------------+
+                 | ActionGate: allowlist / action kinds / risk class |
+                 |             / HITL control token                  |
+                 +-------------------------+------------------------+
+                                           v
+                 Surface seam: observe / act / resolve
+                 (Playwright web driver today; desktop by design)
+                                           v
+                       MockCore Teller (live legacy app)
+
+  escalation:  SessionController hands the same live session to a human, then back
+  evidence:    every run writes redacted JSONL + screenshots + a typed result
+```
+
 ## Setup
 
-Requires Node.js ≥ 20.
+Requires Node.js >= 20.
 
 ```bash
 npm install
@@ -101,7 +125,7 @@ Demo runs write new folders under `evidence/` by design (every run leaves eviden
 apps/mock-cu/       the target app: legacy-hostile mock credit union + fault injection (POST /__faults)
 src/core/           surface-agnostic vocabulary (Observation, SemanticAction) + templates
 src/surface/        the Surface seam; Playwright web implementation (element map, locator ladder)
-src/policy/         policy config, redaction, and the ActionGate — the single choke point for every action
+src/policy/         policy config, redaction, and the ActionGate; every action funnels through it
 src/schema/         capability artifact, conditions, tenant overlays, result contract (Zod)
 src/discovery/      LLM agent loop, tool surface, recorder, deterministic compiler
 src/replay/         condition evaluation + the deterministic replay engine

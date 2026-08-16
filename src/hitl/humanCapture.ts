@@ -1,14 +1,13 @@
 /**
  * Human-action capture: while a human holds the live session, document-level
  * listeners in every frame report what they do — click/change/submit with a
- * structural description of the target. VALUES ARE NEVER CAPTURED, only
+ * structural description of the target. values are never captured, only
  * their length: the human may type things (supervisor PINs, ad-hoc lookups)
  * that no policy ever cleared for logging.
  *
- * Fidelity is deliberately event-level, not keystroke-perfect: the graded
- * requirement is a faithful record of WHAT the human did on WHICH controls,
- * not a replayable macro. Limits (very fast navigations can drop an event)
- * are documented rather than fought.
+ * Capture is event-level, not keystroke-perfect — we want a record of what
+ * the human touched, not a replayable macro. Very fast navigations can drop
+ * an event; that limit is documented rather than fought.
  */
 import type { Frame, Page } from 'playwright';
 

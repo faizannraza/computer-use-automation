@@ -1,5 +1,5 @@
 /**
- * The compiler: recorded trace → capability artifact. DETERMINISTIC CODE,
+ * The compiler: recorded trace → capability artifact. Deterministic code,
  * no LLM anywhere — the model contributed action intents and the capability
  * identity (prose), but everything executable in the artifact is derived
  * mechanically from recorded evidence:

@@ -1,9 +1,6 @@
-/**
- * The recorder: the raw, append-only trace of what the discovery agent
- * actually did — accepted actions with the element evidence and the state
- * digests before/after each one. The compiler consumes this; the artifact is
- * DERIVED from it deterministically, never from the model transcript.
- */
+/** Append-only trace of what the agent actually did: accepted actions with
+ * element evidence and before/after state digests. The compiler consumes
+ * this; nothing in the artifact comes from the model transcript. */
 import type { Observation, ObservedElement, RiskClass } from '../core/types.js';
 
 /** What the compiler needs to know about the acted-on element. */

@@ -1,10 +1,7 @@
-/**
- * Hardening suite from the adversarial review: the engine's remaining
- * classification branches (timeout, exhausted recovery, precondition,
- * anomaly), the refuse-restart-after-irreversible safety guard, and the
- * guarantee that FAILED results keep their forensics (step traces,
- * recoveries, the irreversible-completed signal).
- */
+/** Covers the engine's remaining classification branches — timeout,
+ * exhausted recovery, precondition failure, anomaly fail-fast — plus the
+ * refuse-restart-after-irreversible guard and the guarantee that failed
+ * results keep their forensics. */
 import type { Server } from 'node:http';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../apps/mock-cu/server.js';

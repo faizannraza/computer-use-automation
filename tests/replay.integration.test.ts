@@ -1,9 +1,7 @@
-/**
- * The M3 acceptance suite: the gold artifact replayed against the live mock
- * app, deterministically, with NO model anywhere — covering the full result
- * contract: success with typed outputs, a named business outcome, a
- * recovered runtime error, a refused ambiguity, and the pre-flight guards.
- */
+/** Gold artifact replayed against the live mock app, no model anywhere.
+ * Covers the full result contract: success with typed outputs, a named
+ * business outcome, a recovered runtime error, a refused ambiguity, and the
+ * pre-flight guards. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Server } from 'node:http';
@@ -63,7 +61,7 @@ const opts = () => ({
 });
 
 describe('deterministic replay of member.readSavingsBalance', () => {
-  it('① succeeds and returns the typed output', async () => {
+  it('succeeds and returns the typed output', async () => {
     const result = await replayCapability(resolved(), opts());
     expect(result.status).toBe('success');
     if (result.status !== 'success') return;
@@ -81,7 +79,7 @@ describe('deterministic replay of member.readSavingsBalance', () => {
     expect(resultJson).toContain('***97'); // pii-masked balance in evidence; caller gets the real value
   }, 60_000);
 
-  it('② reports MEMBER_NOT_FOUND as a business outcome, not a failure', async () => {
+  it('reports MEMBER_NOT_FOUND as a business outcome', async () => {
     const result = await replayCapability(resolved(), { ...opts(), paramValues: { memberId: '99999' } });
     expect(result.status).toBe('business_outcome');
     if (result.status !== 'business_outcome') return;
@@ -89,7 +87,7 @@ describe('deterministic replay of member.readSavingsBalance', () => {
     expect(result.message).toContain('legitimate business result');
   }, 60_000);
 
-  it('③ recovers from a mid-flow session timeout by re-authenticating (restart)', async () => {
+  it('recovers from a mid-flow session timeout by re-authenticating', async () => {
     await armFault('session_timeout', 'once');
     const result = await replayCapability(resolved(), opts());
     expect(result.status).toBe('success');
@@ -98,7 +96,7 @@ describe('deterministic replay of member.readSavingsBalance', () => {
     expect(result.recoveriesUsed).toContainEqual({ code: 'SESSION_TIMEOUT', attempts: 1 });
   }, 60_000);
 
-  it('④ refuses to guess between duplicate Search buttons: TARGET_AMBIGUOUS with expected/observed', async () => {
+  it('fails TARGET_AMBIGUOUS on duplicate Search buttons instead of guessing', async () => {
     await armFault('duplicate_button', 'on');
     const result = await replayCapability(resolved(), opts());
     await armFault('duplicate_button', 'off');
@@ -111,7 +109,7 @@ describe('deterministic replay of member.readSavingsBalance', () => {
     expect(result.failure.screenshotRef).toBeDefined();
   }, 60_000);
 
-  it('⑤ dismisses the known interstitial and completes (recoverable condition)', async () => {
+  it('dismisses the known interstitial and completes', async () => {
     await armFault('interstitial', 'once');
     const result = await replayCapability(resolved(), opts());
     expect(result.status).toBe('success');

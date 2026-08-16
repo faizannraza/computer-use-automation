@@ -1,10 +1,7 @@
-/**
- * End-to-end proof of the M2 layer: the complete member-lookup flow driven
- * purely through Surface + ActionGate — semantic locators only, across
- * frames, no CSS selectors, no Playwright calls above the seam — ending with
- * the savings balance read out of a legacy table, and with the operator
- * password provably absent from the evidence log.
- */
+/** Drives the full member-lookup flow through Surface + ActionGate alone:
+ * semantic locators only, across frames, no Playwright calls above the seam.
+ * Ends by reading the savings balance out of a legacy table and checking the
+ * operator password never reached the evidence log. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Server } from 'node:http';

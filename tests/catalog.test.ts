@@ -1,4 +1,4 @@
-/** The agent-facing catalog: typed, discoverable, honest about risk. */
+/** Catalog entries are derived entirely from the artifact's own contract. */
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, findByName } from '../src/catalog/catalog.js';
 
