@@ -1,0 +1,54 @@
+{
+  "tenantId": "demo-fcu",
+  "extends": {
+    "capabilityId": "member.readSavingsBalance",
+    "versionRange": "^1"
+  },
+  "bindings": {
+    "baseUrl": "http://localhost:4173"
+  },
+  "patches": [
+    {
+      "op": "addRecovery",
+      "recovery": {
+        "code": "SESSION_TIMEOUT",
+        "description": "This tenant's instance expires operator sessions aggressively. Recover by restarting the run from the entrypoint (safe: the flow is read-only).",
+        "when": {
+          "c": "textPresent",
+          "pattern": "Your session has expired"
+        },
+        "handler": {
+          "kind": "restartRun"
+        },
+        "maxAttempts": 2
+      }
+    },
+    {
+      "op": "addRecovery",
+      "recovery": {
+        "code": "KNOWN_INTERSTITIAL",
+        "description": "This tenant shows a system-notice interstitial. Dismiss it via its Continue control.",
+        "when": {
+          "c": "textPresent",
+          "pattern": "System Notice"
+        },
+        "handler": {
+          "kind": "dismiss",
+          "target": {
+            "framePath": [],
+            "strategies": [
+              { "s": "roleName", "role": "link", "name": "Continue", "nameMatch": "exact" }
+            ],
+            "disambiguation": { "requireUnique": true, "minScore": 0.6 }
+          }
+        },
+        "maxAttempts": 2
+      }
+    },
+    {
+      "op": "overrideWait",
+      "stepId": "s3",
+      "timeoutMs": 15000
+    }
+  ]
+}

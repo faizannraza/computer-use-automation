@@ -14,6 +14,7 @@
 import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
+import { buildCatalog, findByName } from './catalog/catalog.js';
 import { runDiscovery } from './discovery/agent.js';
 import type { OutputHint } from './discovery/compile.js';
 import { TerminalOperator } from './hitl/terminalOperator.js';
@@ -33,6 +34,9 @@ switch (command) {
   case 'replay':
     await replayCmd(rest);
     break;
+  case 'catalog':
+    await catalogCmd(rest);
+    break;
   case 'approve':
     approveCmd(rest);
     break;
@@ -43,8 +47,56 @@ switch (command) {
     hashCmd(rest);
     break;
   default:
-    console.error('usage: cu <discover|replay|approve|validate|hash> ...');
+    console.error('usage: cu <discover|replay|catalog|approve|validate|hash> ...');
     process.exit(64);
+}
+
+/**
+ * The agent-facing surface: `cu catalog` prints the callable-capability
+ * catalog (function-calling tool definitions); `cu catalog --invoke <name>`
+ * invokes one by name with typed args — the path an AI agent would take.
+ */
+async function catalogCmd(argv: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      invoke: { type: 'string' },
+      param: { type: 'string', multiple: true },
+      'base-url': { type: 'string', default: 'http://localhost:4173' },
+      policy: { type: 'string', default: 'policies/default.policy.json' },
+      dir: { type: 'string', default: 'capabilities' },
+      'allow-draft': { type: 'boolean', default: false },
+      'evidence-dir': { type: 'string', default: 'evidence' },
+    },
+  });
+  if (!values.invoke) {
+    console.log(JSON.stringify(buildCatalog(values.dir!), null, 2));
+    return;
+  }
+  const entry = findByName(values.invoke, values.dir!);
+  const paramValues: Record<string, string> = {};
+  for (const kv of values.param ?? []) {
+    const eq = kv.indexOf('=');
+    if (eq < 1) {
+      console.error(`--param expects k=v, got '${kv}'`);
+      process.exit(64);
+    }
+    paramValues[kv.slice(0, eq)] = kv.slice(eq + 1);
+  }
+  const { artifact, verified } = loadCapability(entry.artifactFile);
+  const result = await replayCapability(
+    { artifact, bindings: { baseUrl: values['base-url']! } },
+    {
+      policy: loadPolicy(values.policy!),
+      paramValues,
+      verified,
+      allowDraft: values['allow-draft']!,
+      evidenceBaseDir: values['evidence-dir']!,
+    },
+  );
+  console.error(`\n[${result.status.toUpperCase()}] invoked ${entry.name}@${entry.version} via catalog`);
+  console.log(JSON.stringify(result, null, 2));
+  process.exit(result.status === 'success' || result.status === 'business_outcome' ? 0 : result.status === 'failed' ? 2 : 3);
 }
 
 async function discoverCmd(argv: string[]): Promise<void> {

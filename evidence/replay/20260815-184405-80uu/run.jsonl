@@ -1,0 +1,24 @@
+{"ts":"2026-08-15T23:44:05.148Z","type":"run_start","capability":"member.readSavingsBalance@1.0.0","tenant":null,"params":{"memberId":"12345","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-15T23:44:05.293Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-15T23:44:05.482Z","type":"step_start","stepId":"s1","intent":"Enter the operator ID for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:44:05.517Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:44:05.517Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:44:05.563Z","type":"step_ok","stepId":"s1","ms":81}
+{"ts":"2026-08-15T23:44:05.563Z","type":"step_start","stepId":"s2","intent":"Enter the operator password for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:44:05.579Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:44:05.579Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:44:05.613Z","type":"step_ok","stepId":"s2","ms":50}
+{"ts":"2026-08-15T23:44:05.613Z","type":"step_start","stepId":"s3","intent":"Submit the sign-in form.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:44:05.629Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:44:05.629Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:44:06.011Z","type":"step_ok","stepId":"s3","ms":398}
+{"ts":"2026-08-15T23:44:06.012Z","type":"step_start","stepId":"s4","intent":"Open the Member Search screen.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:44:06.053Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:44:06.053Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-15T23:44:06.132Z","type":"step_ok","stepId":"s4","ms":120}
+{"ts":"2026-08-15T23:44:06.132Z","type":"step_start","stepId":"s5","intent":"Enter member number to search.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:44:06.166Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:44:06.166Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-15T23:44:06.217Z","type":"step_ok","stepId":"s5","ms":85}
+{"ts":"2026-08-15T23:44:06.217Z","type":"step_start","stepId":"s6","intent":"Search for the member.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:44:06.251Z","type":"run_result","status":"failed","failure":{"class":"TARGET_AMBIGUOUS","stepId":"s6","expected":"a unique confident match for the step's target (strategies: roleName)","observed":"strategy 0 (roleName) matched 2 near-equal candidates — refusing to guess; candidates: [{\"ref\":11,\"role\":\"button\",\"name\":\"Search\",\"score\":1},{\"ref\":12,\"role\":\"button\",\"name\":\"Search\",\"score\":1}]; at http://localhost:4173/; title \"MockCore Teller v7.2.14\"; headings: MockCore™ Teller | Main Menu | Session | Member Search | Member No. or Name | MockCore™ Teller v7.2.14 — build 20260219; text: \"[frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [fra…\"","screenshotRef":"steps/007-failure.png"}}

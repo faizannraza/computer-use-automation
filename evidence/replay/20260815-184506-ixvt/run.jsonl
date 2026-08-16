@@ -1,0 +1,49 @@
+{"ts":"2026-08-15T23:45:06.695Z","type":"run_start","capability":"member.readSavingsBalance@1.0.0","tenant":"demo-fcu","params":{"memberId":"12345","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-15T23:45:07.081Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-15T23:45:07.317Z","type":"step_start","stepId":"s1","intent":"Enter the operator ID for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.347Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:45:07.348Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.413Z","type":"step_ok","stepId":"s1","ms":96}
+{"ts":"2026-08-15T23:45:07.414Z","type":"step_start","stepId":"s2","intent":"Enter the operator password for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.448Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:45:07.448Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.514Z","type":"step_ok","stepId":"s2","ms":100}
+{"ts":"2026-08-15T23:45:07.514Z","type":"step_start","stepId":"s3","intent":"Submit the sign-in form.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.547Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:45:07.547Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.631Z","type":"recovery_applied","code":"SESSION_TIMEOUT","attempt":1,"handler":"restartRun"}
+{"ts":"2026-08-15T23:45:07.631Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"http://localhost:4173/login?expired=1","risk":"read"}
+{"ts":"2026-08-15T23:45:07.818Z","type":"step_start","stepId":"s1","intent":"Enter the operator ID for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.848Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:45:07.848Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.897Z","type":"step_ok","stepId":"s1","ms":79}
+{"ts":"2026-08-15T23:45:07.897Z","type":"step_start","stepId":"s2","intent":"Enter the operator password for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.913Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:45:07.913Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.947Z","type":"step_ok","stepId":"s2","ms":50}
+{"ts":"2026-08-15T23:45:07.947Z","type":"step_start","stepId":"s3","intent":"Submit the sign-in form.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:45:07.963Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:45:07.963Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/login","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.349Z","type":"step_ok","stepId":"s3","ms":402}
+{"ts":"2026-08-15T23:45:08.349Z","type":"step_start","stepId":"s4","intent":"Open the Member Search screen.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.386Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:45:08.387Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.482Z","type":"step_ok","stepId":"s4","ms":133}
+{"ts":"2026-08-15T23:45:08.483Z","type":"step_start","stepId":"s5","intent":"Enter member number to search.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.516Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-15T23:45:08.516Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.566Z","type":"step_ok","stepId":"s5","ms":83}
+{"ts":"2026-08-15T23:45:08.567Z","type":"step_start","stepId":"s6","intent":"Search for the member.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.600Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:45:08.600Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-15T23:45:08.956Z","type":"step_ok","stepId":"s6","ms":389}
+{"ts":"2026-08-15T23:45:08.957Z","type":"step_start","stepId":"s7","intent":"Open the member 12345 detail page.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-15T23:45:09.002Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-15T23:45:09.002Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"reversible"}
+{"ts":"2026-08-15T23:45:09.364Z","type":"step_ok","stepId":"s7","ms":407}
+{"ts":"2026-08-15T23:45:09.365Z","type":"step_start","stepId":"s8","intent":"Read the REGULAR SAVINGS (S00) account balance.","kind":"read","risk":"read"}
+{"ts":"2026-08-15T23:45:09.406Z","type":"resolved","stepId":"s8","strategyIndex":0,"strategy":"tableCell","score":0.9500000000000001}
+{"ts":"2026-08-15T23:45:09.406Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"http://localhost:4173/","risk":"read"}
+{"ts":"2026-08-15T23:45:09.406Z","type":"extracted","stepId":"s8","into":"savingsBalance"}
+{"ts":"2026-08-15T23:45:09.436Z","type":"step_ok","stepId":"s8","ms":71}
+{"ts":"2026-08-15T23:45:09.470Z","type":"run_result","status":"success"}

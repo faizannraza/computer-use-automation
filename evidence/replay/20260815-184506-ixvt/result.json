@@ -1,0 +1,93 @@
+{
+  "capabilityId": "member.readSavingsBalance",
+  "version": "1.0.0",
+  "runId": "20260815-184506-ixvt",
+  "evidenceDir": "evidence/replay/20260815-184506-ixvt",
+  "startedAt": "2026-08-15T23:45:06.695Z",
+  "status": "success",
+  "outputs": {
+    "savingsBalance": "***97"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID for sign-in.",
+      "status": "ok",
+      "ms": 79,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator password for sign-in.",
+      "status": "ok",
+      "ms": 50,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the sign-in form.",
+      "status": "ok",
+      "ms": 402,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open the Member Search screen.",
+      "status": "ok",
+      "ms": 133,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter member number to search.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member.",
+      "status": "ok",
+      "ms": 389,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Open the member 12345 detail page.",
+      "status": "ok",
+      "ms": 407,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Read the REGULAR SAVINGS (S00) account balance.",
+      "status": "ok",
+      "ms": 71,
+      "strategyIndex": 0,
+      "strategy": "tableCell",
+      "score": 0.9500000000000001
+    }
+  ],
+  "recoveriesUsed": [
+    {
+      "code": "SESSION_TIMEOUT",
+      "attempts": 1
+    }
+  ],
+  "interventions": [],
+  "finishedAt": "2026-08-15T23:45:09.470Z"
+}

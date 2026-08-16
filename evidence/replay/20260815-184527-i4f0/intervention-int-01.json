@@ -1,0 +1,18 @@
+{
+  "kind": "approve_risky",
+  "stepId": "s13",
+  "stepIntent": "Confirm opening the sub-account (IRREVERSIBLE: posts the opening deposit)",
+  "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+  "suggestedResolution": "Review the pending irreversible action in the live window. approve = the automation performs it; abort = stop the run.",
+  "options": [
+    "approve",
+    "abort"
+  ],
+  "capabilityId": "member.openSubAccount",
+  "version": "1.0.0",
+  "runId": "20260815-184527-i4f0",
+  "observationSummary": "at http://localhost:4173/; title \"MockCore Teller v7.2.14\"; headings: MockCore™ Teller | Main Menu | Session | Review Sub-Account | Review — Please Verify Before Confirming | Member; text: \"[frame banner] MockCore™ Teller Signed in: teller1 | Institution: 0001 — Demo Federal Credit Union [frame menu] Main Menu Home Member Search Transactions Reports Batch Operations Session Sign Out [fra…\"",
+  "screenshotRef": "steps/014-intervention.png",
+  "id": "int-01",
+  "at": "2026-08-15T23:45:30.974Z"
+}

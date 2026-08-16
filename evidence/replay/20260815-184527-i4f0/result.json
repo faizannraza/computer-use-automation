@@ -1,0 +1,178 @@
+{
+  "capabilityId": "member.openSubAccount",
+  "version": "1.0.0",
+  "runId": "20260815-184527-i4f0",
+  "evidenceDir": "evidence/replay/20260815-184527-i4f0",
+  "startedAt": "2026-08-15T23:45:27.347Z",
+  "status": "success",
+  "outputs": {
+    "confirmationNo": "CNF-000341",
+    "newSuffix": "S02"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID on the sign-in screen",
+      "status": "ok",
+      "ms": 77,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 0.95
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator password",
+      "status": "ok",
+      "ms": 50,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 0.95
+    },
+    {
+      "stepId": "s3",
+      "intent": "Sign in and land on the teller home screen",
+      "status": "ok",
+      "ms": 418,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Search from the main menu",
+      "status": "ok",
+      "ms": 411,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number in the search field",
+      "status": "ok",
+      "ms": 107,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 0.95
+    },
+    {
+      "stepId": "s6",
+      "intent": "Run the search and wait for the results table (or the no-match message)",
+      "status": "ok",
+      "ms": 413,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Open the matching member's detail screen from the results row",
+      "status": "ok",
+      "ms": 415,
+      "strategyIndex": 0,
+      "strategy": "textAnchor",
+      "score": 0.9
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the new sub-account form for this member",
+      "status": "ok",
+      "ms": 399,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Choose the account type to open",
+      "status": "ok",
+      "ms": 106,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 0.95
+    },
+    {
+      "stepId": "s10",
+      "intent": "Enter the sub-account nickname",
+      "status": "ok",
+      "ms": 67,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 0.95
+    },
+    {
+      "stepId": "s11",
+      "intent": "Enter the initial deposit amount",
+      "status": "ok",
+      "ms": 65,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 0.95
+    },
+    {
+      "stepId": "s12",
+      "intent": "Continue to the review screen (validation happens here)",
+      "status": "ok",
+      "ms": 412,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s13",
+      "intent": "Confirm opening the sub-account (IRREVERSIBLE: posts the opening deposit)",
+      "status": "ok",
+      "ms": 698,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s14",
+      "intent": "Read the confirmation number from the confirmation screen",
+      "status": "ok",
+      "ms": 56,
+      "strategyIndex": 0,
+      "strategy": "textAnchor",
+      "score": 0.85
+    },
+    {
+      "stepId": "s15",
+      "intent": "Read the new share suffix from the confirmation screen",
+      "status": "ok",
+      "ms": 66,
+      "strategyIndex": 0,
+      "strategy": "textAnchor",
+      "score": 0.85
+    }
+  ],
+  "recoveriesUsed": [
+    {
+      "code": "SUPERVISOR_AUTH_REQUIRED",
+      "attempts": 1
+    }
+  ],
+  "interventions": [
+    {
+      "id": "int-01",
+      "kind": "approve_risky",
+      "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+      "resolution": "approve",
+      "humanActions": 0,
+      "heldForMs": 5,
+      "stepId": "s13",
+      "note": "Scripted operator (same Operator seam as the terminal console): reviewed pending confirm, approving."
+    },
+    {
+      "id": "int-02",
+      "kind": "human_action_required",
+      "reason": "SUPERVISOR_AUTH_REQUIRED: The app demands supervisor authorization (PRM-4031) before the sub-account can be opened. Only a person with the supervisor PIN can clear this on the live session.",
+      "resolution": "resume",
+      "humanActions": 3,
+      "heldForMs": 60,
+      "stepId": "s13",
+      "note": "Scripted operator: entered the supervisor PIN on the live session and authorized."
+    }
+  ],
+  "finishedAt": "2026-08-15T23:45:31.768Z"
+}
