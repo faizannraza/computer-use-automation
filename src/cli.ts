@@ -16,9 +16,9 @@ import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { buildCatalog, findByName } from './catalog/catalog.js';
+import { findByName, loadCatalog } from './catalog/catalog.js';
 import { runDiscovery } from './discovery/agent.js';
-import { compileTrace } from './discovery/compile.js';
+import { compileTrace, genericCallerParamDescription } from './discovery/compile.js';
 import type { OutputHint } from './discovery/compile.js';
 import type { DiscoveryTrace } from './discovery/recorder.js';
 import { newRunId } from './evidence/runLog.js';
@@ -95,7 +95,13 @@ async function catalogCmd(argv: string[]): Promise<void> {
     },
   });
   if (!values.invoke) {
-    console.log(JSON.stringify(buildCatalog(values.dir!), null, 2));
+    // stdout stays the machine-readable tool list (an unloadable artifact is
+    // not callable, so it is not in it); the files that refused to load go to
+    // stderr, so a broken recording is impossible to miss without corrupting
+    // the JSON a caller is piping.
+    const { entries, broken } = loadCatalog(values.dir!);
+    console.log(JSON.stringify(entries, null, 2));
+    for (const b of broken) console.error(`WARNING: '${b.file}' did not load and is not callable: ${b.error}`);
     return;
   }
   const entry = findByName(values.invoke, values.dir!);
@@ -190,7 +196,11 @@ async function discoverCmd(argv: string[]): Promise<void> {
         : { type: 'string' as const };
     paramSpecs[name!] = ParamSpecSchema.parse({
       ...shape,
-      description: `Caller-supplied parameter '${name}'.`,
+      // A placeholder on purpose. The compiler recognises this exact string and
+      // replaces it with the on-screen label of the field the param was
+      // actually typed into (plus a choose's offered options) — which is
+      // knowledge only the recording has, so it cannot be written here.
+      description: genericCallerParamDescription(name!),
       sensitivity: (sensitivity as Sensitivity | undefined) ?? 'none',
       source: 'caller',
       ...((sensitivity ?? 'none') === 'none' || sensitivity === 'internal' ? { example: value } : {}),
@@ -534,7 +544,12 @@ function recompileCmd(argv: string[]): void {
     supplied[spec.slice(0, eq)] = spec.slice(eq + 1);
   }
   const before = CapabilityArtifactSchema.parse(JSON.parse(readFileSync(file, 'utf8')));
-  const baseUrl = values['base-url'] ?? (values.app ? loadProfile(values.app).baseUrl : undefined);
+  // The profile is a compiler INPUT, not just a source of the base URL: it
+  // names the app's transaction-token field, and a re-derivation run without it
+  // would drop the token assertions and report them as a compiler difference
+  // that is really a missing flag.
+  const recompileProfile = values.app ? loadProfile(values.app) : undefined;
+  const baseUrl = values['base-url'] ?? recompileProfile?.baseUrl;
   if (!baseUrl) {
     console.error('recompile needs the base URL the run was recorded against: pass --app <profile> or --base-url <url>');
     process.exit(64);
@@ -579,6 +594,11 @@ function recompileCmd(argv: string[]): void {
 
   const { artifact, report } = compileTrace({
     trace,
+    // The role the flow was recorded as is a fact about the RECORDING, and the
+    // trace does not carry it — so recompiling must preserve what the artifact
+    // already knows, or a supervisor-only capability silently loses the one
+    // declaration that says so.
+    ...(before.policy.requiresRole !== undefined ? { requiresRole: before.policy.requiresRole } : {}),
     paramSpecs: before.params,
     callerParamValues,
     outputHints,
@@ -590,6 +610,7 @@ function recompileCmd(argv: string[]): void {
     // The trace directory is `<evidenceBaseDir>/discovery/<runId>`, so the
     // base the artifact should point back at is two levels up from it.
     evidenceBaseDir: path.dirname(path.dirname(path.resolve(values.trace))).replace(`${process.cwd()}${path.sep}`, ''),
+    ...(recompileProfile !== undefined ? { profile: recompileProfile } : {}),
   });
   // The recording happened once. Recompiling re-reads it; it does not re-do it.
   // `evidenceRef` is deliberately NOT carried over — recompiling is exactly

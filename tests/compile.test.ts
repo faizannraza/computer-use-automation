@@ -4,11 +4,16 @@
  * parameterization by value-matching, checkpoint mining from state deltas,
  * locator-ladder construction, and outcome attachment.
  */
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { computeContentHash } from '../src/schema/capability.js';
 import { ParamSpecSchema } from '../src/schema/capability.js';
-import { compileTrace } from '../src/discovery/compile.js';
+import { compileTrace, genericCallerParamDescription } from '../src/discovery/compile.js';
 import type { DiscoveryTrace, RecordedAction, StateDigest } from '../src/discovery/recorder.js';
+import { AppProfileSchema } from '../src/profile/appProfile.js';
+import { evaluateCondition } from '../src/replay/detectors.js';
+import type { Observation, ObservedElement } from '../src/core/types.js';
 
 const BASE = 'http://localhost:4173';
 
@@ -74,7 +79,9 @@ const trace: DiscoveryTrace = {
 };
 
 const paramSpecs = {
-  memberId: ParamSpecSchema.parse({ type: 'string', description: 'member number', sensitivity: 'internal', source: 'caller', pattern: '^[0-9]+$', example: '12345' }),
+  // The CLI's placeholder, verbatim — this is what a real discovery run hands
+  // the compiler, and it is the string the compiler is allowed to replace.
+  memberId: ParamSpecSchema.parse({ type: 'string', description: genericCallerParamDescription('memberId'), sensitivity: 'internal', source: 'caller', pattern: '^[0-9]+$', example: '12345' }),
   operatorId: ParamSpecSchema.parse({ type: 'string', description: 'operator', sensitivity: 'internal', source: 'env', env: 'MOCK_CU_USER' }),
 };
 
@@ -372,5 +379,373 @@ describe('compileTrace', () => {
     const { artifact } = compiled();
     expect(artifact.successCriteria.length).toBeGreaterThan(0);
     expect(JSON.stringify(artifact.successCriteria)).not.toContain('99999');
+  });
+});
+
+/**
+ * Substitution ORDER. A param whose value is a prefix of another param's value
+ * wins the span in a naive reduce, leaving the longer value half-templated —
+ * and the hardcoded half pins the artifact to the recording session.
+ *
+ * This is the defect that shipped `member.transferFunds` with a final
+ * postcondition of `textPresent "{memberId}-S0001:"`: replayed against any
+ * other share pair the transfer POSTED and then reported POSTCONDITION_TIMEOUT,
+ * telling the caller the money had not moved while it had.
+ */
+describe('parameterization order (longest value first)', () => {
+  const shareDigest: StateDigest = {
+    location: `${BASE}/transfer/receipt`,
+    title: 'Receipt',
+    markers: [{ text: 'TRANSFER POSTED' }, { text: '101555-S0001:' }],
+  };
+  const beforePost: StateDigest = { location: `${BASE}/transfer/review`, title: 'Review', markers: [{ text: 'CONFIRM FUNDS TRANSFER' }] };
+
+  const prefixTrace: DiscoveryTrace = {
+    goal: 'prefix collision',
+    actions: [
+      act({ kind: 'navigate', intent: 'Open the app', risk: 'read', url: `${BASE}/`, before: { location: 'about:blank', title: '', markers: [] }, after: beforePost }),
+      act({
+        kind: 'activate', intent: 'Post the transfer', risk: 'irreversible',
+        // The row text carries BOTH values, with the shorter one a strict
+        // prefix of the longer one and delimited by the '-'.
+        element: { role: 'button', name: 'Post Transfer', nearText: '101555 | 101555-S0001 | posted', framePath: [] },
+        before: beforePost, after: shareDigest,
+      }),
+    ],
+    outcomes: [],
+    done: { capabilityId: 'member.transferFunds', title: 't', description: 'd' },
+  };
+
+  const prefixParams = {
+    memberId: ParamSpecSchema.parse({ type: 'string', description: genericCallerParamDescription('memberId'), sensitivity: 'internal', source: 'caller', example: '101555' }),
+    fromShare: ParamSpecSchema.parse({ type: 'string', description: genericCallerParamDescription('fromShare'), sensitivity: 'internal', source: 'caller', example: '101555-S0001' }),
+  };
+
+  function compilePrefix() {
+    return compileTrace({
+      trace: prefixTrace,
+      paramSpecs: prefixParams,
+      // Declaration order deliberately puts the SHORTER value first — the
+      // order a real `--param memberId=… --param fromShare=…` produces.
+      callerParamValues: { memberId: '101555', fromShare: '101555-S0001' },
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'prefixrun',
+      app: { appId: 'meridian-core', vendor: 'Cornerstone' },
+      version: '1.0.0',
+    });
+  }
+
+  it('the longer param value wins the span, whatever order the params were declared in', () => {
+    const { artifact } = compilePrefix();
+    const posted = artifact.steps.find((s) => s.intent === 'Post the transfer')!;
+    const patterns = posted.post.map((p) => (p.c === 'textPresent' ? p.pattern : ''));
+    // The whole share id becomes ONE placeholder. The old ordering produced
+    // "{memberId}-S0001:" — a placeholder plus a hardcoded share.
+    expect(patterns).toContain('{fromShare}:');
+    // Nothing EXECUTABLE may carry the recorded share id. (`params.*.example`
+    // legitimately still records it — that is the recorded value, and it is
+    // what makes the artifact re-derivable.)
+    const executable = JSON.stringify({ steps: artifact.steps, successCriteria: artifact.successCriteria });
+    expect(executable).not.toContain('{memberId}-S0001');
+    expect(executable).not.toContain('S0001');
+  });
+
+  it('still parameterizes the shorter value where it stands alone', () => {
+    const { artifact } = compilePrefix();
+    // The row anchor sees "101555 | 101555-S0001 | posted": both must bind.
+    const posted = artifact.steps.find((s) => s.intent === 'Post the transfer')!;
+    const json = JSON.stringify(posted.action);
+    expect(json).toContain('{fromShare}');
+    expect(json).toContain('{memberId}');
+  });
+
+  it('the success criteria mined from the final state are fully templated too', () => {
+    const { artifact } = compilePrefix();
+    expect(JSON.stringify(artifact.successCriteria)).toContain('{fromShare}');
+    expect(JSON.stringify(artifact.successCriteria)).not.toContain('S0001');
+  });
+
+  it('lints a placeholder that runs into further identifier characters', () => {
+    // A recorded identifier whose suffix NO param declares: reordering cannot
+    // fix it, so the compiler must say so before a human approves it.
+    const strayTrace = structuredClone(prefixTrace);
+    strayTrace.actions[1]!.after = {
+      ...shareDigest,
+      markers: [{ text: 'TRANSFER POSTED' }, { text: '101555-S0002:' }],
+    };
+    const { report } = compileTrace({
+      trace: strayTrace,
+      paramSpecs: prefixParams,
+      callerParamValues: { memberId: '101555', fromShare: '101555-S0001' },
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'strayrun',
+      app: { appId: 'meridian-core', vendor: 'Cornerstone' },
+      version: '1.0.0',
+    });
+    expect(report.notes.some((n) => n.includes('half-substituted') && n.includes('{memberId}-S0002'))).toBe(true);
+  });
+
+  it('does not lint ordinary prose or URL templates', () => {
+    const { report } = compiled();
+    expect(report.notes.every((n) => !n.includes('half-substituted'))).toBe(true);
+  });
+});
+
+/**
+ * Caller-param descriptions. The Capability-API criterion is "a catalog an
+ * agent could invoke BY NAME WITHOUT KNOWING THE UI" — and
+ * `"Caller-supplied parameter 'searchBy'"` repeats the name back at a caller
+ * who already had it. The compiler holds what is missing: the on-screen label
+ * of the field the param binds to, and a choose's offered options.
+ */
+describe('caller-param descriptions', () => {
+  it('seeds the description from the on-screen label of the field it was typed into', () => {
+    const { artifact } = compiled();
+    expect(artifact.params['memberId']!.description).toBe('Typed into the "Member No. or Name" field on screen.');
+  });
+
+  it('leaves env params and human-authored descriptions alone', () => {
+    const { artifact } = compiled();
+    // Env-sourced: its own description is accurate and is not a placeholder.
+    expect(artifact.params['operatorId']!.description).toBe('operator');
+    const authored = compileTrace({
+      trace,
+      paramSpecs: {
+        ...paramSpecs,
+        memberId: ParamSpecSchema.parse({ ...paramSpecs.memberId, description: 'The member number to look up.' }),
+      },
+      callerParamValues: { memberId: '12345' },
+      outputHints: { savingsBalance: { type: 'money', sensitivity: 'pii' } },
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'authoredrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(authored.artifact.params['memberId']!.description).toBe('The member number to look up.');
+  });
+
+  const searchByTrace: DiscoveryTrace = {
+    goal: 'search by',
+    actions: [
+      act({ kind: 'navigate', intent: 'Open the app', risk: 'read', url: `${BASE}/login`, before: { location: 'about:blank', title: '', markers: [] }, after: loginDigest }),
+      act({
+        kind: 'choose', intent: 'Pick the search mode', risk: 'reversible',
+        element: {
+          role: 'combobox', name: 'Search by:', label: 'Search by:',
+          options: ['Member Number', 'Last Name'], optionValues: ['number', 'name'],
+          framePath: workFrame,
+        },
+        option: { literal: 'name' }, optionBy: 'value',
+        before: searchDigest, after: searchDigest,
+      }),
+      act({
+        kind: 'setValue', intent: 'Enter the search value', risk: 'reversible',
+        element: { role: 'textbox', name: 'Value:', framePath: workFrame }, // no label recorded
+        value: { literal: 'Lovelace' }, before: searchDigest, after: searchDigest,
+      }),
+    ],
+    outcomes: [],
+    done: { capabilityId: 'member.inquire', title: 't', description: 'd' },
+  };
+  const searchByParams = {
+    searchBy: ParamSpecSchema.parse({ type: 'string', description: genericCallerParamDescription('searchBy'), sensitivity: 'none', source: 'caller', example: 'name' }),
+    query: ParamSpecSchema.parse({ type: 'string', description: genericCallerParamDescription('query'), sensitivity: 'none', source: 'caller', example: 'Lovelace' }),
+  };
+  const compileSearchBy = () =>
+    compileTrace({
+      trace: searchByTrace,
+      paramSpecs: searchByParams,
+      callerParamValues: { searchBy: 'name', query: 'Lovelace' },
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'searchbyrun',
+      app: { appId: 'meridian-core', vendor: 'Cornerstone' },
+      version: '1.0.0',
+    });
+
+  it('records a choose param’s offered options as prose', () => {
+    const { artifact } = compileSearchBy();
+    // The bound-by-VALUE step matches option values, so the VALUES are what a
+    // caller supplies — listing the visible labels would advertise inputs that
+    // do not work.
+    expect(artifact.params['searchBy']!.description).toBe(
+      'Chosen in the "Search by" field on screen. Offered at recording time: number, name.',
+    );
+  });
+
+  it('describes the offered options WITHOUT constraining the param to them', () => {
+    // Deliberate: the same code path serves fromShare/toShare, whose offered
+    // values are one member's share ids. An enum domain there would compile a
+    // capability that rejects every other member.
+    const { artifact } = compileSearchBy();
+    expect(artifact.params['searchBy']!.type).toBe('string');
+    expect(artifact.params['searchBy']!.values).toBeUndefined();
+  });
+
+  it('falls back to the generic text when no label was recorded', () => {
+    const { artifact } = compileSearchBy();
+    expect(artifact.params['query']!.description).toBe(genericCallerParamDescription('query'));
+  });
+});
+
+/**
+ * The per-transaction token assertion. ADAPTATION.md and the MERIDIAN profile
+ * both say the system asserts a token is present before a posting step; until
+ * this landed, neither the compiler nor any artifact did.
+ */
+describe('the per-transaction token assertion', () => {
+  const profile = AppProfileSchema.parse(JSON.parse(readFileSync('profiles/meridian-core.profile.json', 'utf8')));
+
+  // MERIDIAN as the replay evidence records it: the SIGN-ON form carries no
+  // hidden token, the transfer form and its review screen each carry one.
+  const signOn: StateDigest = { location: `${BASE}/`, title: 'Sign On', markers: [{ text: 'OPERATOR SIGN ON' }] };
+  const form: StateDigest = { location: `${BASE}/transfer`, title: 'Transfer', markers: [{ text: 'FUNDS TRANSFER' }], hiddenFields: [{ name: '_token' }] };
+  const review: StateDigest = { location: `${BASE}/transfer/review`, title: 'Review', markers: [{ text: 'CONFIRM FUNDS TRANSFER' }], hiddenFields: [{ name: '_token' }] };
+  const receipt: StateDigest = { location: `${BASE}/transfer/receipt`, title: 'Receipt', markers: [{ text: 'TRANSFER POSTED' }] };
+
+  const tokenTrace: DiscoveryTrace = {
+    goal: 'token assertion',
+    actions: [
+      act({ kind: 'navigate', intent: 'Open the app', risk: 'read', url: `${BASE}/`, before: { location: 'about:blank', title: '', markers: [] }, after: signOn }),
+      act({ kind: 'activate', intent: 'Sign On', risk: 'reversible', element: { role: 'button', name: 'Sign On', framePath: [] }, before: signOn, after: form }),
+      act({ kind: 'activate', intent: 'Open Funds Transfer', risk: 'read', element: { role: 'link', name: 'Funds Transfer', framePath: [] }, before: form, after: form }),
+      act({ kind: 'setValue', intent: 'Enter the amount', risk: 'reversible', element: { role: 'textbox', name: 'Amount:', label: 'Amount:', framePath: [] }, value: { literal: '25.00' }, before: form, after: form }),
+      act({ kind: 'activate', intent: 'Continue', risk: 'reversible', element: { role: 'button', name: 'Continue', framePath: [] }, before: form, after: review }),
+      act({ kind: 'activate', intent: 'Post Transfer', risk: 'irreversible', element: { role: 'button', name: 'Post Transfer', framePath: [] }, before: review, after: receipt }),
+    ],
+    outcomes: [],
+    done: { capabilityId: 'member.transferFunds', title: 't', description: 'd' },
+  };
+
+  const compileToken = (withProfile: boolean) =>
+    compileTrace({
+      trace: tokenTrace,
+      paramSpecs: {},
+      callerParamValues: {},
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'tokenrun',
+      app: { appId: 'meridian-core', vendor: 'Cornerstone' },
+      version: '1.0.0',
+      ...(withProfile ? { profile } : {}),
+    });
+
+  const TOKEN_CONDITION = {
+    c: 'elementPresent',
+    target: {
+      framePath: [],
+      strategies: [{ s: 'roleName', role: 'hidden', name: '_token', nameMatch: 'exact' }],
+      disambiguation: { requireUnique: true, minScore: 0.6 },
+    },
+  };
+
+  it('asserts the token before every form-posting step whose state carried one', () => {
+    const { artifact } = compileToken(true);
+    const cont = artifact.steps.find((s) => s.intent === 'Continue')!;
+    const post = artifact.steps.find((s) => s.intent === 'Post Transfer')!;
+    expect(cont.pre).toContainEqual(TOKEN_CONDITION);
+    expect(post.pre).toContainEqual(TOKEN_CONDITION);
+  });
+
+  it('does NOT assert it on a posting step whose form carried no token', () => {
+    // MERIDIAN's sign-on form POSTs and has no `_token`. A flat "every posting
+    // step" rule would put an unsatisfiable precondition here and make every
+    // capability unrunnable at step one.
+    const { artifact, report } = compileToken(true);
+    const signOnStep = artifact.steps.find((s) => s.intent === 'Sign On')!;
+    expect(signOnStep.pre.some((c) => c.c === 'elementPresent')).toBe(false);
+    expect(signOnStep.pre.length).toBeGreaterThan(0); // it keeps its marker precondition
+    expect(report.notes.some((n) => n.includes("transaction token '_token': NOT asserted") && n.includes('s1'))).toBe(true);
+    expect(report.notes.some((n) => n.includes("transaction token '_token': asserted present before s4, s5"))).toBe(true);
+  });
+
+  it('does not assert it on navigation or on typing steps', () => {
+    // The link and the setValue both act on a page that DOES carry the token —
+    // so this is the rule's first half doing the work, not the evidence gate.
+    const { artifact } = compileToken(true);
+    const link = artifact.steps.find((s) => s.intent === 'Open Funds Transfer')!;
+    const typing = artifact.steps.find((s) => s.intent === 'Enter the amount')!;
+    expect(link.pre.some((c) => c.c === 'elementPresent')).toBe(false);
+    expect(typing.pre).toEqual([]);
+  });
+
+  it('emits nothing at all when the run had no app profile', () => {
+    const { artifact, report } = compileToken(false);
+    expect(JSON.stringify(artifact)).not.toContain('elementPresent');
+    expect(report.notes.every((n) => !n.includes('transaction token'))).toBe(true);
+  });
+
+  it('stays schema-legal and hash-consistent with the extra precondition', () => {
+    const { artifact } = compileToken(true);
+    expect(computeContentHash(artifact)).toBe(artifact.integrity.contentHash);
+  });
+
+  /**
+   * Ground truth. The synthetic trace above asserts what the compiler EMITS;
+   * this asserts the emitted condition would actually match MERIDIAN, by
+   * evaluating it against element maps captured on the live app during a
+   * committed replay of member.transferFunds.
+   */
+  describe('against the committed MERIDIAN replay evidence', () => {
+    // Found rather than hardcoded. Committed evidence is CURATED — runs are
+    // pruned and re-recorded as capabilities change — so pinning a run id makes
+    // this suite fail for a reason that has nothing to do with the compiler.
+    // What the test actually needs is "any committed transferFunds replay that
+    // captured element maps", and that is what it looks for.
+    const runsDir = 'evidence/meridian/replay';
+    const RUN = (() => {
+      for (const id of readdirSync(runsDir).sort().reverse()) {
+        const steps = path.join(runsDir, id, 'steps');
+        const resultFile = path.join(runsDir, id, 'result.json');
+        if (!existsSync(steps) || !existsSync(resultFile)) continue;
+        const result = JSON.parse(readFileSync(resultFile, 'utf8')) as { capabilityId?: string };
+        if (result.capabilityId !== 'member.transferFunds') continue;
+        if (readdirSync(steps).some((f) => f.endsWith('.elements.json'))) return steps;
+      }
+      throw new Error('no committed member.transferFunds replay carries element maps');
+    })();
+    /** The nth captured element map, by capture order — the file names carry a
+     *  running counter and the step they followed, both of which move when a
+     *  capability is re-recorded. Position is the stable handle. */
+    const dumps = readdirSync(RUN).filter((f) => f.endsWith('.elements.json')).sort();
+    const observationFrom = (file: string): Observation => {
+      const dump = JSON.parse(readFileSync(path.join(RUN, file), 'utf8')) as { location: string; elements: ObservedElement[] };
+      return { seq: 1, location: dump.location, title: '', elements: dump.elements, visibleText: '', at: '1970-01-01T00:00:00.000Z' };
+    };
+    /** The first captured state whose location is the review screen, and the
+     *  one before it — the two states the posting steps act on. */
+    const locationOf = (file: string): string =>
+      (JSON.parse(readFileSync(path.join(RUN, file), 'utf8')) as { location: string }).location;
+    const reviewIdx = dumps.findIndex((f) => locationOf(f).includes('/transfer/review'));
+    const tokenCondition = () => {
+      const { artifact } = compileToken(true);
+      const cond = artifact.steps.find((s) => s.intent === 'Post Transfer')!.pre.find((c) => c.c === 'elementPresent');
+      if (cond === undefined) throw new Error('no token condition was emitted');
+      return cond;
+    };
+
+    it('matches the transfer form — the state the Continue step posts from', async () => {
+      expect(reviewIdx).toBeGreaterThan(0);
+      expect(await evaluateCondition(tokenCondition(), observationFrom(dumps[reviewIdx - 1]!))).toBe(true);
+    });
+
+    it('matches the review screen — the state the Post Transfer step posts from', async () => {
+      expect(reviewIdx).toBeGreaterThanOrEqual(0);
+      expect(await evaluateCondition(tokenCondition(), observationFrom(dumps[reviewIdx]!))).toBe(true);
+    });
+
+    it('does NOT match the sign-on screen — which is why the evidence gate exists', async () => {
+      // The first capture of any run is the entrypoint: MERIDIAN's sign-on form
+      // posts without a token, so a flat "every posting step" rule would have
+      // put an unsatisfiable precondition on step 1 of all seven capabilities.
+      expect(await evaluateCondition(tokenCondition(), observationFrom(dumps[0]!))).toBe(false);
+    });
   });
 });

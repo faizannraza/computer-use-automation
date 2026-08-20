@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:53:11.552Z"
+      "at": "2026-08-20T21:00:12.357Z"
     }
   },
   "params": {
     "memberId": {
       "type": "integer",
-      "description": "Caller-supplied parameter 'memberId'.",
+      "description": "Typed into the \"Value\" field on screen.",
       "required": true,
       "pattern": "^[0-9]+$",
       "example": "101555",
@@ -41,7 +41,7 @@
     },
     "fromShare": {
       "type": "string",
-      "description": "Caller-supplied parameter 'fromShare'.",
+      "description": "Chosen in the \"From Share\" field on screen. Offered at recording time: 101555-S0001, 101555-CERT, 101555-MMKT-3, 101555-MMKT-4, 101555-MMKT-5.",
       "required": true,
       "example": "101555-S0001",
       "sensitivity": "none",
@@ -49,7 +49,7 @@
     },
     "toShare": {
       "type": "string",
-      "description": "Caller-supplied parameter 'toShare'.",
+      "description": "Chosen in the \"To Share\" field on screen. Offered at recording time: 101555-S0001, 101555-CERT, 101555-MMKT-3, 101555-MMKT-4, 101555-MMKT-5.",
       "required": true,
       "example": "101555-CERT",
       "sensitivity": "none",
@@ -57,7 +57,7 @@
     },
     "amount": {
       "type": "money",
-      "description": "Caller-supplied parameter 'amount'.",
+      "description": "Typed into the \"Amount\" field on screen.",
       "required": true,
       "pattern": "^\\$?[0-9][0-9,]*\\.[0-9]{2}$",
       "example": "5.00",
@@ -66,7 +66,7 @@
     },
     "memo": {
       "type": "string",
-      "description": "Caller-supplied parameter 'memo'.",
+      "description": "Typed into the \"Memo\" field on screen.",
       "required": true,
       "example": "Capability recording",
       "sensitivity": "none",
@@ -782,7 +782,7 @@
         },
         {
           "c": "textPresent",
-          "pattern": "{memberId}-S0001:"
+          "pattern": "{fromShare}:"
         }
       ],
       "wait": {
@@ -838,7 +838,7 @@
     },
     {
       "c": "textPresent",
-      "pattern": "{memberId}-S0001:"
+      "pattern": "{fromShare}:"
     },
     {
       "c": "textPresent",
@@ -846,6 +846,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "1bde941db48a0255de42ab6d1e86ba5284c6082ce5012ffacd496656dd4457ae"
+    "contentHash": "215fdde25e1767e525cff09d08b0ece71733f056f61986900357d4693b3bab3d"
   }
 }

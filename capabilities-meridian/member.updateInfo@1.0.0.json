@@ -4,7 +4,7 @@
     "id": "member.updateInfo",
     "version": "1.0.0",
     "title": "Update Member Information",
-    "description": "Signs on to MERIDIAN CORE, searches Member Inquiry by Member Number for the given memberId, selects the record, and opens Update Member Information. Types the email, phone, and address parameters into the E-mail, Phone, and Mailing Address fields and clicks Save Changes (an irreversible record modification). Confirms success via the 'CHANGES SAVED' / 'MEMBER INFORMATION UPDATED' screen (outcome UPDATE_SAVED). Inputs: memberId, email, phone, address, plus operatorId/operatorPassword resolved from the environment.",
+    "description": "Signs on to MERIDIAN CORE, opens Member Inquiry, searches by Member Number for the 'memberId' parameter and selects the member, then opens 'Update Member Information' and writes the 'email', 'phone', and 'address' parameters into the E-mail, Phone, and Mailing Address fields. Clicking 'Save Changes' commits the member-record change (irreversible). On the resulting confirmation screen it captures the success confirmation indicator into output 'confirmation' (value \"MEMBER INFORMATION UPDATED\"). Note: the detailed confirmation sentence renders as plain non-semantic text and is not exposed as an addressable element, so the addressable success heading is used as the confirmation value. Inputs: memberId, email, phone, address, operatorId, operatorPassword.",
     "app": {
       "appId": "meridian-core",
       "vendor": "Cornerstone Financial Systems"
@@ -16,17 +16,17 @@
     }
   },
   "provenance": {
-    "recordedAt": "2026-08-20T19:57:35.790Z",
+    "recordedAt": "2026-08-20T20:47:16.028Z",
     "recordedBy": {
       "kind": "llm-discovery",
       "model": "claude-opus-4-8",
-      "discoveryRunId": "20260820-125646-4tb7"
+      "discoveryRunId": "20260820-134302-g6i5"
     },
-    "evidenceRef": "evidence/meridian/discovery/20260820-125646-4tb7",
+    "evidenceRef": "evidence/meridian/discovery/20260820-134302-g6i5",
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:58:01.431Z"
+      "at": "2026-08-20T20:48:21.293Z"
     }
   },
   "params": {
@@ -43,24 +43,21 @@
       "type": "string",
       "description": "Caller-supplied parameter 'email'.",
       "required": true,
-      "example": "***om",
-      "sensitivity": "none",
+      "sensitivity": "pii",
       "source": "caller"
     },
     "phone": {
       "type": "string",
       "description": "Caller-supplied parameter 'phone'.",
       "required": true,
-      "example": "***99",
-      "sensitivity": "none",
+      "sensitivity": "pii",
       "source": "caller"
     },
     "address": {
       "type": "string",
       "description": "Caller-supplied parameter 'address'.",
       "required": true,
-      "example": "***ay",
-      "sensitivity": "none",
+      "sensitivity": "pii",
       "source": "caller"
     },
     "operatorId": {
@@ -80,33 +77,33 @@
       "env": "MERIDIAN_OPERATOR_PASSWORD"
     }
   },
-  "outputs": {},
-  "outcomes": [
-    {
-      "code": "UPDATE_SAVED",
-      "description": "The member's contact information (email, phone, mailing address) was successfully saved. Confirmation screen shows the update was committed.",
-      "when": {
-        "c": "textPresent",
-        "pattern": "CHANGES SAVED"
-      },
-      "terminal": true,
-      "outputs": {}
+  "outputs": {
+    "confirmation": {
+      "type": "string",
+      "description": "Capture the on-screen success confirmation indicator for the member information update.",
+      "sensitivity": "none",
+      "source": {
+        "stepId": "s13",
+        "transform": "trim"
+      }
     }
-  ],
+  },
+  "outcomes": [],
   "recoveries": [],
   "anomalies": [],
   "policy": {
     "actionsUsed": [
       "navigate",
       "setValue",
-      "activate"
+      "activate",
+      "read"
     ],
     "maxRisk": "irreversible"
   },
   "steps": [
     {
       "id": "s1",
-      "intent": "Enter the operator ID for sign on.",
+      "intent": "Enter operator ID for sign on.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -157,7 +154,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "intent": "Enter operator «secret:operatorPassword» for sign on.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -203,7 +200,7 @@
     },
     {
       "id": "s3",
-      "intent": "Submit the sign on form.",
+      "intent": "Submit sign on credentials.",
       "action": {
         "kind": "activate",
         "target": {
@@ -347,7 +344,7 @@
     },
     {
       "id": "s6",
-      "intent": "Run the member search.",
+      "intent": "Run the member number search.",
       "action": {
         "kind": "activate",
         "target": {
@@ -396,7 +393,7 @@
     },
     {
       "id": "s7",
-      "intent": "Select the matching member record.",
+      "intent": "Select the found member to open their record.",
       "action": {
         "kind": "activate",
         "target": {
@@ -472,7 +469,7 @@
             "textContext": "Update Member Information",
             "bboxPct": {
               "x": 38.1,
-              "y": 40.6,
+              "y": 49.4,
               "w": 12.2,
               "h": 1.7
             },
@@ -500,7 +497,7 @@
     },
     {
       "id": "s9",
-      "intent": "Enter the email parameter into the E-mail field.",
+      "intent": "Enter the new email into the E-mail field.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -546,7 +543,7 @@
     },
     {
       "id": "s10",
-      "intent": "Enter the phone parameter into the Phone field.",
+      "intent": "Enter the new phone into the Phone field.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -592,7 +589,7 @@
     },
     {
       "id": "s11",
-      "intent": "Enter the address parameter into the Mailing Address field.",
+      "intent": "Enter the new address into the Mailing Address field.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -638,7 +635,7 @@
     },
     {
       "id": "s12",
-      "intent": "Save the updated member information.",
+      "intent": "Save the updated member information, committing the record change.",
       "action": {
         "kind": "activate",
         "target": {
@@ -679,9 +676,47 @@
         "pollMs": 250
       },
       "risk": "irreversible",
-      "onDetect": [
-        "UPDATE_SAVED"
-      ]
+      "onDetect": []
+    },
+    {
+      "id": "s13",
+      "intent": "Capture the on-screen success confirmation indicator for the member information update.",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "heading",
+              "name": "MEMBER INFORMATION UPDATED",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "MEMBER INFORMATION UPDATED",
+            "bboxPct": {
+              "x": 21.5,
+              "y": 8.8,
+              "w": 57,
+              "h": 1.9
+            }
+          }
+        },
+        "into": "confirmation"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
     }
   ],
   "successCriteria": [
@@ -691,6 +726,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "bed0765d8d0c13f004c94ebb6d03782a0c51d47129994729d6a3b4d7b4764894"
+    "contentHash": "d5b56367fb9cadf6a2ead5e3ff64996e05a26a0c89c6707ed37fe1978054677a"
   }
 }

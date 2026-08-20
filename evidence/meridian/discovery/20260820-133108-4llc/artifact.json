@@ -1,0 +1,351 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "session.signOn",
+    "version": "1.0.0",
+    "title": "Operator Sign On to Meridian Core",
+    "description": "Signs an operator on to MERIDIAN CORE from the OPERATOR SIGN ON screen using operatorId, operatorPassword, and branch parameters, landing on the MAIN MENU. Returns the signed-on operator identity from the status bar as 'sessionBanner'. Handles the BAD_CREDENTIALS outcome when an invalid credential is supplied (sign-on screen redisplays with an 'Invalid operator ID or ...' error and no session is created).",
+    "app": {
+      "appId": "meridian-core",
+      "vendor": "Cornerstone Financial Systems"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-20T20:32:05.214Z",
+    "recordedBy": {
+      "kind": "llm-discovery",
+      "model": "claude-opus-4-8",
+      "discoveryRunId": "20260820-133108-4llc"
+    },
+    "evidenceRef": "evidence/meridian/discovery/20260820-133108-4llc",
+    "approval": {
+      "state": "draft"
+    }
+  },
+  "params": {
+    "branch": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'branch'.",
+      "required": true,
+      "example": "MAIN-001",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_ID"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_PASSWORD"
+    }
+  },
+  "outputs": {
+    "sessionBanner": {
+      "type": "string",
+      "description": "Capture the signed-on operator identity shown in the status bar.",
+      "sensitivity": "none",
+      "source": {
+        "stepId": "s5",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "code": "BAD_CREDENTIALS",
+      "description": "Sign-on failed because the operator ID/credential combination was invalid. The sign-on screen redisplays with an error banner and no session is established.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "Invalid operator ID or"
+      },
+      "terminal": true,
+      "outputs": {}
+    }
+  ],
+  "recoveries": [],
+  "anomalies": [],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "setValue",
+      "choose",
+      "activate",
+      "read"
+    ],
+    "maxRisk": "reversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter the operator ID into the Operator ID field.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Operator ID:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Operator ID:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 12,
+              "w": 11.7,
+              "h": 2.1
+            }
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "OPERATOR SIGN ON"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» into the Password credential field.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Password:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Password:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 14.9,
+              "w": 11.7,
+              "h": 2.1
+            }
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Select the branch by its underlying value MAIN-001 (the branch parameter value verbatim).",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Branch:"
+            },
+            {
+              "s": "roleName",
+              "role": "combobox",
+              "name": "Branch:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Branch:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 17.8,
+              "w": 12.2,
+              "h": 2.4
+            }
+          }
+        },
+        "option": {
+          "param": "branch"
+        },
+        "by": "value"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Click Sign On to authenticate and enter the Main Menu.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign On",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 22.5,
+              "w": 5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/002-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MAIN MENU"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "1."
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": [
+        "BAD_CREDENTIALS"
+      ]
+    },
+    {
+      "id": "s5",
+      "intent": "Capture the signed-on operator identity shown in the status bar.",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "cell",
+              "name": "OPR TELLER1 | BR {branch} | 08/20/2026 20:31:36 | SID 7086C867",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "BR {branch}",
+              "relation": "rowOf",
+              "targetRole": "cell"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | BR {branch} | … | …",
+            "bboxPct": {
+              "x": 20.4,
+              "y": 36.5,
+              "w": 59.2,
+              "h": 2.5
+            }
+          }
+        },
+        "into": "sessionBanner"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "MAIN MENU"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "1."
+    },
+    {
+      "c": "textPresent",
+      "pattern": "2."
+    }
+  ],
+  "integrity": {
+    "contentHash": "362f941949202ba17b6c1a1cbba4c85a2aaa8c2cfb2b9482e08f907b88630115"
+  }
+}

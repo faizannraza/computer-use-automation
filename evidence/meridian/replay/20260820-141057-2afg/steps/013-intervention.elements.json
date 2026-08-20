@@ -1,0 +1,298 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members/103001/open-share/review",
+  "count": 19,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "hidden",
+      "name": "_token",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:12)"
+    },
+    {
+      "ref": 5,
+      "role": "hidden",
+      "name": "type",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:4)"
+    },
+    {
+      "ref": 6,
+      "role": "hidden",
+      "name": "deposit",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:4)"
+    },
+    {
+      "ref": 7,
+      "role": "button",
+      "name": "Open Share",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 24.5,
+        "w": 6.7,
+        "h": 2.4
+      },
+      "nearText": "CONFIRM NEW SHARE Member:103001 - ***hy Share Type:MMKT - Money Market Initial Deposit:***00 Cancel"
+    },
+    {
+      "ref": 8,
+      "role": "link",
+      "name": "Cancel",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 28.7,
+        "y": 24.9,
+        "w": 2.9,
+        "h": 1.6
+      },
+      "nearText": "CONFIRM NEW SHARE Member:103001 - ***hy Share Type:MMKT - Money Market Initial Deposit:***00 Cancel"
+    },
+    {
+      "ref": 9,
+      "role": "heading",
+      "name": "CONFIRM NEW SHARE",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 10,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 11,
+      "role": "cell",
+      "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 21:10:59 | SID A5304EFF",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 28.4,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 21:10:59 | SID A5304EFF",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR TELLER1 | BR MAIN-001 | 08/20/2026 21:10:59 | SID A5304EFF"
+      ]
+    },
+    {
+      "ref": 12,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 30.9,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 13,
+      "role": "rowheader",
+      "name": "Member:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 14,
+        "w": 7.7,
+        "h": 2.4
+      },
+      "nearText": "Member: | 103001 - ***hy",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member:",
+        "103001 - ***hy"
+      ]
+    },
+    {
+      "ref": 14,
+      "role": "cell",
+      "name": "103001 - ***hy",
+      "framePath": [],
+      "interactive": false,
+      "label": "Member:",
+      "bboxPct": {
+        "x": 30.3,
+        "y": 14,
+        "w": 12.6,
+        "h": 2.4
+      },
+      "nearText": "Member: | 103001 - ***hy",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member:",
+        "103001 - ***hy"
+      ]
+    },
+    {
+      "ref": 15,
+      "role": "rowheader",
+      "name": "Share Type:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 16.4,
+        "w": 7.7,
+        "h": 2.4
+      },
+      "nearText": "Share Type: | MMKT - Money Market",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Share Type:",
+        "MMKT - Money Market"
+      ]
+    },
+    {
+      "ref": 16,
+      "role": "cell",
+      "name": "MMKT - Money Market",
+      "framePath": [],
+      "interactive": false,
+      "label": "Share Type:",
+      "bboxPct": {
+        "x": 30.3,
+        "y": 16.4,
+        "w": 12.6,
+        "h": 2.4
+      },
+      "nearText": "Share Type: | MMKT - Money Market",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Share Type:",
+        "MMKT - Money Market"
+      ]
+    },
+    {
+      "ref": 17,
+      "role": "rowheader",
+      "name": "Initial Deposit:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 18.8,
+        "w": 7.7,
+        "h": 2.4
+      },
+      "nearText": "Initial Deposit: | ***00",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Initial Deposit:",
+        "***00"
+      ]
+    },
+    {
+      "ref": 18,
+      "role": "cell",
+      "name": "***00",
+      "framePath": [],
+      "interactive": false,
+      "label": "Initial Deposit:",
+      "bboxPct": {
+        "x": 30.3,
+        "y": 18.8,
+        "w": 12.6,
+        "h": 2.4
+      },
+      "nearText": "Initial Deposit: | ***00",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Initial Deposit:",
+        "***00"
+      ]
+    }
+  ]
+}

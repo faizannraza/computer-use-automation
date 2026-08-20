@@ -451,7 +451,16 @@ describe('F17 — app-wide outcome codes must survive settling', () => {
 });
 
 describe('F6 / F11b — what run_start writes about the caller', () => {
-  const { artifact: updateInfo } = loadCapability('capabilities-meridian/member.updateInfo@1.0.0.json');
+  const { artifact: shippedUpdateInfo } = loadCapability('capabilities-meridian/member.updateInfo@1.0.0.json');
+  // The shipped artifact declares these fields `pii` itself — which is correct,
+  // and exactly why it is the wrong fixture for this pair of tests. What is
+  // under test is the ENGINE rule ("the profile may raise a param's declared
+  // sensitivity, never lower it"), so the fixture has to start below the raise:
+  // an artifact that says `none` about data the profile calls regulated.
+  const updateInfo = structuredClone(shippedUpdateInfo);
+  for (const name of ['email', 'phone', 'address']) {
+    updateInfo.params[name]!.sensitivity = 'none';
+  }
   const meridian = loadProfile('profiles/meridian-core.profile.json');
   const memberPii = {
     memberId: '103001',
@@ -506,9 +515,22 @@ describe('F6 / F11b — what run_start writes about the caller', () => {
   });
 
   it('without a profile the artifact still governs — the raise is the profile, not a new default', async () => {
+    // Same fixture, no profile: the artifact's own `none` stands and the value
+    // is written through. This is the control for the test above — without it,
+    // that one would pass even if the engine had simply started masking
+    // everything, which would be a different (and much blunter) system.
     const result = await runUpdateInfo();
     const jsonl = readFileSync(path.join((result as { evidenceDir: string }).evidenceDir, 'run.jsonl'), 'utf8');
     expect(jsonl).toContain('ada.lovelace@example.com');
+  });
+
+  it('the shipped artifact declares these fields regulated on its own, profile or not', async () => {
+    // The guarantee the fixture above deliberately steps around: member contact
+    // details are `pii` in the contract itself, so a caller that never loads a
+    // profile still gets them masked in evidence.
+    for (const name of ['email', 'phone', 'address']) {
+      expect(`${name}=${shippedUpdateInfo.params[name]!.sensitivity}`).toBe(`${name}=pii`);
+    }
   });
 
   it('records the resolved operator role on the run and in the result', async () => {

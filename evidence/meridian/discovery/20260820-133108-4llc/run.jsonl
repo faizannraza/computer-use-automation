@@ -1,0 +1,52 @@
+{"ts":"2026-08-20T20:31:08.707Z","type":"run_start","goal":"Record a SIGN ON / SESSION capability against MERIDIAN CORE. (1) On the OPERATOR SIGN ON screen type the operatorId parameter into Operator ID and the operatorPassword parameter into the credential field. (2) For Branch call choose with option = the branch parameter value verbatim (it is the option's underlying value, e.g. MAIN-001). (3) Click Sign On. (4) You land on the MAIN MENU. Use read to capture the signed-on operator identity shown in the status bar into an output named 'sessionBanner'. (5) Then probe one exceptional state: begin_probe BAD_CREDENTIALS, sign off, and attempt to sign on again with a deliberately incorrect credential such as 'zzqqxx123', then declare_outcome BAD_CREDENTIALS. IMPORTANT for the marker: choose a span of text you can literally see on that failed screen that contains NO credential value and no member data — the harness will reject a marker that redaction would mask, so prefer the leading part of the error message or a heading. (6) declare_done with capability_id 'session.signOn'.","model":"claude-opus-4-8","params":{"branch":"MAIN-001","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T20:31:11.155Z","type":"llm_turn","turn":1,"stopReason":"tool_use","inputTokens":4211,"outputTokens":128}
+{"ts":"2026-08-20T20:31:11.155Z","type":"tool_use","turn":1,"tool":"navigate","input":{"url":"https://web-sample.interface-hiring.com","intent":"Open the MERIDIAN CORE application to reach the OPERATOR SIGN ON screen."}}
+{"ts":"2026-08-20T20:31:11.178Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T20:31:11.553Z","type":"screenshot","name":"navigate","file":"steps/001-navigate.png"}
+{"ts":"2026-08-20T20:31:14.939Z","type":"llm_turn","turn":2,"stopReason":"tool_use","inputTokens":6300,"outputTokens":128}
+{"ts":"2026-08-20T20:31:14.939Z","type":"tool_use","turn":2,"tool":"type","input":{"ref":0,"intent":"Enter the operator ID into the Operator ID field.","param":"operatorId"}}
+{"ts":"2026-08-20T20:31:14.940Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:17.548Z","type":"llm_turn","turn":3,"stopReason":"tool_use","inputTokens":5111,"outputTokens":106}
+{"ts":"2026-08-20T20:31:17.549Z","type":"tool_use","turn":3,"tool":"type","input":{"ref":1,"intent":"Enter the operator «secret:operatorPassword» into the Password credential field.","param":"operatorPassword"}}
+{"ts":"2026-08-20T20:31:17.549Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:19.710Z","type":"llm_turn","turn":4,"stopReason":"tool_use","inputTokens":5241,"outputTokens":119}
+{"ts":"2026-08-20T20:31:19.711Z","type":"tool_use","turn":4,"tool":"choose","input":{"ref":2,"option":"MAIN-001 - Main Office","intent":"Select the branch matching the branch parameter value MAIN-001."}}
+{"ts":"2026-08-20T20:31:19.711Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:29.253Z","type":"llm_turn","turn":5,"stopReason":"tool_use","inputTokens":5394,"outputTokens":529}
+{"ts":"2026-08-20T20:31:29.254Z","type":"tool_use","turn":5,"tool":"revise","input":{"drop_last":1,"reason":"Task requires choosing by the option's underlying value (MAIN-001) verbatim, not the visible label."}}
+{"ts":"2026-08-20T20:31:29.254Z","type":"revised","requested":1,"dropped":1,"reason":"Task requires choosing by the option's underlying value (MAIN-001) verbatim, not the visible label."}
+{"ts":"2026-08-20T20:31:31.390Z","type":"llm_turn","turn":6,"stopReason":"tool_use","inputTokens":5944,"outputTokens":123}
+{"ts":"2026-08-20T20:31:31.391Z","type":"tool_use","turn":6,"tool":"choose","input":{"ref":2,"option":"MAIN-001","intent":"Select the branch by its underlying value MAIN-001 (the branch parameter value verbatim)."}}
+{"ts":"2026-08-20T20:31:31.391Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:35.750Z","type":"llm_turn","turn":7,"stopReason":"tool_use","inputTokens":6095,"outputTokens":86}
+{"ts":"2026-08-20T20:31:35.751Z","type":"tool_use","turn":7,"tool":"click","input":{"ref":3,"intent":"Click Sign On to authenticate and enter the Main Menu."}}
+{"ts":"2026-08-20T20:31:35.751Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:36.144Z","type":"screenshot","name":"click","file":"steps/002-click.png"}
+{"ts":"2026-08-20T20:31:39.374Z","type":"llm_turn","turn":8,"stopReason":"tool_use","inputTokens":8531,"outputTokens":143}
+{"ts":"2026-08-20T20:31:39.374Z","type":"tool_use","turn":8,"tool":"read","input":{"ref":13,"output_name":"sessionBanner","intent":"Capture the signed-on operator identity shown in the status bar."}}
+{"ts":"2026-08-20T20:31:39.374Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"read"}
+{"ts":"2026-08-20T20:31:41.886Z","type":"llm_turn","turn":9,"stopReason":"tool_use","inputTokens":7400,"outputTokens":131}
+{"ts":"2026-08-20T20:31:41.886Z","type":"tool_use","turn":9,"tool":"begin_probe","input":{"outcome_code":"BAD_CREDENTIALS","intent":"Sign off and attempt sign-on with an incorrect credential to observe the failure state."}}
+{"ts":"2026-08-20T20:31:41.886Z","type":"probe_started","code":"BAD_CREDENTIALS"}
+{"ts":"2026-08-20T20:31:43.999Z","type":"llm_turn","turn":10,"stopReason":"tool_use","inputTokens":7578,"outputTokens":88}
+{"ts":"2026-08-20T20:31:43.999Z","type":"tool_use","turn":10,"tool":"click","input":{"ref":3,"intent":"Sign off to return to the OPERATOR SIGN ON screen."}}
+{"ts":"2026-08-20T20:31:43.999Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T20:31:44.396Z","type":"screenshot","name":"click","file":"steps/003-click.png"}
+{"ts":"2026-08-20T20:31:47.320Z","type":"llm_turn","turn":11,"stopReason":"tool_use","inputTokens":9627,"outputTokens":127}
+{"ts":"2026-08-20T20:31:47.320Z","type":"tool_use","turn":11,"tool":"type","input":{"ref":0,"intent":"Enter the operator ID for the bad-credential attempt.","param":"operatorId"}}
+{"ts":"2026-08-20T20:31:47.320Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:49.402Z","type":"llm_turn","turn":12,"stopReason":"tool_use","inputTokens":8437,"outputTokens":114}
+{"ts":"2026-08-20T20:31:49.402Z","type":"tool_use","turn":12,"tool":"type","input":{"ref":1,"intent":"Enter a deliberately incorrect «secret:operatorPassword» to trigger the failure state.","text":"zzqqxx123"}}
+{"ts":"2026-08-20T20:31:49.402Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:51.471Z","type":"llm_turn","turn":13,"stopReason":"tool_use","inputTokens":8574,"outputTokens":86}
+{"ts":"2026-08-20T20:31:51.471Z","type":"tool_use","turn":13,"tool":"click","input":{"ref":3,"intent":"Click Sign On with the incorrect credential to observe the failure."}}
+{"ts":"2026-08-20T20:31:51.471Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:31:51.759Z","type":"screenshot","name":"click","file":"steps/004-click.png"}
+{"ts":"2026-08-20T20:31:55.708Z","type":"llm_turn","turn":14,"stopReason":"tool_use","inputTokens":10654,"outputTokens":187}
+{"ts":"2026-08-20T20:31:55.708Z","type":"tool_use","turn":14,"tool":"declare_outcome","input":{"code":"BAD_CREDENTIALS","description":"Sign-on failed because the operator ID/«secret:operatorPassword» combination was invalid. The sign-on screen redisplays with an error mes…","marker":"Invalid operator ID or «secret:operatorPassword»."}}
+{"ts":"2026-08-20T20:32:01.048Z","type":"llm_turn","turn":15,"stopReason":"tool_use","inputTokens":9627,"outputTokens":258}
+{"ts":"2026-08-20T20:32:01.048Z","type":"tool_use","turn":15,"tool":"declare_outcome","input":{"code":"BAD_CREDENTIALS","description":"Sign-on failed because the operator ID/credential combination was invalid. The sign-on screen redisplays with an error b…","marker":"Invalid operator ID or"}}
+{"ts":"2026-08-20T20:32:01.049Z","type":"outcome_declared","code":"BAD_CREDENTIALS","marker":"Invalid operator ID or"}
+{"ts":"2026-08-20T20:32:05.183Z","type":"llm_turn","turn":16,"stopReason":"tool_use","inputTokens":9918,"outputTokens":265}
+{"ts":"2026-08-20T20:32:05.183Z","type":"tool_use","turn":16,"tool":"declare_done","input":{"capability_id":"session.signOn","title":"Operator Sign On to Meridian Core","description":"Signs an operator on to MERIDIAN CORE from the OPERATOR SIGN ON screen using operatorId, operatorPassword, and branch pa…"}}
+{"ts":"2026-08-20T20:32:05.221Z","type":"run_result","status":"compiled","artifactPath":"/tmp/cu-regen/session.signOn@1.0.0.json","usage":{"inputTokens":118642,"outputTokens":2618,"turns":16}}

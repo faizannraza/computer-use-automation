@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:58:02.191Z"
+      "at": "2026-08-20T21:00:14.649Z"
     }
   },
   "params": {
     "memberId": {
       "type": "integer",
-      "description": "Caller-supplied parameter 'memberId'.",
+      "description": "Typed into the \"Value\" field on screen.",
       "required": true,
       "pattern": "^[0-9]+$",
       "example": "100234",
@@ -41,7 +41,7 @@
     },
     "share": {
       "type": "string",
-      "description": "Caller-supplied parameter 'share'.",
+      "description": "Chosen in the \"Share\" field on screen. Offered at recording time: 100234-S0001, 100234-S0070, 100234-S0001-3, 100234-MMKT-4.",
       "required": true,
       "example": "100234-S0001-3",
       "sensitivity": "none",
@@ -49,7 +49,7 @@
     },
     "reasonCode": {
       "type": "string",
-      "description": "Caller-supplied parameter 'reasonCode'.",
+      "description": "Chosen in the \"Reason Code\" field on screen. Offered at recording time: FRAUD, LEGAL, DECEASED.",
       "required": true,
       "example": "LEGAL",
       "sensitivity": "none",
@@ -57,7 +57,7 @@
     },
     "notes": {
       "type": "string",
-      "description": "Caller-supplied parameter 'notes'.",
+      "description": "Typed into the \"Notes\" field on screen.",
       "required": true,
       "example": "Capability recording",
       "sensitivity": "none",
@@ -705,7 +705,7 @@
             },
             {
               "s": "textAnchor",
-              "text": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:{memberId} - ***da Share:{memberId}-S0001-3 - Regular Shares Reason:{reasonCode} Notes:{notes} Cancel",
+              "text": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:{memberId} - ***da Share:{share} - Regular Shares Reason:{reasonCode} Notes:{notes} Cancel",
               "relation": "rowOf",
               "targetRole": "button"
             }
@@ -715,7 +715,7 @@
             "minScore": 0.6
           },
           "snapshot": {
-            "textContext": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:{memberId} - ***da Share:{memberId}-S0001-3 - Regular Shares Reason:{reasonCode} Notes:{notes} Cancel",
+            "textContext": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:{memberId} - ***da Share:{share} - Regular Shares Reason:{reasonCode} Notes:{notes} Cancel",
             "bboxPct": {
               "x": 21.5,
               "y": 30.7,
@@ -798,6 +798,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "d8b74377b4559d91967501ece7873db8df593e99039a1a11473a254da81fc609"
+    "contentHash": "2e6d232bea2e6b16eab683c9bbd4c48120c952b9ce56d3401ed2015b487eb909"
   }
 }

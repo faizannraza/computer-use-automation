@@ -59,6 +59,28 @@ async function post(url: string, body: unknown): Promise<Response> {
   });
 }
 
+interface RunDetail {
+  summary: { status: string; recoveries?: { code: string; attempts: number }[] };
+  result?: { status: string; failure?: { class: string } };
+}
+
+/**
+ * Drive one run to a terminal state and return its detail.
+ *
+ * Under an app profile that merges an escalating recovery into every
+ * capability, invocation is ASYNC by default — the 202 is the point (see the
+ * forced-async describe below) — so a test that wants the run's outcome polls
+ * the run rather than reading the POST's body.
+ */
+async function awaitRun(baseUrl: string, runId: string): Promise<RunDetail> {
+  for (let i = 0; i < 300; i++) {
+    const detail = (await (await fetch(`${baseUrl}/api/runs/${runId}`)).json()) as RunDetail;
+    if (detail.summary.status !== 'running') return detail;
+    await new Promise((r) => setTimeout(r, 10));
+  }
+  throw new Error(`run ${runId} never reached a terminal state`);
+}
+
 beforeAll(async () => {
   tmpRoot = mkdtempSync(path.join(os.tmpdir(), 'cu-api-'));
   evidenceBaseDir = path.join(tmpRoot, 'evidence');
@@ -75,7 +97,17 @@ beforeAll(async () => {
   // Dummy credentials for the profile's roles: no run in this file reaches a
   // sign-on screen — every one is refused on its params before a browser could
   // exist — but the role indirection resolves them up front.
-  for (const key of ['MERIDIAN_TELLER_ID', 'MERIDIAN_TELLER_PASSWORD', 'MERIDIAN_SUPERVISOR_ID', 'MERIDIAN_SUPERVISOR_PASSWORD']) {
+  for (const key of [
+    'MERIDIAN_TELLER_ID',
+    'MERIDIAN_TELLER_PASSWORD',
+    'MERIDIAN_SUPERVISOR_ID',
+    'MERIDIAN_SUPERVISOR_PASSWORD',
+    // The MockCore profile's role, for the forced-async control case below:
+    // that profile merges no escalating recovery, so its read-only capability
+    // is the one invocation that may still answer synchronously.
+    'MOCK_CU_USER',
+    'MOCK_CU_PASS',
+  ]) {
     savedEnv[key] = process.env[key];
     process.env[key] = 'test-only';
   }
@@ -452,11 +484,14 @@ describe('fault injection is a harness affordance, not an API feature', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ params: {}, options: { inject: { kind: 'maintenance' } } }),
       });
-      // Past the gate: it fails on its missing param, not on the flag.
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as { status: string; failure?: { class: string } };
-      expect(body.status).toBe('failed');
-      expect(body.failure?.class).toBe('INVALID_PARAMS');
+      // Past the gate: the run STARTS (202, because this profile's recovery
+      // set can pause for a human) and then fails on its missing param, not on
+      // the flag.
+      expect(res.status).toBe(202);
+      const { runId } = (await res.json()) as { runId: string };
+      const detail = await awaitRun(url, runId);
+      expect(detail.result?.status).toBe('failed');
+      expect(detail.result?.failure?.class).toBe('INVALID_PARAMS');
     });
   });
 });
@@ -518,9 +553,12 @@ describe('requiresRole is enforced, and the role a run used is recorded', () => 
     await invoke({ params: { memberId: '100234' }, options: { role: 'teller' } });
     expect(((await (await get('/api/runs?limit=500')).json()) as unknown[]).length).toBe(before);
 
+    // Admitted: the run is dispatched (202 — this profile's SUPERVISOR_OVERRIDE
+    // recovery can park it on a human) and then fails on its missing param.
     const ok = await invoke({ params: {}, options: { role: 'supervisor' } });
-    expect(ok.status).toBe(200);
-    expect((await ok.json()) as { status: string }).toMatchObject({ status: 'failed' });
+    expect(ok.status).toBe(202);
+    const { runId } = (await ok.json()) as { runId: string };
+    expect((await awaitRun(restrictedBase, runId)).result?.status).toBe('failed');
   });
 
   it('carries the resolved role into /api/runs and /api/runs/:id', async () => {
@@ -537,5 +575,182 @@ describe('requiresRole is enforced, and the role a run used is recorded', () => 
 
     const detail = (await (await get(`/api/runs/${started.runId}`)).json()) as { summary: { role?: string } };
     expect(detail.summary.role).toBe('supervisor');
+  });
+});
+
+/**
+ * A directory of artifacts is a bag of independently recorded flows, and one
+ * of them being unloadable is a normal operating state — the schema keeps
+ * gaining refusals, and a recording made before one of them stops loading.
+ * Before this, `buildCatalog` rethrew on the first bad file and took the
+ * catalog, health and invoke routes down with it: a reviewer saw a dashboard
+ * that loaded, an empty catalog, and nothing anywhere saying why.
+ */
+describe('one unloadable artifact does not take the API down', () => {
+  let brokenDir: string;
+  let srv: Server;
+  let brokenBase: string;
+  const BROKEN_FILE = 'member.brokenFlow@1.0.0.json';
+
+  const at = async (url: string): Promise<Response> => fetch(`${brokenBase}${url}`);
+
+  beforeAll(async () => {
+    brokenDir = path.join(tmpRoot, 'capabilities-with-a-broken-one');
+    mkdirSync(brokenDir, { recursive: true });
+    writeFileSync(
+      path.join(brokenDir, 'member.readBalances@1.0.0.json'),
+      readFileSync('capabilities-meridian/member.readBalances@1.0.0.json', 'utf8'),
+      'utf8',
+    );
+    // Parses as JSON, refused as an artifact — the shape a newly tightened
+    // schema rule produces out of an older recording.
+    writeFileSync(path.join(brokenDir, BROKEN_FILE), JSON.stringify({ capability: { id: 'member.brokenFlow' } }), 'utf8');
+
+    const { app } = createApiApp({
+      profileFile: 'profiles/meridian-core.profile.json',
+      capabilitiesDir: brokenDir,
+      evidenceBaseDir,
+      interventionTimeoutMs: 60_000,
+      allowInject: false,
+    });
+    srv = await new Promise<Server>((resolve) => {
+      const s = app.listen(0, '127.0.0.1', () => resolve(s));
+    });
+    const addr = srv.address();
+    if (addr === null || typeof addr === 'string') throw new Error('no port');
+    brokenBase = `http://127.0.0.1:${addr.port}`;
+  });
+
+  afterAll(() => srv.close());
+
+  it('serves the catalog, health and the dashboard — all 200, none 500', async () => {
+    const catalog = await at('/api/capabilities');
+    expect(catalog.status).toBe(200);
+    expect(((await catalog.json()) as { name: string }[]).map((e) => e.name)).toEqual(['member.readBalances']);
+
+    const health = await at('/api/health');
+    expect(health.status).toBe(200);
+    expect(await health.json()).toMatchObject({ ok: true, capabilities: 1, brokenCapabilities: 1 });
+
+    expect((await at('/')).status).toBe(200);
+    expect((await at(`/api/runs/replay/${RUN_ID}/evidence`)).status).toBe(200);
+  });
+
+  it('publishes the broken file and its error where an operator sees them', async () => {
+    const profile = (await (await at('/api/profile')).json()) as {
+      catalog: { callable: number; broken: { name: string; file: string; error: string }[] };
+    };
+    expect(profile.catalog.callable).toBe(1);
+    expect(profile.catalog.broken).toHaveLength(1);
+    expect(profile.catalog.broken[0]?.file).toBe(path.join(brokenDir, BROKEN_FILE));
+    expect(profile.catalog.broken[0]?.name).toBe('member.brokenFlow');
+    expect(profile.catalog.broken[0]?.error).toBeTruthy();
+
+    const health = (await (await at('/api/health')).json()) as { broken: { file: string }[] };
+    expect(health.broken[0]?.file).toContain(BROKEN_FILE);
+  });
+
+  it('fails a BROKEN capability loudly with a 4xx that names the file and the error', async () => {
+    for (const res of [
+      await at('/api/capabilities/member.brokenFlow'),
+      await fetch(`${brokenBase}/api/capabilities/member.brokenFlow/invoke`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ params: { memberId: '100234' } }),
+      }),
+    ]) {
+      // Never a 500 (the old behaviour), and never a bare 404 — the recording
+      // exists and is one schema error away from working.
+      expect(res.status).toBe(422);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toContain(BROKEN_FILE);
+      expect(body.error).toContain('does not load');
+    }
+  });
+
+  it('still 404s a name that was never recorded at all', async () => {
+    const res = await fetch(`${brokenBase}/api/capabilities/member.neverRecorded/invoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ params: {} }),
+    });
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { error: string }).error).toContain('no capability');
+  });
+
+  it('runs the VALID sibling: the good subset stays fully usable', async () => {
+    const res = await fetch(`${brokenBase}/api/capabilities/member.readBalances/invoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ params: {} }),
+    });
+    expect(res.status).toBe(202);
+    const { runId } = (await res.json()) as { runId: string };
+    expect((await awaitRun(brokenBase, runId)).result?.status).toBe('failed'); // on its params, having actually started
+  });
+});
+
+/**
+ * Forced async is about "can this stop for a person", not about risk alone.
+ *
+ * MERIDIAN's SUPERVISOR_OVERRIDE_REQUIRED recovery uses an `escalate` handler
+ * and `applyProfile` merges it into EVERY capability, so a read-only lookup
+ * that trips a 403 waits on a human too. Keyed on `maxRisk` alone, such a run
+ * was dispatched synchronously and held the HTTP request open for the full
+ * 180s intervention timeout.
+ */
+describe('anything that can pause for a human is dispatched asynchronously', () => {
+  it('202s a REVERSIBLE capability, naming the recovery that can park it', async () => {
+    const res = await post('/api/capabilities/member.readBalances/invoke', { params: {} });
+    expect(res.status).toBe(202);
+    const body = (await res.json()) as { async: boolean; reason: string; runId: string };
+    expect(body.async).toBe(true);
+    expect(body.reason).toContain('SUPERVISOR_OVERRIDE_REQUIRED');
+    await awaitRun(base, body.runId);
+  });
+
+  it('202s an irreversible one for the reason it always did', async () => {
+    const res = await post('/api/capabilities/member.transferFunds/invoke', { params: {} });
+    expect(res.status).toBe(202);
+    expect(((await res.json()) as { reason: string }).reason).toContain('irreversible');
+  });
+
+  /**
+   * The control. MockCore's profile merges NO escalating recovery, so its
+   * read-only capability cannot pause for anyone and there is nothing to keep
+   * a caller waiting on — it still answers with the result inline. Without
+   * this, "force async" would be indistinguishable from "always async".
+   */
+  it('answers a capability that CANNOT pause synchronously', async () => {
+    const { app } = createApiApp({
+      profileFile: 'profiles/mockcore-teller.profile.json',
+      capabilitiesDir: 'capabilities',
+      evidenceBaseDir,
+      interventionTimeoutMs: 60_000,
+      allowInject: false,
+    });
+    const mock = await new Promise<Server>((resolve) => {
+      const s = app.listen(0, '127.0.0.1', () => resolve(s));
+    });
+    try {
+      const addr = mock.address();
+      if (addr === null || typeof addr === 'string') throw new Error('no port');
+      const url = `http://127.0.0.1:${addr.port}`;
+      const call = async (name: string): Promise<Response> =>
+        fetch(`${url}/api/capabilities/${name}/invoke`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ params: {} }),
+        });
+
+      const sync = await call('member.readSavingsBalance');
+      expect(sync.status).toBe(200);
+      expect((await sync.json()) as { status: string }).toMatchObject({ status: 'failed' });
+
+      // ...and the irreversible arm of the rule is untouched by any of this.
+      expect((await call('member.openSubAccount')).status).toBe(202);
+    } finally {
+      mock.close();
+    }
   });
 });

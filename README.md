@@ -223,13 +223,19 @@ curl -s -X POST localhost:4180/api/capabilities/member.readBalances/invoke \
   -H 'content-type: application/json' -d '{"params":{"memberId":"100234"}}'
 ```
 
+> **The target is shared and other people are using it.** Shares get opened, and
+> put on hold, between one run and the next — a share that is `HOLD` today may
+> have been `OPEN` when this was written. Before running the transfer below,
+> read the member first and pick two shares that are currently **OPEN**:
+> `npm run cu -- replay --capability capabilities-meridian/member.readBalances@1.0.0.json --app profiles/meridian-core.profile.json --param memberId=103001`
+
 **Irreversible capabilities pause for a human.** A transfer returns `202` with a run id, stops on
 the confirmation screen, and posts nothing until someone approves it in the dashboard:
 
 ```bash
 curl -s -X POST localhost:4180/api/capabilities/member.transferFunds/invoke \
   -H 'content-type: application/json' \
-  -d '{"params":{"memberId":"101555","fromShare":"101555-S0001","toShare":"101555-CERT","amount":"5.00","memo":"demo"}}'
+  -d '{"params":{"memberId":"103001","fromShare":"103001-S0070-7","toShare":"103001-MMKT-4","amount":"1.00","memo":"Q3 rebalance"}}'
 # → 202 {"runId":"…","status":"running","reason":"…pause for human approval before anything posts"}
 curl -s localhost:4180/api/interventions              # the pending decision + its screenshot
 curl -s localhost:4180/api/interventions/<key>/nonce  # fetched at approve time, never listed
@@ -242,6 +248,29 @@ the transport — a loopback bind, plus a `Host` header check, because a loopbac
 survive DNS rebinding (a page whose DNS flips to `127.0.0.1` becomes same-origin, and then CORS is
 irrelevant). The nonce means a caller must name one specific pending decision rather than harvest
 approvals from a listing it polls. Real deployment needs real authentication here.
+
+### If replays suddenly start failing
+
+Two causes, in order of likelihood — check them before suspecting the capability.
+
+**1. The target's global fault switch is armed.** MERIDIAN's System Settings screen sets a
+*server-side, app-wide* error mode and a random error rate, and the app is **shared** — anyone can
+arm it, and it stays armed. The symptom is unmistakable: *every* capability fails the same way at
+once, with a recovery code that repeats.
+
+```bash
+npm run cu -- replay --capability capabilities-meridian/member.readBalances@1.0.0.json \
+  --app profiles/meridian-core.profile.json --param memberId=103001
+# recoveriesUsed: [MAINTENANCE_INTERSTITIAL] on a run you did not inject → the switch is on
+```
+
+Clear it by hand at <https://web-sample.interface-hiring.com/settings> (Force error mode → *none*,
+Random error rate → `0`). The automation cannot do this for you: `policies/meridian.policy.json`
+denies `/settings`, deliberately — a system that can turn off its own target's failure injection is
+not demonstrating error handling.
+
+**2. The share you named has changed.** Shares get opened and put on `HOLD` by other people between
+runs. Read the member first and pick shares that are currently `OPEN`.
 
 **Offline / no key.** Replay, the API, the dashboard and the whole test suite need no model — the
 production path never calls one. Only two things do: `cu discover` (recording a new capability) and

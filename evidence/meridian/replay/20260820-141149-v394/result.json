@@ -1,0 +1,146 @@
+{
+  "capabilityId": "member.updateInfo",
+  "version": "1.0.0",
+  "runId": "20260820-141149-v394",
+  "evidenceDir": "evidence/meridian/replay/20260820-141149-v394",
+  "startedAt": "2026-08-20T21:11:49.858Z",
+  "role": "teller",
+  "status": "success",
+  "outputs": {
+    "confirmation": "MEMBER INFORMATION UPDATED"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter operator ID for sign on.",
+      "status": "ok",
+      "ms": 106,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator «secret:operatorPassword» for sign on.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit sign on credentials.",
+      "status": "ok",
+      "ms": 186,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "status": "ok",
+      "ms": 129,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search for.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Run the member number search.",
+      "status": "ok",
+      "ms": 135,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Select the found member to open their record.",
+      "status": "ok",
+      "ms": 156,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the Update Member Information form.",
+      "status": "ok",
+      "ms": 161,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Enter the new email into the E-mail field.",
+      "status": "ok",
+      "ms": 64,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s10",
+      "intent": "Enter the new phone into the Phone field.",
+      "status": "ok",
+      "ms": 67,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s11",
+      "intent": "Enter the new address into the Mailing Address field.",
+      "status": "ok",
+      "ms": 66,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s12",
+      "intent": "Save the updated member information, committing the record change.",
+      "status": "ok",
+      "ms": 28401,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s13",
+      "intent": "Capture the on-screen success confirmation indicator for the member information update.",
+      "status": "ok",
+      "ms": 64,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [
+    {
+      "id": "int-01",
+      "kind": "approve_risky",
+      "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+      "resolution": "approve",
+      "humanActions": 0,
+      "heldForMs": 28224,
+      "stepId": "s12",
+      "note": "approved in the dashboard"
+    }
+  ],
+  "irreversibleCompleted": true,
+  "finishedAt": "2026-08-20T21:12:20.197Z"
+}

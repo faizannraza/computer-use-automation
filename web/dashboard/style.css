@@ -188,6 +188,21 @@ input::placeholder { color: #4d5867; }
 .cap-card:last-child { margin-bottom: 0; }
 .cap-card:hover { border-color: var(--accent); background: #161d2b; }
 .cap-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* An artifact that did not load. Not a button (there is nothing to invoke),
+   and marked in the error tone so it cannot be mistaken for a usable one. */
+.cap-card.is-broken {
+  cursor: default; border-style: dashed; border-color: var(--err);
+  background: transparent;
+}
+.cap-card.is-broken:hover { border-color: var(--err); background: transparent; }
+.cap-card.is-broken .cap-name { color: var(--err); }
+/* A schema refusal is a multi-line Zod report. It is shown IN FULL — nothing
+   about a broken artifact is truncated — but boxed and scrollable, so one bad
+   file cannot push the rest of the catalog off the panel. */
+.cap-card.is-broken .hint {
+  max-height: 9em; overflow: auto; white-space: pre-wrap;
+  font-family: var(--mono); font-size: 11px;
+}
 .cap-name { font-family: var(--mono); font-size: 14px; color: var(--fg); font-weight: 500; }
 .cap-ver { color: var(--fg-faint); }
 .cap-title { font-size: 13px; color: var(--fg-dim); margin: 4px 0 8px; line-height: 1.35; }

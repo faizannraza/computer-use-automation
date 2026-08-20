@@ -425,6 +425,24 @@ export class DiscoveryToolExecutor {
           if (!obs.visibleText.toLowerCase().includes(marker.toLowerCase())) {
             return textOut(`Marker ${JSON.stringify(marker)} is NOT visible on the current screen — declare only states you are observing.`, true);
           }
+          // Grounding checks the marker against RAW screen text, but everything
+          // recorded passes through the redactor on the way to disk. If those
+          // two disagree, the marker is stored as a mask and the detector can
+          // never fire at replay — it advertises handling that does not exist,
+          // which is worse than declaring nothing.
+          //
+          // This is not hypothetical: MERIDIAN's sign-on error reads "Invalid
+          // operator ID or password.", and the demo operator's password IS the
+          // word `password`, so the marker was stored as
+          // "Invalid operator ID or «secret:operatorPassword»." and a bad login
+          // reported as a hard timeout instead of the declared outcome.
+          const redactedMarker = redactor.apply(marker);
+          if (redactedMarker !== marker) {
+            return textOut(
+              `Marker ${JSON.stringify(marker)} contains regulated data (it redacts to ${JSON.stringify(redactedMarker)}), so it would be stored masked and could never match at replay. Choose a different span of the SAME screen that carries no credential, member name, or balance — a nearby heading or the non-sensitive part of the message.`,
+              true,
+            );
+          }
           recorder.declareOutcome({ code, description: String(input['description']), marker, observedIn: digestOf(obs) });
           log.event('outcome_declared', { code, marker });
           return textOut(`Outcome ${code} declared (marker verified visible).`);

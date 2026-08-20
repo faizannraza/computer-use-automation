@@ -76,7 +76,10 @@ async function boot() {
   $('invoke-form').addEventListener('submit', onInvokeSubmit);
   $('shot-stage').addEventListener('click', () => { const img = $('shot-stage').querySelector('img'); if (img) lightbox(img.src, img.dataset.file); });
 
+  // Both, then the broken rows: the catalog route serves only what is
+  // CALLABLE, and the files that refused to load ride on /api/profile.
   await Promise.allSettled([loadProfile(), loadCatalog()]);
+  renderBrokenCapabilities();
   await loadHistory();
   setInterval(loadHistory, 8000);
   pollInterventions();
@@ -137,6 +140,32 @@ async function loadCatalog() {
         c.requiresRole && badge(`role: ${c.requiresRole}`, 'accent'),
         badge(c.app || 'app'),
       ),
+    ));
+  }
+}
+
+/**
+ * One row per artifact that did not load — marked, un-invokable, and carrying
+ * the error verbatim.
+ *
+ * The alternative (show nothing) is what made a malformed artifact so
+ * expensive: the console rendered a short catalog and no reason, and the
+ * capability that is missing is precisely the one nobody can see. These rows
+ * are deliberately NOT buttons: there is no artifact to build a form from, and
+ * invoking the name answers 422 anyway.
+ */
+function renderBrokenCapabilities() {
+  const broken = (S.profile && S.profile.catalog && S.profile.catalog.broken) || [];
+  $('cap-count').textContent = `${S.caps.length} recorded${broken.length ? ` · ${broken.length} broken` : ''}`;
+  if (!broken.length) return;
+  const box = $('catalog');
+  for (const b of broken) {
+    box.append(h('div', { class: 'cap-card is-broken' },
+      h('div', {}, h('span', { class: 'cap-name', text: b.name }), ' ',
+        h('span', { class: 'cap-ver mono', text: 'does not load' })),
+      h('div', { class: 'cap-title mono', text: b.file }),
+      h('div', { class: 'badges' }, badge('unloadable', 'err'), badge('not callable', 'warn')),
+      h('div', { class: 'hint', text: b.error }),
     ));
   }
 }
@@ -638,7 +667,11 @@ function renderResult(detail) {
   const status = (result && result.status) || summary.status || 'unknown';
   setRunStatus(status);
 
+  // The recovery badge sits in the HEAD, beside the status pill: a run that
+  // reached 'success' the hard way says so where the status is read, not only
+  // in the "Recoveries applied" section further down the panel.
   panel.append(h('div', { class: 'result-head' }, h('h3', { text: 'Result' }), pill(status),
+    recoveryBadge((result && result.recoveriesUsed) || summary.recoveries),
     result && result.irreversibleCompleted ? badge('IRREVERSIBLE ACTION DISPATCHED', 'err') : null,
     summary.durationMs ? badge(`duration ${fmtMs(summary.durationMs)}`) : null,
     result && result.evidenceDir ? badge(result.evidenceDir) : null));
@@ -743,6 +776,11 @@ async function loadHistory() {
         onclick: () => openRun(r.runId, r.kind) },
         h('span', { class: 'run-row-cap', text: r.capabilityId || r.runId }),
         pill(r.live ? 'running' : r.status),
+        // "Recovered" is its own fact about a run: a success that took two
+        // SESSION_EXPIRED restarts is not the same event as a clean one, and
+        // the row used to be pixel-identical. The badge names the codes,
+        // because which condition recurred is what says the app is drifting.
+        recoveryBadge(r.recoveries),
         h('span', { class: 'run-row-meta' },
           h('span', { text: r.kind }),
           h('span', { text: r.runId }),
@@ -756,6 +794,19 @@ async function loadHistory() {
   } catch (err) {
     clear(box).append(emptyState('History unavailable', String(err.message)));
   }
+}
+
+/**
+ * The "recovered" badge, from a summary's recovery list. Returns null when the
+ * run recorded none — including runs whose evidence predates the field, which
+ * is why an ABSENT list must read as "nothing to say" rather than "clean".
+ */
+function recoveryBadge(recoveries) {
+  if (!Array.isArray(recoveries) || !recoveries.length) return null;
+  const total = recoveries.reduce((n, r) => n + (Number(r.attempts) || 1), 0);
+  const b = badge(`recovered ×${total}`, 'warn');
+  b.title = recoveries.map((r) => `${r.code} ×${r.attempts}`).join(', ');
+  return b;
 }
 
 /** One comparable key per run: its startedAt, else the timestamp its id encodes. */

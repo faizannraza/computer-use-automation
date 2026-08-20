@@ -4,7 +4,7 @@
     "id": "session.signOn",
     "version": "1.0.0",
     "title": "Operator Sign On to Meridian Core",
-    "description": "Signs an operator on to MERIDIAN CORE from the OPERATOR SIGN ON screen using operatorId, operatorPassword (secret), and branch parameters, then lands on the MAIN MENU and returns the signed-on operator identity from the status bar as output 'sessionBanner'. Exceptional outcome BAD_CREDENTIALS occurs when an invalid «secret:operatorPassword» is supplied (marker: \"Invalid operator ID or «secret:operatorPassword».\").",
+    "description": "Signs an operator on to MERIDIAN CORE from the OPERATOR SIGN ON screen using operatorId, operatorPassword, and branch parameters, landing on the MAIN MENU. Returns the signed-on operator identity from the status bar as 'sessionBanner'. Handles the BAD_CREDENTIALS outcome when an invalid credential is supplied (sign-on screen redisplays with an 'Invalid operator ID or ...' error and no session is created).",
     "app": {
       "appId": "meridian-core",
       "vendor": "Cornerstone Financial Systems"
@@ -16,17 +16,17 @@
     }
   },
   "provenance": {
-    "recordedAt": "2026-08-20T19:48:59.860Z",
+    "recordedAt": "2026-08-20T20:32:05.214Z",
     "recordedBy": {
       "kind": "llm-discovery",
       "model": "claude-opus-4-8",
-      "discoveryRunId": "20260820-124803-nqfc"
+      "discoveryRunId": "20260820-133108-4llc"
     },
-    "evidenceRef": "evidence/meridian/discovery/20260820-124803-nqfc",
+    "evidenceRef": "evidence/meridian/discovery/20260820-133108-4llc",
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:53:14.550Z"
+      "at": "2026-08-20T20:32:26.934Z"
     }
   },
   "params": {
@@ -69,10 +69,10 @@
   "outcomes": [
     {
       "code": "BAD_CREDENTIALS",
-      "description": "Signing on with an incorrect «secret:operatorPassword» is rejected: the OPERATOR SIGN ON screen redisplays with an error and no session is established.",
+      "description": "Sign-on failed because the operator ID/credential combination was invalid. The sign-on screen redisplays with an error banner and no session is established.",
       "when": {
         "c": "textPresent",
-        "pattern": "Invalid operator ID or «secret:operatorPassword»."
+        "pattern": "Invalid operator ID or"
       },
       "terminal": true,
       "outputs": {}
@@ -93,7 +93,7 @@
   "steps": [
     {
       "id": "s1",
-      "intent": "Enter the operatorId parameter into the Operator ID field.",
+      "intent": "Enter the operator ID into the Operator ID field.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -144,7 +144,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operatorPassword secret parameter into the Password field.",
+      "intent": "Enter the operator «secret:operatorPassword» into the Password credential field.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -190,7 +190,7 @@
     },
     {
       "id": "s3",
-      "intent": "Select the Branch option whose underlying value is the branch parameter (MAIN-001).",
+      "intent": "Select the branch by its underlying value MAIN-001 (the branch parameter value verbatim).",
       "action": {
         "kind": "choose",
         "target": {
@@ -237,7 +237,7 @@
     },
     {
       "id": "s4",
-      "intent": "Click Sign On to authenticate and reach the MAIN MENU.",
+      "intent": "Click Sign On to authenticate and enter the Main Menu.",
       "action": {
         "kind": "activate",
         "target": {
@@ -297,7 +297,7 @@
             {
               "s": "roleName",
               "role": "cell",
-              "name": "OPR TELLER1 | BR {branch} | 08/20/2026 19:48:21 | SID E1563289",
+              "name": "OPR TELLER1 | BR {branch} | 08/20/2026 20:31:36 | SID 7086C867",
               "nameMatch": "exact"
             },
             {
@@ -348,6 +348,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "4a2dd6b4b261d40c873d8be542ab93fe47e72bea37261a2107a02788e6b19bad"
+    "contentHash": "a01523d9532c40861022326a6b07b1d3f768f78aea09fc9d7b6b9ecf81b8c9eb"
   }
 }

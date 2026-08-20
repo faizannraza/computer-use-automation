@@ -1,0 +1,155 @@
+{
+  "capabilityId": "member.placeHold",
+  "version": "1.0.0",
+  "runId": "20260820-141005-7ckb",
+  "evidenceDir": "evidence/meridian/replay/20260820-141005-7ckb",
+  "startedAt": "2026-08-20T21:10:05.480Z",
+  "role": "supervisor",
+  "status": "success",
+  "outputs": {
+    "confirmationNumber": "CN480125"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID for supervisor sign on.",
+      "status": "ok",
+      "ms": 106,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "status": "ok",
+      "ms": 99,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the sign on form.",
+      "status": "ok",
+      "ms": 186,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "status": "ok",
+      "ms": 129,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search for.",
+      "status": "ok",
+      "ms": 81,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Run the member search.",
+      "status": "ok",
+      "ms": 135,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Select the matching member to open their record.",
+      "status": "ok",
+      "ms": 153,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the Place Account Hold form for this member.",
+      "status": "ok",
+      "ms": 161,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Select the target share by its underlying value (share parameter).",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s10",
+      "intent": "Select the reason code by its underlying value (reasonCode parameter).",
+      "status": "ok",
+      "ms": 67,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s11",
+      "intent": "Enter the hold notes.",
+      "status": "ok",
+      "ms": 65,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s12",
+      "intent": "Continue to the hold review screen.",
+      "status": "ok",
+      "ms": 151,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s13",
+      "intent": "Apply the account hold — commits the restricted, irreversible action (human pre-authorised).",
+      "status": "ok",
+      "ms": 28298,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s14",
+      "intent": "Capture the confirmation/reference number for the placed hold.",
+      "status": "ok",
+      "ms": 65,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [
+    {
+      "id": "int-01",
+      "kind": "approve_risky",
+      "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+      "resolution": "approve",
+      "humanActions": 0,
+      "heldForMs": 28111,
+      "stepId": "s13",
+      "note": "approved in the dashboard"
+    }
+  ],
+  "irreversibleCompleted": true,
+  "finishedAt": "2026-08-20T21:10:35.812Z"
+}

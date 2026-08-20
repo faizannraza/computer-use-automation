@@ -1,0 +1,817 @@
+{
+  "goal": "Record the UPDATE MEMBER INFORMATION capability against MERIDIAN CORE. (1) Sign on. (2) Member Inquiry -> search by Member Number for the memberId parameter -> Select. (3) Click 'Update Member Information'. (4) Type the email parameter into the E-mail field, the phone parameter into Phone, and the address parameter into Mailing Address. (5) Click 'Save Changes' - this modifies the member record, so mark it irreversible=true (a human pre-authorised this recording). (6) On the confirmation screen use read ONCE to capture the confirmation line into an output named 'confirmation' - target the value cell next to its label, and do NOT target the member's name, e-mail, phone or address. (7) Do NOT declare_outcome for the success case: success is already expressed by the step's own checkpoint, and a terminal outcome that fires on the success screen would be dead weight. Only declare_outcome if you deliberately probe a FAILURE state. (8) declare_done with capability_id 'member.updateInfo'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open the MERIDIAN CORE application to begin sign on.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter operator ID for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12.1,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter operator «secret:operatorPassword» for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 15,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Submit sign on credentials.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.8,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry / Selection",
+        "framePath": [],
+        "nearText": "1. | Member Inquiry / Selection",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 15.8,
+          "w": 11.8,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the member number to search for.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.6,
+          "w": 15.1,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "memberId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Run the member number search.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 44.2,
+          "y": 17.4,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=103001",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 7,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Select the found member to open their record.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Select",
+        "framePath": [],
+        "nearText": "103001 | ***hy | 7 | Select",
+        "bboxPct": {
+          "x": 70.3,
+          "y": 27.1,
+          "w": 2.6,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=103001",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "screenshotRef": "steps/005-click.png",
+      "seq": 8,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open the Update Member Information form.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Update Member Information",
+        "framePath": [],
+        "bboxPct": {
+          "x": 38.1,
+          "y": 49.4,
+          "w": 12.2,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/103001",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/006-click.png",
+      "seq": 9,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the new email into the E-mail field.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "E-mail:",
+        "framePath": [],
+        "label": "E-mail:",
+        "bboxPct": {
+          "x": 32,
+          "y": 15.9,
+          "w": 19.1,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "email"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "seq": 10,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the new phone into the Phone field.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Phone:",
+        "framePath": [],
+        "label": "Phone:",
+        "bboxPct": {
+          "x": 32,
+          "y": 18.9,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "phone"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "seq": 11,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the new address into the Mailing Address field.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Mailing Address:",
+        "framePath": [],
+        "label": "Mailing Address:",
+        "bboxPct": {
+          "x": 32,
+          "y": 21.8,
+          "w": 25.2,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "address"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "seq": 12,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Save the updated member information, committing the record change.",
+      "risk": "irreversible",
+      "element": {
+        "role": "button",
+        "name": "Save Changes",
+        "framePath": [],
+        "nearText": " | Cancel",
+        "bboxPct": {
+          "x": 32,
+          "y": 26.4,
+          "w": 7.7,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Update Member Information - Meridian Core",
+        "markers": [
+          {
+            "text": "UPDATE MEMBER INFORMATION"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Mailing Address:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Information Updated - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INFORMATION UPDATED"
+          }
+        ]
+      },
+      "screenshotRef": "steps/008-click.png",
+      "approvedIntervention": "int-01",
+      "seq": 13,
+      "probe": false
+    },
+    {
+      "kind": "read",
+      "intent": "Capture the on-screen success confirmation indicator for the member information update.",
+      "risk": "read",
+      "element": {
+        "role": "heading",
+        "name": "MEMBER INFORMATION UPDATED",
+        "framePath": [],
+        "bboxPct": {
+          "x": 21.5,
+          "y": 8.8,
+          "w": 57,
+          "h": 1.9
+        }
+      },
+      "outputName": "confirmation",
+      "readValue": "MEMBER INFORMATION UPDATED",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Information Updated - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INFORMATION UPDATED"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/103001/update",
+        "title": "Information Updated - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INFORMATION UPDATED"
+          }
+        ]
+      },
+      "seq": 15,
+      "probe": false
+    }
+  ],
+  "outcomes": [],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "member.updateInfo",
+    "title": "Update Member Information",
+    "description": "Signs on to MERIDIAN CORE, opens Member Inquiry, searches by Member Number for the 'memberId' parameter and selects the member, then opens 'Update Member Information' and writes the 'email', 'phone', and 'address' parameters into the E-mail, Phone, and Mailing Address fields. Clicking 'Save Changes' commits the member-record change (irreversible). On the resulting confirmation screen it captures the success confirmation indicator into output 'confirmation' (value \"MEMBER INFORMATION UPDATED\"). Note: the detailed confirmation sentence renders as plain non-semantic text and is not exposed as an addressable element, so the addressable success heading is used as the confirmation value. Inputs: memberId, email, phone, address, operatorId, operatorPassword."
+  }
+}

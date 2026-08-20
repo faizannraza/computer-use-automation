@@ -1,0 +1,63 @@
+{
+  "capabilityId": "session.signOn",
+  "version": "1.0.0",
+  "runId": "20260820-133246-yihz",
+  "evidenceDir": "evidence/meridian/replay/20260820-133246-yihz",
+  "startedAt": "2026-08-20T20:32:46.142Z",
+  "role": "teller",
+  "status": "success",
+  "outputs": {
+    "sessionBanner": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 20:32:47 | SID 61D126F4"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID into the Operator ID field.",
+      "status": "ok",
+      "ms": 96,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» into the Password credential field.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Select the branch by its underlying value MAIN-001 (the branch parameter value verbatim).",
+      "status": "ok",
+      "ms": 66,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Click Sign On to authenticate and enter the Main Menu.",
+      "status": "ok",
+      "ms": 186,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Capture the signed-on operator identity shown in the status bar.",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 1,
+      "strategy": "textAnchor",
+      "score": 0.9
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T20:32:47.158Z"
+}

@@ -25,12 +25,39 @@ export interface MarkerInfo {
   frame?: string;
 }
 
+/**
+ * A hidden form field the walker saw in a state — NAME ONLY, never a value.
+ *
+ * This exists for one reason: legacy cores carry a per-transaction token in a
+ * hidden input, and a capability that posts a form should assert one is
+ * present before it posts. The compiler can only assert what the recording
+ * actually observed, so the observation has to reach it — and the digest is
+ * the only part of an observation the trace keeps.
+ *
+ * The walker already refuses to observe a hidden field's VALUE (it emits
+ * `(present:N)`); this does not even record that length. A token's length is
+ * still a fact about a credential, and digests are written to evidence. A
+ * field NAME is page structure, not data.
+ */
+export interface HiddenFieldInfo {
+  name: string;
+  /** Innermost frame name it was observed in; absent = main frame or unnamed. */
+  frame?: string;
+}
+
 /** Compact digest of an observation for postcondition mining. */
 export interface StateDigest {
   location: string;
   title: string;
   /** Headings / row headers / column headers — checkpoint marker candidates, frame-tagged. */
   markers: MarkerInfo[];
+  /**
+   * Hidden form fields observed in this state, by name. Optional and omitted
+   * when empty, so a state with no hidden inputs digests byte-identically to
+   * one recorded before this field existed — traces stay diffable, and a trace
+   * predating it simply yields no token assertion rather than a wrong one.
+   */
+  hiddenFields?: HiddenFieldInfo[];
   dialogText?: string;
 }
 
@@ -102,10 +129,24 @@ export function digestOf(obs: Observation): StateDigest {
     markers.push({ text: e.name, ...(frame !== undefined ? { frame } : {}) });
     if (markers.length >= 40) break;
   }
+  // A separate pass on purpose: the marker loop stops at 40, and a form's
+  // token must not be lost because a table above it used up the budget.
+  const hiddenFields: HiddenFieldInfo[] = [];
+  const seenHidden = new Set<string>();
+  for (const e of obs.elements) {
+    if (e.role !== 'hidden' || e.name.length === 0) continue;
+    const frame = e.framePath[e.framePath.length - 1]?.name;
+    const key = `${frame ?? ''}\u0000${e.name}`;
+    if (seenHidden.has(key)) continue;
+    seenHidden.add(key);
+    hiddenFields.push({ name: e.name, ...(frame !== undefined ? { frame } : {}) });
+    if (hiddenFields.length >= 20) break;
+  }
   return {
     location: obs.location,
     title: obs.title,
     markers,
+    ...(hiddenFields.length > 0 ? { hiddenFields } : {}),
     ...(obs.dialog ? { dialogText: obs.dialog.text } : {}),
   };
 }

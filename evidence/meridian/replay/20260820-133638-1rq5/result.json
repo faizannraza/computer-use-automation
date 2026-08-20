@@ -1,0 +1,135 @@
+{
+  "capabilityId": "member.transferFunds",
+  "version": "1.0.0",
+  "runId": "20260820-133638-1rq5",
+  "evidenceDir": "evidence/meridian/replay/20260820-133638-1rq5",
+  "startedAt": "2026-08-20T20:36:38.533Z",
+  "role": "teller",
+  "status": "business_outcome",
+  "code": "TRANSACTION_REJECTED",
+  "message": "MERIDIAN rejected the transaction as entered — a validation failure on the submitted values (an overdraw, a malformed e-mail or phone number). The caller should correct the inputs and retry. TWO markers, because the app renders this state on two different screens: the injected 400 shows a 'TRANSACTION REJECTED' banner, while a natural validation failure — an overdraw is the one the brief names — redisplays the form with 'The transaction could not be validated:' and a reason. Matching only the first reported every real overdraw as a hard timeout.",
+  "outputs": {},
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the Operator ID.",
+      "status": "ok",
+      "ms": 96,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword».",
+      "status": "ok",
+      "ms": 85,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click Sign On to authenticate.",
+      "status": "ok",
+      "ms": 177,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "status": "ok",
+      "ms": 316,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search.",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member.",
+      "status": "ok",
+      "ms": 152,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Select the member to open their record.",
+      "status": "ok",
+      "ms": 157,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the Funds Transfer form.",
+      "status": "ok",
+      "ms": 173,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Select the From Share by its underlying value attribute (fromShare parameter).",
+      "status": "ok",
+      "ms": 101,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s10",
+      "intent": "Select the To Share by its underlying value attribute (toShare parameter).",
+      "status": "ok",
+      "ms": 68,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s11",
+      "intent": "Enter the transfer amount.",
+      "status": "ok",
+      "ms": 60,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s12",
+      "intent": "Enter the memo.",
+      "status": "ok",
+      "ms": 67,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s13",
+      "intent": "Click Continue to review the transfer.",
+      "status": "ok",
+      "ms": 416,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T20:36:41.209Z"
+}

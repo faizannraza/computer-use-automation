@@ -351,3 +351,74 @@ describe('subscribing to a run', () => {
     expect(store.detail('run-throw')?.summary.status).toBe('running');
   });
 });
+
+/**
+ * "Recovered" is a fact about a run and the console is required to show it.
+ *
+ * A run that limped to success through two SESSION_EXPIRED restarts was
+ * pixel-identical to a clean one in history, because the summary carried
+ * nothing about recoveries at all — the codes lived only in `result.json`,
+ * which the history list never reads.
+ */
+describe('recoveries reach the run summary', () => {
+  it('carries them from a live run this process drove', () => {
+    const store = new RunStore(base);
+    store.start('20260301-120000-live', 'replay', 'member.readBalances', '1.0.0');
+    store.finish(
+      '20260301-120000-live',
+      replayResult('20260301-120000-live', {
+        recoveriesUsed: [
+          { code: 'SESSION_EXPIRED', attempts: 2 },
+          { code: 'MAINTENANCE_INTERSTITIAL', attempts: 1 },
+        ],
+      }),
+    );
+    const summary = store.list().find((r) => r.runId === '20260301-120000-live');
+    expect(summary?.status).toBe('success');
+    expect(summary?.recoveries).toEqual([
+      { code: 'SESSION_EXPIRED', attempts: 2 },
+      { code: 'MAINTENANCE_INTERSTITIAL', attempts: 1 },
+    ]);
+  });
+
+  it('carries them for a run summarised from result.json on disk', () => {
+    writeResult('replay', '20260301-130000-disk', {
+      status: 'success',
+      capabilityId: 'member.readBalances',
+      version: '1.0.0',
+      startedAt: '2026-03-01T13:00:00.000Z',
+      finishedAt: '2026-03-01T13:00:30.000Z',
+      stepsRun: [{ stepId: 's1', intent: 'a', status: 'ok', ms: 1 }],
+      interventions: [],
+      recoveriesUsed: [{ code: 'SESSION_EXPIRED', attempts: 2 }],
+    });
+    const summary = new RunStore(base).list().find((r) => r.runId === '20260301-130000-disk');
+    expect(summary?.recoveries).toEqual([{ code: 'SESSION_EXPIRED', attempts: 2 }]);
+  });
+
+  it('mines them from the event stream when there is no result document', () => {
+    // A run that never wrote a result (aborted mid-flight, or a discovery run
+    // whose shape predates the result contract) still recorded every recovery
+    // it applied. `attempt` is the engine's per-code counter, so the highest
+    // one seen is how many attempts that code took.
+    writeJsonl('replay', '20260301-140000-jsonl', [
+      { ts: '2026-03-01T14:00:00.000Z', type: 'run_start', capability: 'member.readBalances@1.0.0' },
+      { ts: '2026-03-01T14:00:05.000Z', type: 'recovery_applied', code: 'SESSION_EXPIRED', handler: 'restartRun', attempt: 1 },
+      { ts: '2026-03-01T14:00:09.000Z', type: 'recovery_applied', code: 'SESSION_EXPIRED', handler: 'restartRun', attempt: 2 },
+      { ts: '2026-03-01T14:00:20.000Z', type: 'run_result', status: 'success' },
+    ]);
+    const summary = new RunStore(base).list().find((r) => r.runId === '20260301-140000-jsonl');
+    expect(summary?.recoveries).toEqual([{ code: 'SESSION_EXPIRED', attempts: 2 }]);
+  });
+
+  it('says nothing rather than "clean" for a run that recorded no recovery info', () => {
+    // Absent, not `[]`: evidence written before this field existed cannot
+    // prove a run was clean, and the badge must not claim it was.
+    writeJsonl('replay', '20260301-150000-silent', [
+      { ts: '2026-03-01T15:00:00.000Z', type: 'run_start', capability: 'member.readBalances@1.0.0' },
+      { ts: '2026-03-01T15:00:20.000Z', type: 'run_result', status: 'success' },
+    ]);
+    const summary = new RunStore(base).list().find((r) => r.runId === '20260301-150000-silent');
+    expect(summary?.recoveries).toBeUndefined();
+  });
+});

@@ -1,0 +1,48 @@
+{"ts":"2026-08-20T20:32:43.655Z","type":"run_start","capability":"member.readBalances@1.0.0","tenant":null,"role":"teller","params":{"memberId":"100234","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T20:32:43.793Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T20:32:44.141Z","type":"screenshot","name":"entrypoint","file":"steps/001-entrypoint.png"}
+{"ts":"2026-08-20T20:32:44.141Z","type":"elements","name":"entrypoint","file":"steps/001-entrypoint.elements.json","count":11}
+{"ts":"2026-08-20T20:32:44.141Z","type":"step_start","stepId":"s1","intent":"Enter Operator ID.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.174Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T20:32:44.174Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.223Z","type":"step_ok","stepId":"s1","ms":82}
+{"ts":"2026-08-20T20:32:44.223Z","type":"screenshot","name":"after-s1","file":"steps/002-after-s1.png"}
+{"ts":"2026-08-20T20:32:44.223Z","type":"elements","name":"after-s1","file":"steps/002-after-s1.elements.json","count":11}
+{"ts":"2026-08-20T20:32:44.223Z","type":"step_start","stepId":"s2","intent":"Enter operator «secret:operatorPassword».","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.254Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T20:32:44.254Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.324Z","type":"step_ok","stepId":"s2","ms":101}
+{"ts":"2026-08-20T20:32:44.325Z","type":"screenshot","name":"after-s2","file":"steps/003-after-s2.png"}
+{"ts":"2026-08-20T20:32:44.326Z","type":"elements","name":"after-s2","file":"steps/003-after-s2.elements.json","count":11}
+{"ts":"2026-08-20T20:32:44.326Z","type":"step_start","stepId":"s3","intent":"Sign on to MERIDIAN CORE as the operator.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.376Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T20:32:44.376Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.524Z","type":"step_ok","stepId":"s3","ms":198}
+{"ts":"2026-08-20T20:32:44.524Z","type":"screenshot","name":"after-s3","file":"steps/004-after-s3.png"}
+{"ts":"2026-08-20T20:32:44.525Z","type":"elements","name":"after-s3","file":"steps/004-after-s3.elements.json","count":22}
+{"ts":"2026-08-20T20:32:44.525Z","type":"step_start","stepId":"s4","intent":"Open Member Inquiry / Selection.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.571Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T20:32:44.571Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.671Z","type":"step_ok","stepId":"s4","ms":146}
+{"ts":"2026-08-20T20:32:44.672Z","type":"screenshot","name":"after-s4","file":"steps/005-after-s4.png"}
+{"ts":"2026-08-20T20:32:44.672Z","type":"elements","name":"after-s4","file":"steps/005-after-s4.elements.json","count":13}
+{"ts":"2026-08-20T20:32:44.672Z","type":"step_start","stepId":"s5","intent":"Enter member number to search.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.705Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T20:32:44.705Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.739Z","type":"step_ok","stepId":"s5","ms":67}
+{"ts":"2026-08-20T20:32:44.739Z","type":"screenshot","name":"after-s5","file":"steps/006-after-s5.png"}
+{"ts":"2026-08-20T20:32:44.739Z","type":"elements","name":"after-s5","file":"steps/006-after-s5.elements.json","count":13}
+{"ts":"2026-08-20T20:32:44.740Z","type":"step_start","stepId":"s6","intent":"Search for the member by number.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.771Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T20:32:44.772Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.874Z","type":"classified_fields","registered":1}
+{"ts":"2026-08-20T20:32:44.874Z","type":"step_ok","stepId":"s6","ms":135}
+{"ts":"2026-08-20T20:32:44.874Z","type":"screenshot","name":"after-s6","file":"steps/007-after-s6.png"}
+{"ts":"2026-08-20T20:32:44.875Z","type":"elements","name":"after-s6","file":"steps/007-after-s6.elements.json","count":20}
+{"ts":"2026-08-20T20:32:44.875Z","type":"step_start","stepId":"s7","intent":"Open the member's record.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T20:32:44.876Z","type":"fault_armed","kind":"permission","at":"s7","mechanism":"inject=permission"}
+{"ts":"2026-08-20T20:32:44.907Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T20:32:44.907Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=number&q=100234","risk":"reversible"}
+{"ts":"2026-08-20T20:32:45.122Z","type":"recovery_applied","code":"SUPERVISOR_OVERRIDE_REQUIRED","attempt":1,"handler":"escalate","risk":"reversible"}
+{"ts":"2026-08-20T20:32:45.122Z","type":"escalation_unattended","kind":"human_action_required","reason":"SUPERVISOR_OVERRIDE_REQUIRED: The signed-on operator is not authorised for this restricted function. Only a person can clear it: a supervisor must authorise the action on the live session."}
+{"ts":"2026-08-20T20:32:45.122Z","type":"run_result","status":"escalated"}

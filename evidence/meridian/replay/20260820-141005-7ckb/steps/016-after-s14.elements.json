@@ -1,0 +1,274 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members/103001/hold/post",
+  "count": 16,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "link",
+      "name": "Return to Member Record",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 27.8,
+        "w": 11.1,
+        "h": 1.6
+      },
+      "nearText": "ACCOUNT HOLD APPLIED HOLD RECORDED Confirmation:CN480125 Share:103001-MMKT-2 is now HOLD Applied:08/20/2026 21:10:35 Return to Member Record · Main Menu"
+    },
+    {
+      "ref": 5,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 34.1,
+        "y": 27.8,
+        "w": 4.6,
+        "h": 1.6
+      },
+      "nearText": "ACCOUNT HOLD APPLIED HOLD RECORDED Confirmation:CN480125 Share:103001-MMKT-2 is now HOLD Applied:08/20/2026 21:10:35 Return to Member Record · Main Menu"
+    },
+    {
+      "ref": 6,
+      "role": "heading",
+      "name": "ACCOUNT HOLD APPLIED",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 7,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 8,
+      "role": "cell",
+      "name": "OPR SUPER1 | BR MAIN-001 | 08/20/2026 21:10:35 | SID 8D0E89D7",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 30.9,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR SUPER1 | BR MAIN-001 | 08/20/2026 21:10:35 | SID 8D0E89D7",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR SUPER1 | BR MAIN-001 | 08/20/2026 21:10:35 | SID 8D0E89D7"
+      ]
+    },
+    {
+      "ref": 9,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 33.4,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 10,
+      "role": "rowheader",
+      "name": "Confirmation:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 17.3,
+        "w": 7.1,
+        "h": 2.4
+      },
+      "nearText": "Confirmation: | CN480125",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Confirmation:",
+        "CN480125"
+      ]
+    },
+    {
+      "ref": 11,
+      "role": "cell",
+      "name": "CN480125",
+      "framePath": [],
+      "interactive": false,
+      "label": "Confirmation:",
+      "bboxPct": {
+        "x": 29.7,
+        "y": 17.3,
+        "w": 13.7,
+        "h": 2.4
+      },
+      "nearText": "Confirmation: | CN480125",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Confirmation:",
+        "CN480125"
+      ]
+    },
+    {
+      "ref": 12,
+      "role": "rowheader",
+      "name": "Share:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 19.6,
+        "w": 7.1,
+        "h": 2.4
+      },
+      "nearText": "Share: | 103001-MMKT-2 is now HOLD",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Share:",
+        "103001-MMKT-2 is now HOLD"
+      ]
+    },
+    {
+      "ref": 13,
+      "role": "cell",
+      "name": "103001-MMKT-2 is now HOLD",
+      "framePath": [],
+      "interactive": false,
+      "label": "Share:",
+      "bboxPct": {
+        "x": 29.7,
+        "y": 19.6,
+        "w": 13.7,
+        "h": 2.4
+      },
+      "nearText": "Share: | 103001-MMKT-2 is now HOLD",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Share:",
+        "103001-MMKT-2 is now HOLD"
+      ]
+    },
+    {
+      "ref": 14,
+      "role": "rowheader",
+      "name": "Applied:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 22,
+        "w": 7.1,
+        "h": 2.4
+      },
+      "nearText": "Applied: | 08/20/2026 21:10:35",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Applied:",
+        "08/20/2026 21:10:35"
+      ]
+    },
+    {
+      "ref": 15,
+      "role": "cell",
+      "name": "08/20/2026 21:10:35",
+      "framePath": [],
+      "interactive": false,
+      "label": "Applied:",
+      "bboxPct": {
+        "x": 29.7,
+        "y": 22,
+        "w": 13.7,
+        "h": 2.4
+      },
+      "nearText": "Applied: | 08/20/2026 21:10:35",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Applied:",
+        "08/20/2026 21:10:35"
+      ]
+    }
+  ]
+}

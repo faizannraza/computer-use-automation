@@ -1,0 +1,77 @@
+{
+  "capabilityId": "member.readBalances",
+  "version": "1.0.0",
+  "runId": "20260820-133243-c1w6",
+  "evidenceDir": "evidence/meridian/replay/20260820-133243-c1w6",
+  "startedAt": "2026-08-20T20:32:43.654Z",
+  "role": "teller",
+  "status": "escalated",
+  "interventionId": "none",
+  "reason": "SUPERVISOR_OVERRIDE_REQUIRED: The signed-on operator is not authorised for this restricted function. Only a person can clear it: a supervisor must authorise the action on the live session.",
+  "resolution": "no_operator_available",
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter Operator ID.",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator «secret:operatorPassword».",
+      "status": "ok",
+      "ms": 101,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Sign on to MERIDIAN CORE as the operator.",
+      "status": "ok",
+      "ms": 198,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "status": "ok",
+      "ms": 146,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter member number to search.",
+      "status": "ok",
+      "ms": 67,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member by number.",
+      "status": "ok",
+      "ms": 135,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [
+    {
+      "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+      "attempts": 1
+    }
+  ],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T20:32:45.122Z"
+}

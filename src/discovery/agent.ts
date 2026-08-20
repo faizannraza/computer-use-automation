@@ -290,6 +290,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
       version: opts.artifactVersion ?? '1.0.0',
       ...(opts.evidenceBaseDir !== undefined ? { evidenceBaseDir: opts.evidenceBaseDir } : {}),
       ...(opts.requiresRole !== undefined ? { requiresRole: opts.requiresRole } : {}),
+      // The profile the run was DRIVEN under is also the profile the artifact
+      // is compiled against — the compiler reads its transaction-token field
+      // name to decide which posting steps assert the app's token.
+      ...(opts.profile !== undefined ? { profile: opts.profile } : {}),
     });
   } catch (err) {
     const reason = `compile failed: ${err instanceof Error ? err.message : String(err)}`;

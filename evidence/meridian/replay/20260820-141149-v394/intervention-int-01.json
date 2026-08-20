@@ -1,0 +1,19 @@
+{
+  "stepId": "s12",
+  "stepIntent": "Save the updated member information, committing the record change.",
+  "kind": "approve_risky",
+  "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+  "suggestedResolution": "Review the pending irreversible action in the live window. approve = the automation performs it; abort = stop the run.",
+  "options": [
+    "approve",
+    "abort"
+  ],
+  "origin": "replay",
+  "capabilityId": "member.updateInfo",
+  "version": "1.0.0",
+  "runId": "20260820-141149-v394",
+  "observationSummary": "at https://web-sample.interface-hiring.com/members/103001/update; title \"Update Member Information - Meridian Core\"; headings: UPDATE MEMBER INFORMATION | E-mail: | Phone: | Mailing Address:; frames observed: (main); text: \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off UPDATE MEMBER INFORMATION Member 103001 - ***hy E-mail: Phone: Mail…\"",
+  "screenshotRef": "steps/013-intervention.png",
+  "id": "int-01",
+  "at": "2026-08-20T21:11:51.731Z"
+}

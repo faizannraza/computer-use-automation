@@ -38,8 +38,8 @@ half, so cutting first turns a length limit into a disclosure.
 | `member.placeHold` | `discovery/20260820-125646-713v/` | claude-opus-4-8 | 14 | irreversible | supervisor |
 | `member.readBalances` | `discovery/20260820-124803-gz6r/` | claude-opus-4-8 | 8 | reversible | — |
 | `member.transferFunds` | `discovery/20260820-124803-5o6z/` | claude-opus-4-8 | 15 | irreversible | — |
-| `member.updateInfo` | `discovery/20260820-125646-4tb7/` | claude-opus-4-8 | 12 | irreversible | — |
-| `session.signOn` | `discovery/20260820-124803-nqfc/` | claude-opus-4-8 | 5 | reversible | — |
+| `member.updateInfo` | `discovery/20260820-134302-g6i5/` | claude-opus-4-8 | 13 | irreversible | — |
+| `session.signOn` | `discovery/20260820-133108-4llc/` | claude-opus-4-8 | 5 | reversible | — |
 
 Each discovery directory holds the model transcript (screenshots elided), the
 recorded `trace.json`, the `compile-report.json` listing every parameterisation
@@ -62,28 +62,33 @@ refuses it for a teller — and it is the only one that declares `requiresRole`.
 
 ## Replay — the runtime-state taxonomy, one run per row
 
-No model is involved in any of these.
+No model is involved in any of these. Together they cover **all six** of the
+brief's `inject` kinds (validation, notfound, permission, timeout, maintenance,
+server) and the natural errors it names.
 
 | Run | Capability | Result | What it demonstrates |
 |---|---|---|---|
-| `replay/20260820-125909-m7jx/` | `session.signOn` | **success** | sign on / session |
 | `replay/20260820-125911-2www/` | `member.readBalances` | **success** | read every share, balance and status |
 | `replay/20260820-125913-vt04/` | `member.inquire` | **success** | member inquiry by LAST NAME → matches table |
-| `replay/20260820-125915-z85j/` | `member.readBalances` | **success** · recoveries: MAINTENANCE_INTERSTITIAL | maintenance interstitial → RECOVERED |
-| `replay/20260820-125919-hn2h/` | `member.readBalances` | **failed** — UNEXPECTED_STATE | application error → HARD FAILURE, fast |
-| `replay/20260820-125921-psm2/` | `member.readBalances` | **success** · recoveries: SESSION_EXPIRED | session expired mid-flow → RECOVERED |
-| `replay/20260820-125924-korr/` | `member.readBalances` | **business_outcome** — RECORD_NOT_FOUND | record not found (injected 404) → BUSINESS OUTCOME |
-| `replay/20260820-125927-oi59/` | `member.inquire` | **business_outcome** — TRANSACTION_REJECTED | transaction rejected (injected 400) → BUSINESS OUTCOME |
+| `replay/20260820-125915-z85j/` | `member.readBalances` | **success** · recoveries: MAINTENANCE_INTERSTITIAL | maintenance interstitial (503) → RECOVERED |
+| `replay/20260820-125919-hn2h/` | `member.readBalances` | **failed** — UNEXPECTED_STATE | application error (500) → HARD FAILURE, fast |
+| `replay/20260820-125921-psm2/` | `member.readBalances` | **success** · recoveries: SESSION_EXPIRED | session expired mid-flow (440) → RECOVERED |
+| `replay/20260820-125924-korr/` | `member.readBalances` | **business_outcome** — RECORD_NOT_FOUND | record not found (404) → BUSINESS OUTCOME |
+| `replay/20260820-125927-oi59/` | `member.inquire` | **business_outcome** — TRANSACTION_REJECTED | transaction rejected (400) → BUSINESS OUTCOME |
 | `replay/20260820-125929-j80w/` | `member.readBalances` | **business_outcome** — MEMBER_NOT_FOUND | no such member, by number → BUSINESS OUTCOME |
 | `replay/20260820-125931-7gbr/` | `member.inquire` | **business_outcome** — MEMBER_NOT_FOUND | no such member, by name → BUSINESS OUTCOME |
-| `replay/20260820-125933-9yut/` | `member.placeHold` | **escalated** — no_operator_available · recoveries: SUPERVISOR_OVERRIDE_REQUIRED | teller attempts a restricted hold → ESCALATED |
-| `replay/20260820-125936-1b4e/` | `member.transferFunds` | **escalated** — no_operator_available | unattended transfer → ESCALATED, nothing posted |
-| `replay/20260820-130209-g818/` | `member.transferFunds` | **success** | transfer posted after a human approved it in the dashboard |
+| `replay/20260820-133228-akda/` | `session.signOn` | **business_outcome** — BAD_CREDENTIALS | bad credentials → BUSINESS OUTCOME |
+| `replay/20260820-133243-c1w6/` | `member.readBalances` | **escalated** — no_operator_available · recoveries: SUPERVISOR_OVERRIDE_REQUIRED | permission denied (403) → ESCALATED |
+| `replay/20260820-133246-yihz/` | `session.signOn` | **success** | sign on / session |
+| `replay/20260820-133638-1rq5/` | `member.transferFunds` | **business_outcome** — TRANSACTION_REJECTED | overdraw on a transfer → BUSINESS OUTCOME |
+| `replay/20260820-140825-bt08/` | `member.transferFunds` | **success** | funds transfer POSTED after a human approved it |
+| `replay/20260820-141005-7ckb/` | `member.placeHold` | **success** | account hold PLACED as supervisor |
+| `replay/20260820-141057-2afg/` | `member.openShare` | **success** | new share OPENED after approval |
+| `replay/20260820-141149-v394/` | `member.updateInfo` | **success** | member contact details UPDATED after approval |
+| `replay/20260820-141322-ad9v/` | `member.placeHold` | **escalated** — no_operator_available · recoveries: SUPERVISOR_OVERRIDE_REQUIRED | teller attempts a restricted hold → ESCALATED |
+| `replay/20260820-141325-b1kn/` | `member.transferFunds` | **escalated** — no_operator_available | unattended transfer → ESCALATED, nothing posted |
 
 ### Detail
-
-**`20260820-125909-m7jx` — sign on / session**  
-The session capability replaying on its own, including the operator banner it reads back.
 
 **`20260820-125911-2www` — read every share, balance and status**  
 The headline read: one `readTable` returns all of a member's shares. Balances are masked in this evidence and returned in full to the caller.
@@ -91,35 +96,71 @@ The headline read: one `readTable` returns all of a member's shares. Balances ar
 **`20260820-125913-vt04` — member inquiry by LAST NAME → matches table**  
 Search-by-name returning a typed `matches` table (member number, name, share count) from one `readTable` extraction.
 
-**`20260820-125915-z85j` — maintenance interstitial → RECOVERED**  
-A 503 maintenance interstitial injected at the entrypoint. Classified as recoverable, cleared by restarting the flow, and the run completed. `recoveriesUsed: MAINTENANCE_INTERSTITIAL`.
+**`20260820-125915-z85j` — maintenance interstitial (503) → RECOVERED**  
+Injected at the entrypoint. Classified as recoverable, cleared by restarting the flow, and the run completed. `recoveriesUsed: MAINTENANCE_INTERSTITIAL`.
 
-**`20260820-125919-hn2h` — application error → HARD FAILURE, fast**  
-A 500 injected at the entrypoint. Matched the profile's APPLICATION_ERROR anomaly and failed immediately with the observed state instead of waiting out the step clock.
+**`20260820-125919-hn2h` — application error (500) → HARD FAILURE, fast**  
+Injected at the entrypoint. Matched the profile's APPLICATION_ERROR anomaly and failed immediately with the observed state instead of waiting out the step clock.
 
-**`20260820-125921-psm2` — session expired mid-flow → RECOVERED**  
-A 440 session timeout injected on the search step. Re-authenticated from the entrypoint — which also mints a fresh transaction token rather than re-posting a consumed one — and completed. `recoveriesUsed: SESSION_EXPIRED`.
+**`20260820-125921-psm2` — session expired mid-flow (440) → RECOVERED**  
+Injected on the search step. Re-authenticated from the entrypoint — which also mints a fresh transaction token rather than re-posting a consumed one — and completed. `recoveriesUsed: SESSION_EXPIRED`.
 
-**`20260820-125924-korr` — record not found (injected 404) → BUSINESS OUTCOME**  
-A 404 injected mid-flow. Reported as the app-wide RECORD_NOT_FOUND outcome — a result the caller handles, not a crash.
+**`20260820-125924-korr` — record not found (404) → BUSINESS OUTCOME**  
+Injected mid-flow. Reported as the app-wide RECORD_NOT_FOUND outcome — a result the caller handles, not a crash.
 
-**`20260820-125927-oi59` — transaction rejected (injected 400) → BUSINESS OUTCOME**  
-A 400 injected mid-flow. Reported as TRANSACTION_REJECTED, the outcome a caller switches on to correct its inputs.
+**`20260820-125927-oi59` — transaction rejected (400) → BUSINESS OUTCOME**  
+Injected mid-flow. Reported as TRANSACTION_REJECTED, the outcome a caller switches on to correct its inputs.
 
 **`20260820-125929-j80w` — no such member, by number → BUSINESS OUTCOME**  
-Natural, uninjected: searching member 999999. MEMBER_NOT_FOUND, grounded in text the discovery run literally stood in front of.
+Searching member 999999. MEMBER_NOT_FOUND, grounded in text the discovery run literally stood in front of.
 
 **`20260820-125931-7gbr` — no such member, by name → BUSINESS OUTCOME**  
-Natural: a last-name search with no matches. The same outcome reached through the other search mode.
+A last-name search with no matches — the same outcome reached through the other search mode.
 
-**`20260820-125933-9yut` — teller attempts a restricted hold → ESCALATED**  
-Natural: a teller runs Place Account Hold. MERIDIAN returns its supervisor-override screen; the run classifies it as a state only a person can clear and escalates. With no operator attached it ends `escalated / no_operator_available` — nothing was placed.
+**`20260820-133228-akda` — bad credentials → BUSINESS OUTCOME**  
+Signing on with an incorrect credential. Reported as BAD_CREDENTIALS rather than as a timeout — which is what it used to do, because the mined marker read "Invalid operator ID or password." and the demo operator's credential IS the word `password`, so the redactor masked it and the detector could never match. The marker now stops short of the regulated span, and the schema refuses any artifact whose detector matches on redacted text.
 
-**`20260820-125936-1b4e` — unattended transfer → ESCALATED, nothing posted**  
+**`20260820-133243-c1w6` — permission denied (403) → ESCALATED**  
+The sixth and last inject kind. A 403 renders MERIDIAN's supervisor-override screen, which the profile classifies as a state only a person can clear; with no operator attached the run ends `escalated / no_operator_available`.
+
+**`20260820-133246-yihz` — sign on / session**  
+The session capability replaying on its own, including the operator banner it reads back.
+
+**`20260820-133638-1rq5` — overdraw on a transfer → BUSINESS OUTCOME**  
+The case the brief names. MERIDIAN redisplays the form with "The transaction could not be validated: Insufficient…" rather than its TRANSACTION REJECTED banner — a second screen for the same class of condition, which is why the profile matches on either. `irreversibleCompleted: false`; before this it reported as a hard POSTCONDITION_TIMEOUT.
+
+**`20260820-140825-bt08` — funds transfer POSTED after a human approved it**  
+Invoked over the API: it ran to the CONFIRM screen and stopped; a human fetched the intervention's one-time nonce and approved; only then did it post. Deliberately run against a share pair the capability was NEVER recorded with — which is what proves the receipt checkpoint binds to `{fromShare}` rather than to the recording's own shares.
+
+**`20260820-141005-7ckb` — account hold PLACED as supervisor**  
+The restricted function completing. Invoked with `options.role: supervisor`; the app lets a supervisor past the override screen, the irreversible post pauses for approval, and the run records `role: supervisor` — the audit field that answers "which runs used supervisor authority".
+
+**`20260820-141057-2afg` — new share OPENED after approval**  
+Open New Share through review → post, approved by a human, returning the confirmation number.
+
+**`20260820-141149-v394` — member contact details UPDATED after approval**  
+Update Member Information. The e-mail, phone and address params are declared `pii` in the contract, so they are masked here while the caller's own invoke response carries them in full.
+
+**`20260820-141322-ad9v` — teller attempts a restricted hold → ESCALATED**  
+A teller runs Place Account Hold. MERIDIAN returns its supervisor-override screen; the run classifies it as a state only a person can clear and escalates. Nothing was placed. Compare with the supervisor run above, which proceeds.
+
+**`20260820-141325-b1kn` — unattended transfer → ESCALATED, nothing posted**  
 The safety property: an irreversible capability invoked with no operator attached runs to the confirmation screen and stops. `irreversibleCompleted: false`.
+### Two states with no run of their own, and why
 
-**`20260820-130209-g818` — transfer posted after a human approved it in the dashboard**  
-Invoked over the API. It ran to the CONFIRM screen and stopped; a human fetched the intervention's one-time nonce and approved; only then did it post. Held 30s for the decision. `irreversibleCompleted: true`, confirmation returned, and the run records the operator role it used.
+- **Invalid e-mail or phone on Update Member Information.** MERIDIAN renders it
+  on the same validation screen as an overdraw, so it resolves to the same
+  `TRANSACTION_REJECTED` outcome through the same profile marker — which the
+  overdraw run above proves fires. There is no committed run because producing
+  one means approving an irreversible submit against a shared app on the chance
+  it is rejected; the classification is demonstrated, the mutation is not worth
+  it.
+- **A natural idle session timeout.** The `SESSION_EXPIRED` recovery matches two
+  markers because the app has two: the injected 440 shows `YOUR SESSION HAS
+  TIMED OUT`, a real idle expiry shows `SESSION ENDED`. Both were observed while
+  grounding the profile; only the injected one is committed as a run, because
+  reproducing the natural one means idling out the real TTL, which no test or
+  demo can wait for.
 
 ## How to reproduce any of these
 

@@ -1,0 +1,107 @@
+{"ts":"2026-08-20T21:08:25.992Z","type":"run_start","capability":"member.transferFunds@1.0.0","tenant":null,"role":"teller","params":{"memberId":"103001","fromShare":"103001-S0070-7","toShare":"103001-MMKT-4","amount":"1.00","memo":"Q3 rebalance","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T21:08:26.122Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T21:08:26.487Z","type":"screenshot","name":"entrypoint","file":"steps/001-entrypoint.png"}
+{"ts":"2026-08-20T21:08:26.487Z","type":"elements","name":"entrypoint","file":"steps/001-entrypoint.elements.json","count":11}
+{"ts":"2026-08-20T21:08:26.487Z","type":"step_start","stepId":"s1","intent":"Enter the Operator ID.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.531Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:26.531Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.594Z","type":"step_ok","stepId":"s1","ms":107}
+{"ts":"2026-08-20T21:08:26.594Z","type":"screenshot","name":"after-s1","file":"steps/002-after-s1.png"}
+{"ts":"2026-08-20T21:08:26.595Z","type":"elements","name":"after-s1","file":"steps/002-after-s1.elements.json","count":11}
+{"ts":"2026-08-20T21:08:26.595Z","type":"step_start","stepId":"s2","intent":"Enter the operator «secret:operatorPassword».","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.628Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:26.628Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.677Z","type":"step_ok","stepId":"s2","ms":82}
+{"ts":"2026-08-20T21:08:26.677Z","type":"screenshot","name":"after-s2","file":"steps/003-after-s2.png"}
+{"ts":"2026-08-20T21:08:26.678Z","type":"elements","name":"after-s2","file":"steps/003-after-s2.elements.json","count":11}
+{"ts":"2026-08-20T21:08:26.678Z","type":"step_start","stepId":"s3","intent":"Click Sign On to authenticate.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.711Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:26.711Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.846Z","type":"step_ok","stepId":"s3","ms":168}
+{"ts":"2026-08-20T21:08:26.847Z","type":"screenshot","name":"after-s3","file":"steps/004-after-s3.png"}
+{"ts":"2026-08-20T21:08:26.847Z","type":"elements","name":"after-s3","file":"steps/004-after-s3.elements.json","count":22}
+{"ts":"2026-08-20T21:08:26.847Z","type":"step_start","stepId":"s4","intent":"Open Member Inquiry / Selection.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.878Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:26.878Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T21:08:26.977Z","type":"step_ok","stepId":"s4","ms":130}
+{"ts":"2026-08-20T21:08:26.978Z","type":"screenshot","name":"after-s4","file":"steps/005-after-s4.png"}
+{"ts":"2026-08-20T21:08:26.978Z","type":"elements","name":"after-s4","file":"steps/005-after-s4.elements.json","count":13}
+{"ts":"2026-08-20T21:08:26.978Z","type":"step_start","stepId":"s5","intent":"Enter the member number to search.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.012Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:27.012Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.061Z","type":"step_ok","stepId":"s5","ms":83}
+{"ts":"2026-08-20T21:08:27.061Z","type":"screenshot","name":"after-s5","file":"steps/006-after-s5.png"}
+{"ts":"2026-08-20T21:08:27.062Z","type":"elements","name":"after-s5","file":"steps/006-after-s5.elements.json","count":13}
+{"ts":"2026-08-20T21:08:27.062Z","type":"step_start","stepId":"s6","intent":"Search for the member.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.095Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:27.095Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.213Z","type":"classified_fields","registered":1}
+{"ts":"2026-08-20T21:08:27.213Z","type":"step_ok","stepId":"s6","ms":151}
+{"ts":"2026-08-20T21:08:27.214Z","type":"screenshot","name":"after-s6","file":"steps/007-after-s6.png"}
+{"ts":"2026-08-20T21:08:27.214Z","type":"elements","name":"after-s6","file":"steps/007-after-s6.elements.json","count":20}
+{"ts":"2026-08-20T21:08:27.214Z","type":"step_start","stepId":"s7","intent":"Select the member to open their record.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.245Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:27.245Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=number&q=103001","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.366Z","type":"classified_fields","registered":9}
+{"ts":"2026-08-20T21:08:27.367Z","type":"step_ok","stepId":"s7","ms":153}
+{"ts":"2026-08-20T21:08:27.367Z","type":"screenshot","name":"after-s7","file":"steps/008-after-s7.png"}
+{"ts":"2026-08-20T21:08:27.367Z","type":"elements","name":"after-s7","file":"steps/008-after-s7.elements.json","count":54}
+{"ts":"2026-08-20T21:08:27.368Z","type":"step_start","stepId":"s8","intent":"Open the Funds Transfer form.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.416Z","type":"resolved","stepId":"s8","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:27.417Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.529Z","type":"step_ok","stepId":"s8","ms":161}
+{"ts":"2026-08-20T21:08:27.529Z","type":"screenshot","name":"after-s8","file":"steps/009-after-s8.png"}
+{"ts":"2026-08-20T21:08:27.530Z","type":"elements","name":"after-s8","file":"steps/009-after-s8.elements.json","count":19}
+{"ts":"2026-08-20T21:08:27.530Z","type":"step_start","stepId":"s9","intent":"Select the From Share by its underlying value attribute (fromShare parameter).","kind":"choose","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.562Z","type":"resolved","stepId":"s9","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:27.562Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.612Z","type":"step_ok","stepId":"s9","ms":82}
+{"ts":"2026-08-20T21:08:27.612Z","type":"screenshot","name":"after-s9","file":"steps/010-after-s9.png"}
+{"ts":"2026-08-20T21:08:27.613Z","type":"elements","name":"after-s9","file":"steps/010-after-s9.elements.json","count":19}
+{"ts":"2026-08-20T21:08:27.613Z","type":"step_start","stepId":"s10","intent":"Select the To Share by its underlying value attribute (toShare parameter).","kind":"choose","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.644Z","type":"resolved","stepId":"s10","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:27.644Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.678Z","type":"step_ok","stepId":"s10","ms":65}
+{"ts":"2026-08-20T21:08:27.679Z","type":"screenshot","name":"after-s10","file":"steps/011-after-s10.png"}
+{"ts":"2026-08-20T21:08:27.679Z","type":"elements","name":"after-s10","file":"steps/011-after-s10.elements.json","count":19}
+{"ts":"2026-08-20T21:08:27.679Z","type":"step_start","stepId":"s11","intent":"Enter the transfer amount.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.711Z","type":"resolved","stepId":"s11","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:27.711Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.745Z","type":"step_ok","stepId":"s11","ms":66}
+{"ts":"2026-08-20T21:08:27.745Z","type":"screenshot","name":"after-s11","file":"steps/012-after-s11.png"}
+{"ts":"2026-08-20T21:08:27.746Z","type":"elements","name":"after-s11","file":"steps/012-after-s11.elements.json","count":19}
+{"ts":"2026-08-20T21:08:27.746Z","type":"step_start","stepId":"s12","intent":"Enter the memo.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.778Z","type":"resolved","stepId":"s12","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:27.779Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.812Z","type":"step_ok","stepId":"s12","ms":66}
+{"ts":"2026-08-20T21:08:27.812Z","type":"screenshot","name":"after-s12","file":"steps/013-after-s12.png"}
+{"ts":"2026-08-20T21:08:27.813Z","type":"elements","name":"after-s12","file":"steps/013-after-s12.elements.json","count":19}
+{"ts":"2026-08-20T21:08:27.813Z","type":"step_start","stepId":"s13","intent":"Click Continue to review the transfer.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.845Z","type":"resolved","stepId":"s13","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:27.846Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer","risk":"reversible"}
+{"ts":"2026-08-20T21:08:27.961Z","type":"step_ok","stepId":"s13","ms":148}
+{"ts":"2026-08-20T21:08:27.962Z","type":"screenshot","name":"after-s13","file":"steps/014-after-s13.png"}
+{"ts":"2026-08-20T21:08:27.962Z","type":"elements","name":"after-s13","file":"steps/014-after-s13.elements.json","count":25}
+{"ts":"2026-08-20T21:08:27.962Z","type":"step_start","stepId":"s14","intent":"Post the funds transfer (pre-authorised for recording).","kind":"activate","risk":"irreversible"}
+{"ts":"2026-08-20T21:08:27.995Z","type":"resolved","stepId":"s14","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T21:08:27.995Z","type":"gate","kind":"activate","decision":{"allowed":false,"code":"RISK_NEEDS_ESCALATION","reason":"irreversible action requires human approval (policy mode: escalate)"},"location":"https://web-sample.interface-hiring.com/members/103001/transfer/review","risk":"irreversible"}
+{"ts":"2026-08-20T21:08:27.996Z","type":"screenshot","name":"intervention","file":"steps/015-intervention.png"}
+{"ts":"2026-08-20T21:08:27.996Z","type":"elements","name":"intervention","file":"steps/015-intervention.elements.json","count":25}
+{"ts":"2026-08-20T21:08:27.996Z","type":"intervention_raised","id":"int-01","kind":"approve_risky","stepId":"s14","reason":"RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)"}
+{"ts":"2026-08-20T21:08:56.087Z","type":"intervention_resolved","id":"int-01","kind":"approve_risky","reason":"RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)","resolution":"approve","humanActions":0,"heldForMs":28091,"stepId":"s14","note":"approved in the dashboard"}
+{"ts":"2026-08-20T21:08:56.129Z","type":"approved_action_relocated","stepId":"s14","fromRef":9,"toRef":9}
+{"ts":"2026-08-20T21:08:56.129Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer/review","risk":"irreversible"}
+{"ts":"2026-08-20T21:08:56.247Z","type":"classified_fields","registered":2}
+{"ts":"2026-08-20T21:08:56.247Z","type":"step_ok","stepId":"s14","ms":28285}
+{"ts":"2026-08-20T21:08:56.247Z","type":"screenshot","name":"after-s14","file":"steps/016-after-s14.png"}
+{"ts":"2026-08-20T21:08:56.248Z","type":"elements","name":"after-s14","file":"steps/016-after-s14.elements.json","count":20}
+{"ts":"2026-08-20T21:08:56.248Z","type":"step_start","stepId":"s15","intent":"Capture the confirmation/reference number from the receipt.","kind":"read","risk":"read"}
+{"ts":"2026-08-20T21:08:56.279Z","type":"resolved","stepId":"s15","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T21:08:56.279Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/103001/transfer/post","risk":"read"}
+{"ts":"2026-08-20T21:08:56.279Z","type":"extracted","stepId":"s15","into":"confirmationNumber"}
+{"ts":"2026-08-20T21:08:56.312Z","type":"step_ok","stepId":"s15","ms":64}
+{"ts":"2026-08-20T21:08:56.313Z","type":"screenshot","name":"after-s15","file":"steps/017-after-s15.png"}
+{"ts":"2026-08-20T21:08:56.313Z","type":"elements","name":"after-s15","file":"steps/017-after-s15.elements.json","count":20}
+{"ts":"2026-08-20T21:08:56.346Z","type":"screenshot","name":"final","file":"steps/018-final.png"}
+{"ts":"2026-08-20T21:08:56.346Z","type":"elements","name":"final","file":"steps/018-final.elements.json","count":20}
+{"ts":"2026-08-20T21:08:56.346Z","type":"run_result","status":"success"}

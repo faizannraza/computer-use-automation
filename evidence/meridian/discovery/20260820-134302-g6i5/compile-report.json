@@ -1,0 +1,14 @@
+{
+  "spineActions": 14,
+  "prunedProbeActions": 0,
+  "parameterizations": [
+    "s7.target.near: \"103001\" → {memberId}",
+    "s7.snapshot: \"103001\" → {memberId}"
+  ],
+  "outcomeAttachments": [],
+  "notes": [
+    "s3: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval",
+    "s6: checkpoint may be non-specific — unscoped short marker \"Shares\"; review before approval",
+    "s12: irreversible action was human-approved during discovery (intervention int-01) — replay will escalate it the same way under the default policy"
+  ]
+}

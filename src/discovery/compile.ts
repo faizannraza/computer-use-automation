@@ -21,11 +21,25 @@ import type { CapabilityArtifact, OutcomeSpec, ParamSpec, Sensitivity, Step } fr
 import { CapabilityArtifactSchema, computeContentHash } from '../schema/capability.js';
 import type { Condition } from '../schema/conditions.js';
 import type { Locator, TargetRef } from '../schema/locators.js';
+import type { AppProfile } from '../profile/appProfile.js';
 import type { DiscoveryTrace, MarkerInfo, RecordedAction, RecordedElement, StateDigest } from './recorder.js';
 
 export interface OutputHint {
   type?: 'string' | 'integer' | 'money';
   sensitivity?: Sensitivity;
+}
+
+/**
+ * The placeholder description a caller param starts life with, before the
+ * compiler has seen which on-screen field it binds to. It lives here rather
+ * than in the CLI that writes it because the compiler has to RECOGNISE it: a
+ * description that is still this string is one nobody has authored, and is
+ * therefore safe to replace with something the recording actually knows. A
+ * human-written description always wins — the compiler improves on silence,
+ * it does not overrule an author.
+ */
+export function genericCallerParamDescription(name: string): string {
+  return `Caller-supplied parameter '${name}'.`;
 }
 
 export interface CompileInputs {
@@ -57,6 +71,15 @@ export interface CompileInputs {
    * is a fact about how the run happened.
    */
   requiresRole?: string;
+  /**
+   * The target application's profile, when the run had one. The compiler reads
+   * exactly one thing from it — `transactionToken.fieldName` — to decide
+   * whether a posting step should assert the app's per-transaction token (see
+   * the transaction-token block below). Optional: without a profile the
+   * compiler behaves exactly as it did before, which is what keeps every
+   * profile-less trace (MockCore, the unit fixtures) compiling unchanged.
+   */
+  profile?: AppProfile;
 }
 
 export interface CompileReport {
@@ -82,7 +105,32 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   // Matching is TOKEN-BOUNDED: a param value only substitutes where it is
   // delimited by non-alphanumerics or string edges, so memberId "123" can
   // never corrupt "S1234" or an unrelated amount.
-  const paramEntries = Object.entries(inputs.callerParamValues).filter(([, v]) => v.length >= 3);
+  //
+  // LONGEST VALUE FIRST — this ordering is load-bearing, not tidiness.
+  // Substitution is a reduce over these entries, so the FIRST param whose
+  // value matches wins the span and every later param sees a string that no
+  // longer contains it. Token boundaries do not save you when one param's
+  // value is a PREFIX of another's ending at a boundary character: with
+  // memberId=101555 and fromShare=101555-S0001, "101555" is delimited by the
+  // '-', so in declaration order memberId consumed it and the receipt marker
+  // "101555-S0001:" compiled to "{memberId}-S0001:" — half a placeholder and
+  // half a hardcoded share from the recording session.
+  //
+  // That is not a cosmetic defect. It shipped a member.transferFunds whose
+  // final postcondition could only match the shares it was recorded with, so
+  // a transfer between any other pair POSTED and then reported
+  // POSTCONDITION_TIMEOUT — the caller told the money did not move while it
+  // had. Longest-first makes the most specific value claim its span before a
+  // shorter one can, which is the substitution-order rule EVERY templating
+  // pass needs; all of paramize's consumers (locator anchors, row anchors,
+  // snapshot context, canonicalUrl, outcome markers) inherit the fix here.
+  //
+  // Equal-length values cannot be prefixes of one another, so their relative
+  // order is irrelevant to this bug; the sort is stable, so they keep
+  // declaration order and compilation stays deterministic.
+  const paramEntries = Object.entries(inputs.callerParamValues)
+    .filter(([, v]) => v.length >= 3)
+    .sort(([, a], [, b]) => b.length - a.length);
   const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // Boundaries are non-alphanumerics — but never the inside of a decimal:
   // "100" must not substitute into "100.00" or "3,100" (the lookarounds
@@ -107,6 +155,74 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   if (spine.length === 0) throw new Error('cannot compile: empty step spine');
   if (spine[0]!.kind !== 'navigate') throw new Error('cannot compile: the run must start with a navigation (entrypoint)');
   const entrypointUrl = canonicalUrl(spine[0]!.url!, 'entrypoint');
+
+  // ---- per-transaction token assertion ----
+  /**
+   * Legacy cores carry a per-transaction token in a hidden field on their
+   * transactional forms (MERIDIAN: `<input type="hidden" name="_token">`).
+   * Driving the real UI submits it for free — the browser posts the form the
+   * operator sees — so there is nothing to read, store or reconstruct. What a
+   * capability CAN do is ASSERT one is there before it posts, so a form served
+   * without a token fails as a named PRECONDITION_FAILED on the step that
+   * would have posted, instead of posting something the core rejects one screen
+   * later, where the failure is a generic error page and the diagnosis a guess.
+   *
+   * WHICH STEPS GET IT — two conditions, both required:
+   *
+   *  1. The step ACTIVATES A `button`. A legacy screen posts by activating a
+   *     submit control, and the walker maps `<button>` and `input[type=submit]`
+   *     to role 'button'; navigation (Member Inquiry, Select, Funds Transfer)
+   *     is a role 'link' GET, which carries no token and needs none. Typing and
+   *     choosing steps are excluded too: they mutate the form locally and post
+   *     nothing, so an assertion there would add a way to fail and no safety.
+   *
+   *  2. The token field was ACTUALLY OBSERVED in the state the step acts on
+   *     (recorded in the before-digest by `digestOf`). This half is not
+   *     belt-and-braces, it is the difference between a guard and an
+   *     unrunnable capability: MERIDIAN's sign-on and member-search forms POST
+   *     and carry NO `_token` — the token is on the transactional forms only.
+   *     A flat "every posting step" rule would have pinned an unsatisfiable
+   *     condition onto the Sign On and Search steps of all seven capabilities.
+   *     So the compiler asserts only what the recording saw, exactly like every
+   *     other condition it emits.
+   *
+   * What this does NOT cover: a form posted by a scripted `<a>` (observed as
+   * role 'link', so no assertion); an `input[type=reset]`, which is role
+   * 'button' and collects a harmless assertion it will always pass; and a
+   * screen carrying TWO token fields, where `requireUnique` — the only
+   * disambiguation mode the schema offers — makes the check report ambiguity
+   * rather than pass. All three surface at review or on the first replay, which
+   * is the direction an assertion is supposed to fail.
+   */
+  const tokenField = inputs.profile?.transactionToken?.fieldName;
+  const tokenAsserted: string[] = [];
+  const tokenSkipped: string[] = [];
+
+  function transactionTokenPre(id: string, action: RecordedAction): Condition[] {
+    if (tokenField === undefined) return [];
+    if (action.kind !== 'activate' || action.element?.role !== 'button') return [];
+    const seen = action.before.hiddenFields?.find((h) => h.name === tokenField);
+    if (seen === undefined) {
+      tokenSkipped.push(id);
+      return [];
+    }
+    tokenAsserted.push(id);
+    return [
+      {
+        c: 'elementPresent',
+        target: {
+          framePath: seen.frame !== undefined ? [{ name: seen.frame }] : [],
+          strategies: [{ s: 'roleName', role: 'hidden', name: tokenField, nameMatch: 'exact' }],
+          // Written out rather than left to the schema default, like every
+          // other target this compiler builds: the artifact is hashed BEFORE
+          // it is parsed, so a key Zod would materialise afterwards is a key
+          // the stored hash does not cover and the artifact fails its own
+          // integrity check on first load.
+          disambiguation: { requireUnique: true, minScore: 0.6 },
+        },
+      },
+    ];
+  }
 
   // ---- steps ----
   // answerDialog actions are runtime evidence, not replayable steps: known
@@ -142,6 +258,27 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       `intervention ${declined.id}: an irreversible action ("${declined.intent}") was DECLINED by the operator and is absent from the spine — the recorded flow may be partial; review before approval`,
     );
   }
+  // The token decision is REPORTED in full, both halves. "Which posting steps
+  // did not get the assertion, and why" is the half a reviewer would otherwise
+  // have to reconstruct by reading digests — and it is the half that says
+  // whether the app really carries a token on every form or only on some.
+  if (tokenField !== undefined) {
+    if (tokenAsserted.length > 0) {
+      report.notes.push(
+        `transaction token '${tokenField}': asserted present before ${tokenAsserted.join(', ')} — the form-posting step(s) whose recorded state carried it`,
+      );
+    }
+    if (tokenSkipped.length > 0) {
+      report.notes.push(
+        `transaction token '${tokenField}': NOT asserted before ${tokenSkipped.join(', ')} — no such hidden field was observed in the state those steps act on, so this app does not put a token on every form; asserting one there would fail every replay`,
+      );
+    }
+    if (tokenAsserted.length === 0 && tokenSkipped.length === 0) {
+      report.notes.push(
+        `transaction token '${tokenField}': the profile declares one, but this flow activates no button that posts a form — nothing to assert it on`,
+      );
+    }
+  }
 
   /** Innermost named frame the action's element lived in (undefined = main frame / navigate). */
   function actionFrameOf(action: RecordedAction): string | undefined {
@@ -173,10 +310,12 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   }
 
   function buildStep(id: string, action: RecordedAction, isFirst: boolean): Step {
-    const pre: Condition[] =
-      isFirst && action.before.markers.length > 0
+    const pre: Condition[] = [
+      ...(isFirst && action.before.markers.length > 0
         ? [markerCondition(rankMarkers(action.before.markers, actionFrameOf(action))[0]!, `${id}.pre`)]
-        : [];
+        : []),
+      ...transactionTokenPre(id, action),
+    ];
     const post = postConditionsFor(id, action);
     const base = {
       id,
@@ -205,17 +344,7 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
         // Resolve what was actually chosen to its underlying value, then bind
         // the param that equals it. Matching against *any* offered value would
         // bind every choose step to whichever param happened to come first.
-        const labels = action.element?.options ?? [];
-        const values = action.element?.optionValues ?? [];
-        const chosen = action.option !== undefined && 'literal' in action.option ? action.option.literal : undefined;
-        let chosenValue: string | undefined;
-        if (chosen !== undefined) {
-          if (values.includes(chosen)) chosenValue = chosen;
-          else {
-            const at = labels.indexOf(chosen);
-            if (at >= 0) chosenValue = values[at];
-          }
-        }
+        const chosenValue = chosenOptionValue(action);
         const byValue = chosenValue !== undefined ? paramEntries.find(([, value]) => value === chosenValue) : undefined;
         if (byValue) {
           report.notes.push(
@@ -257,6 +386,45 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       case 'answerDialog':
         throw new Error('answerDialog steps are not compiled into the spine (declare a recovery instead)');
     }
+  }
+
+  /**
+   * The UNDERLYING VALUE of the option a `choose` recorded — the model may have
+   * named either the visible label or the value attribute, and `options` /
+   * `optionValues` are index-aligned so a label maps back to its value.
+   *
+   * Shared by the step compiler and the param-description pass below on
+   * purpose: two copies of "which param does this choose bind to?" is two
+   * chances to describe a param as one field while binding it to another.
+   */
+  function chosenOptionValue(action: RecordedAction): string | undefined {
+    const chosen = action.option !== undefined && 'literal' in action.option ? action.option.literal : undefined;
+    if (chosen === undefined) return undefined;
+    const values = action.element?.optionValues ?? [];
+    if (values.includes(chosen)) return chosen;
+    const at = (action.element?.options ?? []).indexOf(chosen);
+    return at >= 0 ? values[at] : undefined;
+  }
+
+  /**
+   * Which caller param a recorded input action binds to, by the SAME rules the
+   * step compiler applies: an explicit {param}, or a literal/option value that
+   * exactly equals a caller param's recorded value.
+   */
+  function paramBoundBy(action: RecordedAction): string | undefined {
+    if (action.kind === 'setValue' && action.value !== undefined) {
+      if ('param' in action.value) return action.value.param;
+      const literal = action.value.literal;
+      return paramEntries.find(([, v]) => v === literal)?.[0];
+    }
+    if (action.kind === 'choose' && action.option !== undefined) {
+      if ('param' in action.option) return action.option.param;
+      const value = chosenOptionValue(action);
+      const byValue = value !== undefined ? paramEntries.find(([, v]) => v === value)?.[0] : undefined;
+      if (byValue !== undefined) return byValue;
+      return paramEntries.find(([, v]) => v === (action.option as { literal: string }).literal)?.[0];
+    }
+    return undefined;
   }
 
   function bindingFor(v: { literal: string } | { param: string }, where: string): { literal: string } | { param: string } {
@@ -430,7 +598,11 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
 
   const outcomes: OutcomeSpec[] = trace.outcomes.map((o) => {
     let pattern = paramize(o.marker, `outcome.${o.code}.marker`);
-    for (const [name, value] of probeStandIns.get(o.code) ?? []) {
+    // Longest stand-in first, for exactly the reason paramEntries is sorted:
+    // these are a second substitution pass over the same string, and a probe
+    // value that is a prefix of another probe value would otherwise claim the
+    // span and leave the longer one half-templated.
+    for (const [name, value] of [...(probeStandIns.get(o.code) ?? [])].sort(([, a], [, b]) => b.length - a.length)) {
       pattern = substituteValue(pattern, name, value, `outcome.${o.code}.marker`);
     }
     if (pattern !== o.marker) {
@@ -511,6 +683,74 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     .slice(0, 3)
     .map((m): Condition => markerCondition(m, 'successCriteria'));
 
+  // ---- caller-param descriptions, seeded from the field the param binds to ----
+  /**
+   * The catalog's entire claim is that an agent can invoke a capability BY NAME
+   * WITHOUT KNOWING THE UI. `"Caller-supplied parameter 'searchBy'"` fails that
+   * claim outright: it repeats the param's name back at a caller who already
+   * had it. The compiler holds the missing half already — the recorded element
+   * for the step a param binds to carries the field's on-screen LABEL, and for
+   * a `choose` the options the screen offered — so the description is seeded
+   * from the recording instead of from a template.
+   *
+   * The offered choices go in as PROSE, and DELIBERATELY NOT as `type: 'enum'`
+   * with a `values` list. DO NOT "improve" this into an enum. The same code
+   * path serves `searchBy` (offered number|name — a genuinely fixed domain) and
+   * `fromShare`/`toShare`, whose offered values are ONE MEMBER'S share ids
+   * (101555-S0001, 101555-CERT, …). Pinning those as the param's domain
+   * compiles a capability that works for member 101555 and rejects every other
+   * member, with a validation error on a perfectly legal call. Describing what
+   * a recording observed is safe; constraining the contract to it is not, and
+   * the compiler cannot tell the two cases apart from one recording.
+   */
+  const MAX_LISTED_OPTIONS = 12;
+  const params: Record<string, ParamSpec> = {};
+  for (const [name, spec] of Object.entries(inputs.paramSpecs)) {
+    // Env params carry their own (accurate) description, and a description a
+    // human wrote outranks anything mined from a screen — only the untouched
+    // placeholder is replaced.
+    const described =
+      spec.source === 'caller' && spec.description === genericCallerParamDescription(name)
+        ? describeCallerParam(name)
+        : undefined;
+    params[name] = described !== undefined ? { ...spec, description: described } : spec;
+  }
+
+  /** Prose for one caller param, or undefined to keep whatever it already had. */
+  function describeCallerParam(name: string): string | undefined {
+    // First binding in the spine wins. A param typed into two fields is one
+    // contract input either way, and the first is the one the caller reasons
+    // about; probe actions are excluded because a probe's field is not the
+    // capability's.
+    const action = spine.find((a) => paramBoundBy(a) === name);
+    // Trailing punctuation is chrome, not label: legacy screens render
+    // "Amount:" / "E-mail:*". No label recorded (an unlabelled control, or a
+    // trace older than this) falls back to the generic text — a wrong
+    // description is worse than an empty one.
+    const label = action?.element?.label?.replace(/[\s:*]+$/, '').trim();
+    if (action === undefined || label === undefined || label === '') return undefined;
+    if (action.kind !== 'choose') return `Typed into the "${label}" field on screen.`;
+    // Which list the caller actually supplies: the compiled step matches by
+    // VALUE when the param bound to an option's value, and by visible label
+    // otherwise — so listing the other one would advertise inputs that do not
+    // work.
+    const value = chosenOptionValue(action);
+    const boundByValue = value !== undefined && inputs.callerParamValues[name] === value;
+    const primary = boundByValue ? (action.element?.optionValues ?? []) : (action.element?.options ?? []);
+    const offered = primary.length > 0 ? primary : (action.element?.options ?? []);
+    // A select's visible labels can embed regulated data ("… - Regular Shares
+    // (***00)"), which redaction has already masked by the time the compiler
+    // sees them. Listing masks would put unreadable noise into the one field
+    // an agent reads to decide what to send, so the list is dropped whole
+    // rather than shipped half-legible.
+    if (offered.length === 0 || offered.some((o) => /\*\*\*|«secret:/.test(o))) {
+      return `Chosen in the "${label}" field on screen.`;
+    }
+    const shown = offered.slice(0, MAX_LISTED_OPTIONS);
+    const more = offered.length > shown.length ? `, … (${offered.length} offered in all)` : '';
+    return `Chosen in the "${label}" field on screen. Offered at recording time: ${shown.join(', ')}${more}.`;
+  }
+
   const artifactRaw = {
     schemaVersion: '1' as const,
     capability: {
@@ -528,7 +768,7 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       evidenceRef: `${inputs.evidenceBaseDir ?? 'evidence'}/discovery/${inputs.discoveryRunId}`,
       approval: { state: 'draft' as const },
     },
-    params: inputs.paramSpecs,
+    params,
     outputs,
     outcomes,
     recoveries: [],
@@ -565,6 +805,47 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
         );
       }
     });
+  }
+
+  // Lint: a {placeholder} that runs STRAIGHT INTO more identifier characters
+  // is the fingerprint of a HALF-SUBSTITUTED value — "{memberId}-S0001:" is
+  // not a template, it is one param plus a hardcoded fragment of the recording
+  // session, and the hardcoded half silently pins the artifact to the record it
+  // was recorded against.
+  //
+  // Longest-value-first substitution (see paramEntries) removes the case where
+  // one PARAM's value eats another's. This lint covers the case it cannot: a
+  // recorded string that contains a param's value followed by a suffix nothing
+  // declares — the share `101555-S0002` on a run whose only params are the
+  // member and a different share. That still compiles to a half-placeholder,
+  // and it is still wrong; the difference is only that no reordering can fix
+  // it, so a human has to see it before approval.
+  //
+  // Deliberately narrow: only immediate adjacency, optionally across a single
+  // '-'. A space, ':' or '/' after a placeholder is ordinary prose or a URL
+  // path ("Member {memberId} — Details", "{baseUrl}/members"), and flagging
+  // those would bury the real signal.
+  const HALF_SUBSTITUTED = /\{[a-zA-Z][a-zA-Z0-9_]*\}-?[A-Za-z0-9]/;
+  const halfSubstituted = new Set<string>();
+  const scanForHalfSubstitution = (value: unknown): void => {
+    if (typeof value === 'string') {
+      if (HALF_SUBSTITUTED.test(value)) halfSubstituted.add(value);
+    } else if (Array.isArray(value)) {
+      for (const v of value) scanForHalfSubstitution(v);
+    } else if (value !== null && typeof value === 'object') {
+      for (const v of Object.values(value)) scanForHalfSubstitution(v);
+    }
+  };
+  scanForHalfSubstitution({
+    entrypoint: artifactRaw.capability.entrypoint,
+    steps: artifactRaw.steps,
+    successCriteria: artifactRaw.successCriteria,
+    outcomes: artifactRaw.outcomes,
+  });
+  for (const text of [...halfSubstituted].sort()) {
+    report.notes.push(
+      `possible half-substituted value ${JSON.stringify(text)}: a {param} placeholder runs straight into further identifier characters, so part of a recorded identifier is hardcoded — that fragment pins this capability to the record it was recorded against; review before approval`,
+    );
   }
 
   artifactRaw.integrity.contentHash = computeContentHash(artifactRaw);

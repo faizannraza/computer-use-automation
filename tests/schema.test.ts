@@ -1,5 +1,5 @@
 /** The artifact schema's own guarantees: integrity, contract cross-checks. */
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -17,15 +17,68 @@ describe('the hash rule (tripwire for every future schema change)', () => {
   // field anywhere in the schema silently rewrites canonical JSON for every
   // artifact ever produced and breaks its stored hash — making committed
   // capabilities unreplayable. New fields must be `.optional()`.
-  it('every shipped artifact still hash-verifies', () => {
-    const shipped = readdirSync('capabilities').filter((f) => f.endsWith('.json'));
-    expect(shipped.length).toBeGreaterThan(0);
-    for (const file of shipped) {
-      const { artifact, verified } = loadCapability(path.join('capabilities', file));
-      // Named per file so a failure says WHICH artifact broke.
-      expect(`${file}=${verified}`).toBe(`${file}=true`);
-      expect(computeContentHash(artifact)).toBe(artifact.integrity.contentHash);
-    }
+  // BOTH directories, deliberately. `capabilities/` holds the two MockCore
+  // artifacts and neither uses readTable, appWide, choose-by-value or
+  // requiresRole — so a `.default()` added to any of the NEW vocabulary would
+  // leave those two byte-identical, keep this suite green, and quietly make all
+  // seven MERIDIAN capabilities unreplayable in production.
+  for (const dir of ['capabilities', 'capabilities-meridian']) {
+    it(`every shipped artifact in ${dir}/ still hash-verifies`, () => {
+      const shipped = readdirSync(dir).filter((f) => f.endsWith('.json'));
+      expect(`${dir} has artifacts: ${shipped.length > 0}`).toBe(`${dir} has artifacts: true`);
+      for (const file of shipped) {
+        const { artifact, verified } = loadCapability(path.join(dir, file));
+        // Named per file so a failure says WHICH artifact broke.
+        expect(`${file}=${verified}`).toBe(`${file}=true`);
+        expect(computeContentHash(artifact)).toBe(artifact.integrity.contentHash);
+      }
+    });
+  }
+});
+
+/**
+ * A detector whose marker was redacted can never match a live screen, so it
+ * withdraws the handling it appears to declare — invisibly, until the one run
+ * that needed it reports a hard failure instead of a named outcome.
+ *
+ * This is not hypothetical. MERIDIAN's sign-on error reads "Invalid operator ID
+ * or password.", and the demo operator's credential IS the word `password`, so
+ * the mined marker was stored as "Invalid operator ID or «secret:operatorPassword»."
+ * and a bad login reported POSTCONDITION_TIMEOUT rather than BAD_CREDENTIALS.
+ */
+describe('detectors cannot match on redacted text', () => {
+  const load = (): Record<string, unknown> =>
+    JSON.parse(readFileSync(GOLD, 'utf8')) as Record<string, unknown>;
+
+  it('accepts the gold artifact as-is', () => {
+    expect(() => CapabilityArtifactSchema.parse(load())).not.toThrow();
+  });
+
+  it.each([
+    ['outcomes', '«secret:operatorPassword»'],
+    ['outcomes', '***97'],
+    ['recoveries', '«secret:operatorPassword»'],
+    ['anomalies', '***'],
+  ])('rejects a %s marker containing %s', (section, masked) => {
+    const a = load();
+    const spec = {
+      code: 'POISONED',
+      description: 'a marker that redaction masked',
+      when: { c: 'textPresent', pattern: `Invalid operator ID or ${masked}.` },
+      ...(section === 'outcomes' ? { terminal: true, outputs: {} } : {}),
+      ...(section === 'recoveries' ? { handler: { kind: 'restartRun' }, maxAttempts: 1 } : {}),
+    };
+    (a[section] as unknown[]) = [...((a[section] as unknown[]) ?? []), spec];
+    expect(() => CapabilityArtifactSchema.parse(a)).toThrow(/can never fire/);
+  });
+
+  it('leaves an ordinary marker alone', () => {
+    const a = load();
+    (a['outcomes'] as unknown[]) = [
+      ...((a['outcomes'] as unknown[]) ?? []),
+      { code: 'FINE', description: 'ordinary', when: { c: 'textPresent', pattern: 'Invalid operator ID or' }, terminal: true, outputs: {} },
+    ];
+    expect(() => CapabilityArtifactSchema.parse(a)).not.toThrow();
   });
 });
 

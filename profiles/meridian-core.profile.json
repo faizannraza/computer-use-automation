@@ -1,7 +1,7 @@
 {
   "appId": "meridian-core",
   "vendor": "Cornerstone Financial Systems",
-  "title": "MERIDIAN CORE \u2014 Member Services Platform v4.2.1",
+  "title": "MERIDIAN CORE — Member Services Platform v4.2.1",
   "baseUrl": "https://web-sample.interface-hiring.com",
   "policy": "policies/meridian.policy.json",
   "credentials": {
@@ -23,7 +23,7 @@
   },
   "transactionToken": {
     "fieldName": "_token",
-    "note": "Every form carries a hidden per-transaction token that must accompany the submission. Driving the real UI submits it inherently \u2014 the browser posts the form the operator sees \u2014 so the token is never read, stored, or reconstructed; capabilities only ASSERT that one is present before a posting step, so a form served without it fails loudly instead of posting something the core will reject."
+    "note": "MERIDIAN's transactional forms carry a hidden token that must accompany the submission. Driving the real UI submits it inherently — the browser posts the form the operator sees — so the token is never read, stored, or reconstructed; the compiler only ASSERTS one is present before a posting step, so a form served without it fails loudly instead of posting something the core will reject. Two observed caveats, both grounded in committed evidence rather than assumed: it is NOT on every form (sign-on and member search post without one, which is why the assertion is emitted only for steps whose recorded state actually showed the field), and it is per-SESSION rather than strictly per-transaction — the same value recurs across forms within one session and changes between sessions."
   },
   "faultInjection": {
     "kind": "queryParam",
@@ -36,7 +36,7 @@
       "maintenance",
       "server"
     ],
-    "note": "The app forces a runtime condition per-request via ?inject=<kind>. The harness arms it as a one-shot request rewrite so it can land on a chosen step \u2014 including a form POST, which is the only way to exercise a fault on a review\u2192post transition."
+    "note": "The app forces a runtime condition per-request via ?inject=<kind>. The harness arms it as a one-shot request rewrite so it can land on a chosen step — including a form POST, which is the only way to exercise a fault on a review→post transition."
   },
   "dataClassification": {
     "pii": {
@@ -103,7 +103,7 @@
       },
       "handler": {
         "kind": "escalate",
-        "suggestion": "This restricted function requires supervisor authority. On the live session, sign on as a supervisor and complete the action, then resume \u2014 the step's own postcondition will verify the result. If no supervisor is available, abort."
+        "suggestion": "This restricted function requires supervisor authority. On the live session, sign on as a supervisor and complete the action, then resume — the step's own postcondition will verify the result. If no supervisor is available, abort."
       },
       "maxAttempts": 1
     }
@@ -131,10 +131,19 @@
     },
     {
       "code": "TRANSACTION_REJECTED",
-      "description": "MERIDIAN rejected the transaction as entered \u2014 a validation failure on the submitted field values (for example an overdraw, or a malformed e-mail or phone number). The caller should correct the inputs and retry.",
+      "description": "MERIDIAN rejected the transaction as entered — a validation failure on the submitted values (an overdraw, a malformed e-mail or phone number). The caller should correct the inputs and retry. TWO markers, because the app renders this state on two different screens: the injected 400 shows a 'TRANSACTION REJECTED' banner, while a natural validation failure — an overdraw is the one the brief names — redisplays the form with 'The transaction could not be validated:' and a reason. Matching only the first reported every real overdraw as a hard timeout.",
       "when": {
-        "c": "textPresent",
-        "pattern": "TRANSACTION REJECTED"
+        "c": "any",
+        "of": [
+          {
+            "c": "textPresent",
+            "pattern": "TRANSACTION REJECTED"
+          },
+          {
+            "c": "textPresent",
+            "pattern": "The transaction could not be validated"
+          }
+        ]
       },
       "terminal": true,
       "outputs": {}

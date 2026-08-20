@@ -1,0 +1,146 @@
+{
+  "capabilityId": "member.openShare",
+  "version": "1.0.0",
+  "runId": "20260820-141057-2afg",
+  "evidenceDir": "evidence/meridian/replay/20260820-141057-2afg",
+  "startedAt": "2026-08-20T21:10:57.655Z",
+  "role": "teller",
+  "status": "success",
+  "outputs": {
+    "confirmationNumber": "CN480127"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID for sign on.",
+      "status": "ok",
+      "ms": 90,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "status": "ok",
+      "ms": 100,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit sign on credentials.",
+      "status": "ok",
+      "ms": 183,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "status": "ok",
+      "ms": 148,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search for.",
+      "status": "ok",
+      "ms": 64,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Run the member search.",
+      "status": "ok",
+      "ms": 119,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Select the matched member to open their record.",
+      "status": "ok",
+      "ms": 154,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the New Share form for this member.",
+      "status": "ok",
+      "ms": 178,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Select the share type using the shareType parameter's underlying value.",
+      "status": "ok",
+      "ms": 64,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s10",
+      "intent": "Enter the initial deposit amount.",
+      "status": "ok",
+      "ms": 68,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s11",
+      "intent": "Continue to the review screen for the new share.",
+      "status": "ok",
+      "ms": 134,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s12",
+      "intent": "Commit and open the new share (pre-authorised irreversible action).",
+      "status": "ok",
+      "ms": 28482,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s13",
+      "intent": "Capture the confirmation number value from the confirmation screen.",
+      "status": "ok",
+      "ms": 65,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [
+    {
+      "id": "int-01",
+      "kind": "approve_risky",
+      "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+      "resolution": "approve",
+      "humanActions": 0,
+      "heldForMs": 28289,
+      "stepId": "s12",
+      "note": "approved in the dashboard"
+    }
+  ],
+  "irreversibleCompleted": true,
+  "finishedAt": "2026-08-20T21:11:28.014Z"
+}

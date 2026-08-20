@@ -57,10 +57,18 @@ function add(node) {
   return node;
 }
 
-/** A link into the dashboard, on the run when we know it. Always a new tab. */
+/**
+ * A link into the dashboard, on the run when we know it. Always a new tab.
+ *
+ * The FRAGMENT is the dashboard's deep link (`/#run=<id>&kind=replay`) — it
+ * reads `location.hash` at boot and rewrites it on every openRun. This used to
+ * build a query string (`/?run=<id>`), which the dashboard never looks at, so
+ * "Approve in the dashboard →" — the one click the demo turns on — landed the
+ * operator on an unopened console with the parked run nowhere in sight.
+ */
 function dashLink(className, html, runId) {
   var a = el('a', className, html);
-  a.href = runId ? '/?run=' + encodeURIComponent(runId) : '/';
+  a.href = runId ? '/#run=' + encodeURIComponent(runId) + '&kind=replay' : '/';
   a.target = '_blank';
   a.rel = 'noopener';
   return a;

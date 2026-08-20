@@ -1,0 +1,345 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members/103001/hold/review",
+  "count": 22,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "hidden",
+      "name": "_token",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:12)"
+    },
+    {
+      "ref": 5,
+      "role": "hidden",
+      "name": "share",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:13)"
+    },
+    {
+      "ref": 6,
+      "role": "hidden",
+      "name": "reason",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:5)"
+    },
+    {
+      "ref": 7,
+      "role": "hidden",
+      "name": "notes",
+      "framePath": [],
+      "interactive": false,
+      "value": "(present:9)"
+    },
+    {
+      "ref": 8,
+      "role": "button",
+      "name": "Apply Hold",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 30.1,
+        "w": 6.2,
+        "h": 2.4
+      },
+      "nearText": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:103001 - ***hy Share:103001-MMKT-2 - Money Market Reason:FRAUD Notes:demo hold Cancel"
+    },
+    {
+      "ref": 9,
+      "role": "link",
+      "name": "Cancel",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 28.3,
+        "y": 30.5,
+        "w": 2.9,
+        "h": 1.6
+      },
+      "nearText": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:103001 - ***hy Share:103001-MMKT-2 - Money Market Reason:FRAUD Notes:demo hold Cancel"
+    },
+    {
+      "ref": 10,
+      "role": "heading",
+      "name": "CONFIRM ACCOUNT HOLD",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 11,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 12,
+      "role": "cell",
+      "name": "OPR SUPER1 | BR MAIN-001 | 08/20/2026 21:10:07 | SID 8D0E89D7",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 34,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR SUPER1 | BR MAIN-001 | 08/20/2026 21:10:07 | SID 8D0E89D7",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR SUPER1 | BR MAIN-001 | 08/20/2026 21:10:07 | SID 8D0E89D7"
+      ]
+    },
+    {
+      "ref": 13,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 36.5,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 14,
+      "role": "rowheader",
+      "name": "Member:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 17.3,
+        "w": 4.7,
+        "h": 2.4
+      },
+      "nearText": "Member: | 103001 - ***hy",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member:",
+        "103001 - ***hy"
+      ]
+    },
+    {
+      "ref": 15,
+      "role": "cell",
+      "name": "103001 - ***hy",
+      "framePath": [],
+      "interactive": false,
+      "label": "Member:",
+      "bboxPct": {
+        "x": 27.3,
+        "y": 17.3,
+        "w": 14.6,
+        "h": 2.4
+      },
+      "nearText": "Member: | 103001 - ***hy",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member:",
+        "103001 - ***hy"
+      ]
+    },
+    {
+      "ref": 16,
+      "role": "rowheader",
+      "name": "Share:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 19.6,
+        "w": 4.7,
+        "h": 2.4
+      },
+      "nearText": "Share: | 103001-MMKT-2 - Money Market",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Share:",
+        "103001-MMKT-2 - Money Market"
+      ]
+    },
+    {
+      "ref": 17,
+      "role": "cell",
+      "name": "103001-MMKT-2 - Money Market",
+      "framePath": [],
+      "interactive": false,
+      "label": "Share:",
+      "bboxPct": {
+        "x": 27.3,
+        "y": 19.6,
+        "w": 14.6,
+        "h": 2.4
+      },
+      "nearText": "Share: | 103001-MMKT-2 - Money Market",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Share:",
+        "103001-MMKT-2 - Money Market"
+      ]
+    },
+    {
+      "ref": 18,
+      "role": "rowheader",
+      "name": "Reason:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 22,
+        "w": 4.7,
+        "h": 2.4
+      },
+      "nearText": "Reason: | FRAUD",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Reason:",
+        "FRAUD"
+      ]
+    },
+    {
+      "ref": 19,
+      "role": "cell",
+      "name": "FRAUD",
+      "framePath": [],
+      "interactive": false,
+      "label": "Reason:",
+      "bboxPct": {
+        "x": 27.3,
+        "y": 22,
+        "w": 14.6,
+        "h": 2.4
+      },
+      "nearText": "Reason: | FRAUD",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Reason:",
+        "FRAUD"
+      ]
+    },
+    {
+      "ref": 20,
+      "role": "rowheader",
+      "name": "Notes:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 24.4,
+        "w": 4.7,
+        "h": 2.4
+      },
+      "nearText": "Notes: | demo hold",
+      "rowId": "t1r3",
+      "cellTexts": [
+        "Notes:",
+        "demo hold"
+      ]
+    },
+    {
+      "ref": 21,
+      "role": "cell",
+      "name": "demo hold",
+      "framePath": [],
+      "interactive": false,
+      "label": "Notes:",
+      "bboxPct": {
+        "x": 27.3,
+        "y": 24.4,
+        "w": 14.6,
+        "h": 2.4
+      },
+      "nearText": "Notes: | demo hold",
+      "rowId": "t1r3",
+      "cellTexts": [
+        "Notes:",
+        "demo hold"
+      ]
+    }
+  ]
+}

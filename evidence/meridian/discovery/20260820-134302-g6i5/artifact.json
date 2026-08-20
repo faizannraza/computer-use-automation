@@ -1,0 +1,729 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.updateInfo",
+    "version": "1.0.0",
+    "title": "Update Member Information",
+    "description": "Signs on to MERIDIAN CORE, opens Member Inquiry, searches by Member Number for the 'memberId' parameter and selects the member, then opens 'Update Member Information' and writes the 'email', 'phone', and 'address' parameters into the E-mail, Phone, and Mailing Address fields. Clicking 'Save Changes' commits the member-record change (irreversible). On the resulting confirmation screen it captures the success confirmation indicator into output 'confirmation' (value \"MEMBER INFORMATION UPDATED\"). Note: the detailed confirmation sentence renders as plain non-semantic text and is not exposed as an addressable element, so the addressable success heading is used as the confirmation value. Inputs: memberId, email, phone, address, operatorId, operatorPassword.",
+    "app": {
+      "appId": "meridian-core",
+      "vendor": "Cornerstone Financial Systems"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-20T20:47:16.028Z",
+    "recordedBy": {
+      "kind": "llm-discovery",
+      "model": "claude-opus-4-8",
+      "discoveryRunId": "20260820-134302-g6i5"
+    },
+    "evidenceRef": "evidence/meridian/discovery/20260820-134302-g6i5",
+    "approval": {
+      "state": "draft"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "integer",
+      "description": "Caller-supplied parameter 'memberId'.",
+      "required": true,
+      "pattern": "^[0-9]+$",
+      "example": "103001",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "email": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'email'.",
+      "required": true,
+      "sensitivity": "pii",
+      "source": "caller"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'phone'.",
+      "required": true,
+      "sensitivity": "pii",
+      "source": "caller"
+    },
+    "address": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'address'.",
+      "required": true,
+      "sensitivity": "pii",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_ID"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_PASSWORD"
+    }
+  },
+  "outputs": {
+    "confirmation": {
+      "type": "string",
+      "description": "Capture the on-screen success confirmation indicator for the member information update.",
+      "sensitivity": "none",
+      "source": {
+        "stepId": "s13",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [],
+  "recoveries": [],
+  "anomalies": [],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "setValue",
+      "activate",
+      "read"
+    ],
+    "maxRisk": "irreversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter operator ID for sign on.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Operator ID:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Operator ID:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 12.1,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "OPERATOR SIGN ON"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter operator «secret:operatorPassword» for sign on.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Password:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Password:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 15,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Submit sign on credentials.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign On",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 22.8,
+              "w": 5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/002-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MAIN MENU"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "1."
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Inquiry / Selection",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | Member Inquiry / Selection",
+            "bboxPct": {
+              "x": 25.4,
+              "y": 15.8,
+              "w": 11.8,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/003-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER INQUIRY / SELECTION"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Search by:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter the member number to search for.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Value:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Value:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Value:",
+            "bboxPct": {
+              "x": 28.2,
+              "y": 17.6,
+              "w": 15.1,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Run the member number search.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 44.2,
+              "y": 17.4,
+              "w": 4.5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/004-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No."
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Shares"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s7",
+      "intent": "Select the found member to open their record.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Select",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "{memberId} | … | … | Select",
+            "bboxPct": {
+              "x": 70.3,
+              "y": 27.1,
+              "w": 2.6,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/005-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER RECORD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member No.:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Open the Update Member Information form.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Update Member Information",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Update Member Information",
+            "bboxPct": {
+              "x": 38.1,
+              "y": 49.4,
+              "w": 12.2,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/006-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "UPDATE MEMBER INFORMATION"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Mailing Address:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s9",
+      "intent": "Enter the new email into the E-mail field.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "E-mail:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "E-mail:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "E-mail:",
+            "bboxPct": {
+              "x": 32,
+              "y": 15.9,
+              "w": 19.1,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "email"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s10",
+      "intent": "Enter the new phone into the Phone field.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Phone:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Phone:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Phone:",
+            "bboxPct": {
+              "x": 32,
+              "y": 18.9,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "phone"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s11",
+      "intent": "Enter the new address into the Mailing Address field.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Mailing Address:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Mailing Address:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Mailing Address:",
+            "bboxPct": {
+              "x": 32,
+              "y": 21.8,
+              "w": 25.2,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "address"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s12",
+      "intent": "Save the updated member information, committing the record change.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Save Changes",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 32,
+              "y": 26.4,
+              "w": 7.7,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/008-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER INFORMATION UPDATED"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "irreversible",
+      "onDetect": []
+    },
+    {
+      "id": "s13",
+      "intent": "Capture the on-screen success confirmation indicator for the member information update.",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "heading",
+              "name": "MEMBER INFORMATION UPDATED",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "MEMBER INFORMATION UPDATED",
+            "bboxPct": {
+              "x": 21.5,
+              "y": 8.8,
+              "w": 57,
+              "h": 1.9
+            }
+          }
+        },
+        "into": "confirmation"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "MEMBER INFORMATION UPDATED"
+    }
+  ],
+  "integrity": {
+    "contentHash": "98e3ab00e0cdaa370f80052090af2840e33597adf270109bea8eb3955bb83c13"
+  }
+}

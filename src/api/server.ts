@@ -31,9 +31,21 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import type { Request, Response } from 'express';
-import { buildCatalog } from '../catalog/catalog.js';
+import { loadCatalog } from '../catalog/catalog.js';
 import { HttpOperator } from './httpOperator.js';
-import { InvocationError, artifactFor, evidencePath, loadContext, roleForRun, shapeOutputs, startInvocation } from './invoke.js';
+import {
+  InvocationError,
+  artifactFor,
+  entryFor,
+  escalatingRecoveries,
+  evidencePath,
+  loadContext,
+  mergedArtifactFor,
+  pausesForHuman,
+  roleForRun,
+  shapeOutputs,
+  startInvocation,
+} from './invoke.js';
 import type { ApiContext } from './invoke.js';
 import { RunStore } from './runStore.js';
 import { handleChat } from '../chat/chatAgent.js';
@@ -80,9 +92,15 @@ export function isLoopbackHost(host: string | undefined): boolean {
 export function createApiApp(opts: ServerOptions = {}): { app: express.Express; ctx: ApiContext } {
   const allowInject = opts.allowInject ?? process.env['CU_ALLOW_INJECT'] === '1';
   const store = new RunStore(opts.evidenceBaseDir ?? 'evidence');
+  // The two defaults are a PAIR and must move together: the artifacts in
+  // `capabilities-meridian/` were recorded against MERIDIAN CORE, and the
+  // profile supplies that app's credentials, recoveries and origin allowlist.
+  // The previous default paired the MERIDIAN profile with `capabilities/` (two
+  // MockCore recordings), so a bare `npm run api` served flows whose origins
+  // the policy denies. `.env.example` ships the same pairing.
   const ctx = loadContext({
     profileFile: opts.profileFile ?? 'profiles/meridian-core.profile.json',
-    capabilitiesDir: opts.capabilitiesDir ?? 'capabilities',
+    capabilitiesDir: opts.capabilitiesDir ?? 'capabilities-meridian',
     evidenceBaseDir: opts.evidenceBaseDir ?? 'evidence',
     store,
     ...(opts.policyFile !== undefined ? { policyFile: opts.policyFile } : {}),
@@ -118,6 +136,7 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
 
   // ---- what this deployment is pointed at ----
   app.get('/api/profile', (_req, res) => {
+    const catalog = loadCatalog(ctx.capabilitiesDir);
     res.json({
       appId: ctx.profile.appId,
       vendor: ctx.profile.vendor,
@@ -138,22 +157,39 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
       },
       appRecoveries: (ctx.profile.recoveries ?? []).map((r) => ({ code: r.code, description: r.description })),
       appAnomalies: (ctx.profile.anomalies ?? []).map((a) => ({ code: a.code, description: a.description })),
+      // The broken artifacts ride on THIS route, not on /api/capabilities.
+      // /api/capabilities is an agent's tool list: everything in it must be
+      // callable, so a file that does not load has no honest representation
+      // there and adding one invites a caller to invoke it. /api/profile is
+      // already the "what is this deployment, and what is wrong with it"
+      // surface (policy, roles, fault flag) that the dashboard loads first, so
+      // that is where an operator is told a recording is unusable.
+      catalog: { dir: ctx.capabilitiesDir, callable: catalog.entries.length, broken: catalog.broken },
     });
   });
 
   // ---- the agent-facing catalog ----
+  // 200 with the CALLABLE entries even when siblings are broken: one malformed
+  // artifact used to 500 this route, /api/capabilities/:name, invoke AND
+  // health, so a reviewer saw a dashboard that loaded next to an empty catalog
+  // with nothing anywhere saying why.
   app.get('/api/capabilities', (_req, res) => {
-    try {
-      res.json(buildCatalog(ctx.capabilitiesDir));
-    } catch (err) {
-      fail(res, err);
-    }
+    res.json(loadCatalog(ctx.capabilitiesDir).entries);
   });
 
   app.get('/api/capabilities/:name', (req, res) => {
     try {
-      const entry = buildCatalog(ctx.capabilitiesDir).find((e) => e.name === req.params.name);
+      const { entries, broken } = loadCatalog(ctx.capabilitiesDir);
+      const entry = entries.find((e) => e.name === req.params.name);
       if (!entry) {
+        // A name that matches a file which did not load answers 422 with the
+        // schema error, rather than a 404 that sends the operator hunting for
+        // a recording that is sitting right there.
+        const bad = broken.find((b) => b.name === req.params.name);
+        if (bad) {
+          res.status(422).json({ error: `capability '${req.params.name}' is recorded in '${bad.file}' but that artifact does not load: ${bad.error}`, file: bad.file });
+          return;
+        }
         res.status(404).json({ error: `no capability '${req.params.name}'` });
         return;
       }
@@ -166,19 +202,19 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
   /**
    * Invoke by name with typed args.
    *
-   * Irreversible capabilities are forced async: they will pause for a human
-   * approval, and a decision that may take minutes must not ride on an open
-   * HTTP request that an intermediary will cut.
+   * A capability that can PAUSE FOR A HUMAN is forced async: a decision that
+   * may take minutes must not ride on an open HTTP request that an
+   * intermediary will cut. "Can pause" is asked of the artifact AFTER the app
+   * profile is merged — see `pausesForHuman` — because the profile is what
+   * adds the escalating recoveries, and the raw file has not seen it.
    */
   app.post('/api/capabilities/:name/invoke', async (req: Request, res: Response) => {
     const body = (req.body ?? {}) as { params?: Record<string, string>; options?: Record<string, unknown> };
     const name = String(req.params.name);
     try {
-      const entry = buildCatalog(ctx.capabilitiesDir).find((e) => e.name === name);
-      if (!entry) {
-        res.status(404).json({ error: `no capability '${name}'` });
-        return;
-      }
+      // 404 unknown, 422 present-but-unloadable — never a 500, and never a
+      // silent "not found" for an artifact that exists with a schema error.
+      const entry = entryFor(ctx, name);
       // Fault injection rewrites requests against the LIVE target so the app
       // returns a forced error — a harness affordance that sits below the
       // ActionGate, and had no business being reachable by an unauthenticated
@@ -190,7 +226,12 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
         });
         return;
       }
-      const wantsAsync = body.options?.['async'] === true || entry.maxRisk === 'irreversible';
+      // The artifact AS IT WILL RUN. `entry.maxRisk` alone was the old test,
+      // and it missed every read-only capability that the profile's
+      // SUPERVISOR_OVERRIDE_REQUIRED recovery can park on a human.
+      const merged = mergedArtifactFor(ctx, name);
+      const escalating = escalatingRecoveries(merged);
+      const wantsAsync = body.options?.['async'] === true || pausesForHuman(merged);
       const started = startInvocation(ctx, {
         name,
         params: body.params ?? {},
@@ -206,7 +247,9 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
           reason:
             entry.maxRisk === 'irreversible'
               ? 'This capability contains an irreversible step: it will pause for human approval before anything posts. Watch the run or poll it.'
-              : 'Run started.',
+              : escalating.length > 0
+                ? `This capability can pause for a human (recoveries: ${escalating.join(', ')}), so it is dispatched asynchronously rather than holding this request open for the intervention timeout. Watch the run or poll it.`
+                : 'Run started.',
           stream: `/api/runs/${started.runId}/stream`,
         });
         return;
@@ -381,8 +424,22 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
     }
   });
 
+  /**
+   * `ok` is about THIS PROCESS: it is serving, and it answers even when every
+   * artifact in the directory is malformed (it used to 500 on the first one).
+   * The artifacts get their own two counts, because "the API is up" and "the
+   * recordings load" are different questions and a health check that conflates
+   * them can only answer one of them honestly.
+   */
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, app: ctx.profile.appId, capabilities: buildCatalog(ctx.capabilitiesDir).length });
+    const { entries, broken } = loadCatalog(ctx.capabilitiesDir);
+    res.json({
+      ok: true,
+      app: ctx.profile.appId,
+      capabilities: entries.length,
+      brokenCapabilities: broken.length,
+      broken: broken.map((b) => ({ file: b.file, error: b.error })),
+    });
   });
 
   // ---- static surfaces ----

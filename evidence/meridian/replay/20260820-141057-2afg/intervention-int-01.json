@@ -1,0 +1,19 @@
+{
+  "stepId": "s12",
+  "stepIntent": "Commit and open the new share (pre-authorised irreversible action).",
+  "kind": "approve_risky",
+  "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+  "suggestedResolution": "Review the pending irreversible action in the live window. approve = the automation performs it; abort = stop the run.",
+  "options": [
+    "approve",
+    "abort"
+  ],
+  "origin": "replay",
+  "capabilityId": "member.openShare",
+  "version": "1.0.0",
+  "runId": "20260820-141057-2afg",
+  "observationSummary": "at https://web-sample.interface-hiring.com/members/103001/open-share/review; title \"Confirm New Share - Meridian Core\"; headings: CONFIRM NEW SHARE | Member: | Share Type: | Initial Deposit:; frames observed: (main); text: \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off CONFIRM NEW SHARE Member: 103001 - ***hy Share Type: MMKT - Money M…\"",
+  "screenshotRef": "steps/013-intervention.png",
+  "id": "int-01",
+  "at": "2026-08-20T21:10:59.464Z"
+}

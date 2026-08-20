@@ -10,7 +10,7 @@
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
-import type { ReplayResult } from '../schema/result.js';
+import type { RecoveryUse, ReplayResult } from '../schema/result.js';
 
 export type RunKind = 'discovery' | 'replay';
 export type RunStatus = 'running' | 'success' | 'business_outcome' | 'escalated' | 'failed' | 'compiled' | 'gave_up' | 'error' | 'unknown';
@@ -26,6 +26,19 @@ export interface RunSummary {
   durationMs?: number;
   stepsOk?: number;
   interventions?: number;
+  /**
+   * Which recoveries the run had to apply, and how many attempts each took.
+   *
+   * A run that limped to 'success' through two SESSION_EXPIRED restarts is a
+   * materially different event from a clean one — it is the "recoverable"
+   * state the console is supposed to show — and the summary carried nothing to
+   * tell them apart, so history rendered them identically. Codes rather than a
+   * bare count, because WHICH condition recurred is the part that says whether
+   * the target app is drifting. Absent (not `[]`) when the run recorded no
+   * recovery information at all, which is honest for evidence written before
+   * this field existed.
+   */
+  recoveries?: RecoveryUse[];
   /** Present for in-flight runs driven by this process. */
   live?: boolean;
   evidenceDir: string;
@@ -95,6 +108,7 @@ export class RunStore {
       durationMs: Date.parse(result.finishedAt) - Date.parse(result.startedAt),
       stepsOk: result.stepsRun.filter((s) => s.status === 'ok').length,
       interventions: result.interventions.length,
+      recoveries: result.recoveriesUsed,
       live: false,
     };
   }
@@ -246,6 +260,7 @@ function summarizeFromDisk(runId: string, kind: RunKind, dir: string): RunSummar
         durationMs: Date.parse(parsed.finishedAt) - Date.parse(parsed.startedAt),
         stepsOk: parsed.stepsRun?.filter((s) => s.status === 'ok').length ?? 0,
         interventions: parsed.interventions?.length ?? 0,
+        ...(parsed.recoveriesUsed !== undefined ? { recoveries: parsed.recoveriesUsed } : {}),
       };
     }
   }
@@ -253,9 +268,19 @@ function summarizeFromDisk(runId: string, kind: RunKind, dir: string): RunSummar
   if (!existsSync(jsonl)) return undefined;
   const lines = readFileSync(jsonl, 'utf8').split('\n').filter((l) => l.trim());
   let summary = base;
+  // Recoveries mined from the event stream, for a run with no result.json —
+  // one aborted mid-flight, or a discovery run, whose shape predates the
+  // result contract. `attempt` is the engine's per-code counter, so the
+  // highest one seen IS the number of attempts that code took.
+  const recoveries = new Map<string, number>();
   for (const line of lines) {
-    const event = safeJson(line) as { type?: string; ts?: string; capability?: string; status?: string; goal?: string } | undefined;
+    const event = safeJson(line) as
+      | { type?: string; ts?: string; capability?: string; status?: string; goal?: string; code?: string; attempt?: number }
+      | undefined;
     if (!event?.type) continue;
+    if (event.type === 'recovery_applied' && event.code) {
+      recoveries.set(event.code, Math.max(recoveries.get(event.code) ?? 0, event.attempt ?? 1));
+    }
     if (event.type === 'run_start') {
       const [id, version] = (event.capability ?? '').split('@');
       summary = {
@@ -277,6 +302,9 @@ function summarizeFromDisk(runId: string, kind: RunKind, dir: string): RunSummar
   }
   if (summary.startedAt && summary.finishedAt) {
     summary.durationMs = Date.parse(summary.finishedAt) - Date.parse(summary.startedAt);
+  }
+  if (recoveries.size > 0) {
+    summary.recoveries = [...recoveries].map(([code, attempts]) => ({ code, attempts }));
   }
   return summary;
 }

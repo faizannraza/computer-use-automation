@@ -39,6 +39,21 @@ first target's fault endpoint was denied, and a profile.
 - **Reads anchored on the data being read.** A receipt's confirmation number differs every run, so
   `roleName "TRF-000123"` never matches twice. Legacy screens are label:value cell pairs, so the
   walker associates a value cell with its bold label cell and a `read` is addressed by that label.
+- **Redaction silently disarmed a detector.** MERIDIAN's sign-on error reads *"Invalid operator ID
+  or password."* — and the demo operator's credential **is** the word `password`. The marker was
+  grounded against the raw screen, then redacted on its way to disk, so the artifact declared
+  `BAD_CREDENTIALS` matching on `"Invalid operator ID or «secret:operatorPassword»."`: a string no
+  screen can ever show. A bad login therefore reported as a hard `POSTCONDITION_TIMEOUT` — the exact
+  business-outcome-versus-failure confusion this system exists to prevent, caused by its own safety
+  machinery. Two guards now: the recorder rejects a marker that redaction would alter and tells the
+  model to pick different text, and the schema refuses to load any artifact whose detector matches
+  on redacted text, because a detector that can never fire is worse than none — it advertises
+  handling that does not exist.
+- **One condition, two screens.** An overdraw does not render MERIDIAN's `TRANSACTION REJECTED`
+  banner; it redisplays the form with *"The transaction could not be validated: Insufficient…"*.
+  Matching only the banner — which is what the injected 400 shows — meant every *real* overdraw fell
+  through to a hard timeout. The profile now matches either, which is precisely the kind of
+  app-level truth that belongs in configuration rather than in a flow.
 
 ## The capability API
 
@@ -84,6 +99,9 @@ condition-based waiting, explicit classification — with the target's taxonomy 
 - **Escalation**: a teller attempting Place Account Hold gets the app's own supervisor-override
   screen, which only a person can clear.
 
+All six of the brief's `inject` kinds and the natural errors it names have a committed evidence run
+apiece; `evidence/meridian/README.md` indexes them one row per state.
+
 Two of the brief's states are deliberately *not* separate codes. An overdraw renders the same screen
 as any other rejected field, so it reports `TRANSACTION_REJECTED` and the caller reads the reason;
 inventing `INSUFFICIENT_FUNDS` would mean pattern-matching prose the app never promised to keep
@@ -95,6 +113,15 @@ store or replay it: the browser submits the form the operator sees, so it is car
 the system does is *assert* one is present before a posting step — the walker observes hidden inputs
 by name, value deliberately never captured — so a form served without a token fails loudly instead of
 posting something the core will reject.
+
+Building that assertion corrected the brief's own premise, which is the sort of thing only recorded
+evidence settles. MERIDIAN does **not** put a token on every form: sign-on and member search post
+without one. So the compiler emits the assertion for a posting step only when the token field was
+actually observed in the state that step acts on — a flat "every posting step" rule would have put an
+unsatisfiable precondition on the Sign On step of all seven capabilities, which is worse than no
+assertion at all. The compile report names both sets: the steps that got it, and the steps that did
+not and why. The token is also per-*session* rather than strictly per-transaction; the profile says
+so now.
 
 ## How the guarantees survive the new surface
 

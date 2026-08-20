@@ -42,6 +42,9 @@ import { FrameHintSchema, TargetRefSchema } from './locators.js';
 
 export const SensitivitySchema = z.enum(['none', 'internal', 'pii', 'secret']);
 
+/** What the redactor leaves behind: `***`, `***<2 chars>`, or `«secret:name»`. */
+const MASKED_TEXT = /\*\*\*|«secret:/;
+
 export const ParamSpecSchema = z
   .object({
     type: z.enum(['string', 'integer', 'money', 'enum']),
@@ -331,6 +334,25 @@ export const CapabilityArtifactSchema = z
       const extracting = extractingAction(step.action);
       if (extracting && !(extracting.into in a.outputs)) {
         ctx.addIssue({ code: 'custom', message: `step ${step.id} reads into undeclared output '${extracting.into}'` });
+      }
+    }
+    // A detector whose marker was REDACTED can never match a live screen, so it
+    // silently withdraws the handling it appears to declare. The compiler is
+    // supposed to prevent this at recording time; this is the backstop, because
+    // "the outcome is declared but never fires" is invisible in review and
+    // surfaces as a hard failure on the one run that needed it.
+    for (const [kind, specs] of [
+      ['outcome', a.outcomes],
+      ['recovery', a.recoveries],
+      ['anomaly', a.anomalies],
+    ] as const) {
+      for (const spec of specs) {
+        if (MASKED_TEXT.test(JSON.stringify(spec.when))) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `${kind} '${spec.code}' matches on redacted text, so it can never fire — re-record it with a marker that carries no regulated data`,
+          });
+        }
       }
     }
     for (const [name, out] of Object.entries(a.outputs)) {

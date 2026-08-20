@@ -9,7 +9,8 @@
  * around the guardrails, so it is not allowed to do anything the engine cannot.
  */
 import path from 'node:path';
-import { findByName } from '../catalog/catalog.js';
+import { loadCatalog } from '../catalog/catalog.js';
+import type { CatalogEntry } from '../catalog/catalog.js';
 import { loadPolicy } from '../policy/policy.js';
 import type { Policy } from '../policy/policy.js';
 import { Redactor } from '../policy/redact.js';
@@ -82,6 +83,65 @@ export class InvocationError extends Error {
   }
 }
 
+/**
+ * Resolve a catalog name to the entry an invocation will run.
+ *
+ * Three outcomes, all of them 4xx, because none of them is a server fault:
+ * the capability is callable, the name is unknown (404), or the file exists
+ * and does not load (422). The third used to be indistinguishable from the
+ * second — the catalog threw on the first bad artifact, so a broken file took
+ * every name down with it — and "not found" is the wrong thing to tell a
+ * caller about a recording that is sitting right there with a schema error.
+ */
+export function entryFor(ctx: ApiContext, name: string): CatalogEntry {
+  const { entries, broken } = loadCatalog(ctx.capabilitiesDir);
+  const entry = entries.find((e) => e.name === name);
+  if (entry) return entry;
+  const bad = broken.find((b) => b.name === name);
+  if (bad) {
+    throw new InvocationError(
+      422,
+      `capability '${name}' is recorded in '${bad.file}' but that artifact does not load: ${bad.error}`,
+    );
+  }
+  throw new InvocationError(404, `no capability named '${name}' in ${ctx.capabilitiesDir}/`);
+}
+
+/**
+ * The artifact AS IT WILL EXECUTE: the recorded flow with this deployment's app
+ * profile merged in. Anything deciding how an invocation behaves has to ask
+ * this rather than the raw file, because the profile contributes outcomes,
+ * recoveries and anomalies that the recording never declared.
+ */
+export function mergedArtifactFor(ctx: ApiContext, name: string): CapabilityArtifact {
+  return applyProfile(artifactFor(ctx, name), ctx.profile).artifact;
+}
+
+/**
+ * Can this invocation stop and wait for a person?
+ *
+ * Two independent ways it can, and the caller must be told about both:
+ *  - an irreversible step, which the policy escalates before it posts; and
+ *  - ANY recovery whose handler is `escalate` — which after a profile merge is
+ *    typically every capability in the deployment, since an app-level recovery
+ *    like MERIDIAN's SUPERVISOR_OVERRIDE_REQUIRED is merged into all of them.
+ *
+ * Keying the forced-async rule on `maxRisk === 'irreversible'` alone therefore
+ * missed the common case: a read-only lookup that trips a 403 escalates, and a
+ * synchronous dispatch then holds the HTTP request open for the full
+ * intervention timeout (180s) — precisely the failure the rule exists to
+ * prevent. Pass the MERGED artifact; the raw one has not seen the profile.
+ */
+export function pausesForHuman(artifact: CapabilityArtifact): boolean {
+  return artifact.policy.maxRisk === 'irreversible' || escalatingRecoveries(artifact).length > 0;
+}
+
+/** Codes whose recovery hands the run to a person — named so the 202 can say
+ *  WHY it refused to answer synchronously. */
+export function escalatingRecoveries(artifact: CapabilityArtifact): string[] {
+  return artifact.recoveries.filter((r) => r.handler.kind === 'escalate').map((r) => r.code);
+}
+
 let active = 0;
 
 /**
@@ -123,7 +183,7 @@ export interface StartedInvocation {
  * a human approval is not riding on a held-open HTTP request.
  */
 export function startInvocation(ctx: ApiContext, req: InvokeRequest): StartedInvocation {
-  const entry = findByName(req.name, ctx.capabilitiesDir);
+  const entry = entryFor(ctx, req.name);
   const { artifact, verified } = loadCapability(entry.artifactFile);
   const merged = applyProfile(artifact, ctx.profile);
   const runId = newRunId();
@@ -172,13 +232,14 @@ export function startInvocation(ctx: ApiContext, req: InvokeRequest): StartedInv
   // a summary of the target screen. Seeded here with the declared params by
   // sensitivity, exactly as the engine seeds its own.
   //
-  // DEPENDENCY (engine, owned elsewhere): `replayCapability` still does
-  // `const redactor = new Redactor()` and ignores the instance below, so this
-  // one does not yet learn the values `classifyObservation` registers at run
-  // time (member names, balances read off the screen). One line in the engine
-  // — `const redactor = opts.redactor ?? new Redactor()` — makes the whole run
-  // share this instance and closes that gap; the field is passed already so
-  // nothing here changes when it lands.
+  // This instance is passed to the engine (`opts.redactor`) and the engine
+  // adopts it (`const redactor = opts.redactor ?? new Redactor()`), so ONE
+  // redactor covers the whole run: the values `classifyObservation` registers
+  // off the screen at run time — member names, balances the flow never
+  // declared — are masked on the operator's intervention listing too, not just
+  // in the evidence files. What it still does NOT cover: a value that appears
+  // on screen and matches no classified label, column or declared param is
+  // unknown to the redactor by construction, here as everywhere else.
   const redactor = new Redactor();
   for (const [name, spec] of Object.entries(merged.artifact.params)) {
     const raw = spec.source === 'env' ? (envOverrides[spec.env ?? ''] ?? process.env[spec.env ?? '']) : req.params[name];
@@ -244,7 +305,7 @@ export function shapeOutputs(artifact: CapabilityArtifact, outputs: Record<strin
 }
 
 export function artifactFor(ctx: ApiContext, name: string): CapabilityArtifact {
-  const entry = findByName(name, ctx.capabilitiesDir);
+  const entry = entryFor(ctx, name);
   return loadCapability(entry.artifactFile).artifact;
 }
 
