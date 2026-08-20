@@ -377,7 +377,9 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     recoveries: [],
     anomalies: [],
     policy: {
-      actionsUsed: [...new Set(spine.slice(1).map((a) => a.kind))],
+      // The entrypoint navigation is implicit in every capability — declare
+      // it so the self-declaration is complete even when no step navigates.
+      actionsUsed: [...new Set(['navigate' as const, ...spine.slice(1).map((a) => a.kind)])],
       maxRisk: spine.some((a) => a.risk === 'irreversible')
         ? ('irreversible' as const)
         : spine.some((a) => a.risk === 'reversible')

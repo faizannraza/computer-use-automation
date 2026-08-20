@@ -121,6 +121,28 @@ describe('engine classification branches', () => {
   }, 60_000);
 });
 
+describe('pre-flight covers the implicit entrypoint navigation', () => {
+  it('a navigate-forbidding policy is refused in pre-flight, before any browser launches', async () => {
+    // No step in an artifact needs to declare 'navigate' for the run to
+    // navigate — the entrypoint always does. A policy that forbids navigate
+    // must fail fast in pre-flight (right layer, debuggable message), not at
+    // the gate after a browser is already up.
+    const noNavigate = PolicySchema.parse({
+      ...policy,
+      allowedActions: ['activate', 'setValue', 'choose', 'read', 'answerDialog'],
+    });
+    const result = await replayCapability(
+      { artifact: gold, bindings: { baseUrl: base } },
+      { ...opts(), policy: noNavigate },
+    );
+    expect(result.status).toBe('failed');
+    if (result.status !== 'failed') return;
+    expect(result.failure.class).toBe('POLICY_BLOCKED');
+    expect(result.failure.observed).toContain('navigate');
+    expect(result.stepsRun).toEqual([]); // pre-flight: nothing ran
+  });
+});
+
 describe('irreversible dispatch semantics', () => {
   it('a dispatched irreversible action counts even when its checkpoint then fails', async () => {
     const a = variant((x) => {

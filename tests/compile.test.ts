@@ -100,6 +100,14 @@ describe('compileTrace', () => {
     expect(computeContentHash(artifact)).toBe(artifact.integrity.contentHash);
   });
 
+  it('declares the implicit entrypoint navigation in policy.actionsUsed', () => {
+    const { artifact } = compiled();
+    // No compiled step navigates (the entry nav is the entrypoint, not a
+    // step), yet every replay navigates — the self-declaration says so.
+    expect(artifact.steps.every((s) => s.action.kind !== 'navigate')).toBe(true);
+    expect(artifact.policy.actionsUsed).toContain('navigate');
+  });
+
   it('canonicalizes the entrypoint origin and excludes probe actions from the spine', () => {
     const { artifact, report } = compiled();
     expect(artifact.capability.entrypoint.value).toBe('{baseUrl}/login');

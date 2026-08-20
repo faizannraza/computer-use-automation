@@ -165,11 +165,15 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
       observed: 'artifact is in draft state — unattended replay of unreviewed automation is refused',
     });
   }
-  const missingActions = artifact.policy.actionsUsed.filter((a) => !opts.policy.allowedActions.includes(a));
+  // Every capability navigates to its entrypoint, whether or not a step says
+  // 'navigate' — so the implicit entrypoint navigation is checked here too,
+  // not first discovered by the gate after a browser has already launched.
+  const actionsNeeded = [...new Set<(typeof artifact.policy.actionsUsed)[number]>([...artifact.policy.actionsUsed, 'navigate'])];
+  const missingActions = actionsNeeded.filter((a) => !opts.policy.allowedActions.includes(a));
   if (missingActions.length > 0) {
     return earlyFail({
       class: 'POLICY_BLOCKED',
-      expected: `policy to allow action kinds: ${artifact.policy.actionsUsed.join(', ')}`,
+      expected: `policy to allow action kinds: ${actionsNeeded.join(', ')} (navigate is implicit — the entrypoint)`,
       observed: `policy forbids: ${missingActions.join(', ')}`,
     });
   }
