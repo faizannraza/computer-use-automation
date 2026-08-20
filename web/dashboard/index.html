@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capability Operations Console</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ───────────────────────── header ───────────────────────── -->
+<header id="topbar">
+  <div class="brand">
+    <span class="brand-mark"></span>
+    <div class="brand-text">
+      <h1 id="app-title">Capability Operations Console</h1>
+      <div class="brand-sub"><span id="app-vendor" class="mono">—</span> <span class="sep">/</span> <a id="app-baseurl" class="mono link" href="#" target="_blank" rel="noreferrer">—</a></div>
+    </div>
+  </div>
+  <div id="policy-strip" class="policy-strip" aria-label="Active policy fence"></div>
+</header>
+
+<!-- ────────────── intervention bar (loud, hidden by default) ────────────── -->
+<section id="intervention-bar" class="intervention-bar" hidden aria-live="assertive"></section>
+
+<!-- ───────────────────────── main grid ───────────────────────── -->
+<main id="grid">
+
+  <!-- left: catalog + history -->
+  <aside class="col col-left">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Capability catalog</h2>
+        <span id="cap-count" class="count mono">—</span>
+      </div>
+      <div id="catalog" class="panel-body scroll"></div>
+    </section>
+
+    <section class="panel panel-grow">
+      <div class="panel-head">
+        <h2>Run history</h2>
+        <div class="head-actions">
+          <select id="history-kind" class="mini-select" aria-label="Filter run kind">
+            <option value="">all kinds</option>
+            <option value="replay">replay</option>
+            <option value="discovery">discovery</option>
+          </select>
+          <button id="history-refresh" class="mini-btn" type="button">Refresh</button>
+        </div>
+      </div>
+      <div id="history" class="panel-body scroll"></div>
+    </section>
+  </aside>
+
+  <!-- centre: the live run -->
+  <section class="col col-main">
+    <section class="panel panel-grow">
+      <div class="panel-head run-head">
+        <div class="run-head-left">
+          <span id="run-status" class="pill pill-idle">idle</span>
+          <div class="run-ident">
+            <div id="run-capability" class="run-capability mono">No run selected</div>
+            <div id="run-sub" class="run-sub mono">Pick a capability to invoke, or open a run from history.</div>
+          </div>
+        </div>
+        <div class="run-head-right">
+          <div id="run-metrics" class="metrics"></div>
+          <button id="btn-evidence" class="mini-btn" type="button" disabled>Audit trail</button>
+        </div>
+      </div>
+
+      <div id="stream-banner" class="stream-banner" hidden></div>
+
+      <div id="timeline" class="panel-body scroll timeline"></div>
+
+      <div id="result-panel" class="result-panel" hidden></div>
+    </section>
+  </section>
+
+  <!-- right: live evidence -->
+  <aside class="col col-right">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Live view</h2>
+        <span id="shot-count" class="count mono">—</span>
+      </div>
+      <div class="panel-body">
+        <figure id="shot-stage" class="shot-stage">
+          <div class="shot-empty">No screenshot yet</div>
+        </figure>
+        <div id="filmstrip" class="filmstrip"></div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<!-- ───────────────────────── dialogs ───────────────────────── -->
+<dialog id="invoke-modal" class="modal">
+  <form id="invoke-form" method="dialog" class="modal-inner">
+    <div class="modal-head">
+      <div>
+        <h3 id="invoke-title">Invoke</h3>
+        <p id="invoke-desc" class="modal-desc"></p>
+      </div>
+      <button type="button" class="icon-btn" data-close="invoke-modal" aria-label="Close">&times;</button>
+    </div>
+    <div id="invoke-fields" class="modal-body scroll"></div>
+    <div class="modal-foot">
+      <div id="invoke-warning" class="invoke-warning" hidden></div>
+      <div class="modal-foot-actions">
+        <button type="button" class="btn btn-ghost" data-close="invoke-modal">Cancel</button>
+        <button type="submit" id="invoke-submit" class="btn btn-primary">Invoke</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="evidence-modal" class="modal modal-wide">
+  <div class="modal-inner">
+    <div class="modal-head">
+      <div>
+        <h3>Audit trail</h3>
+        <p class="modal-desc">Immutable evidence written by the run itself — screenshots, the raw <span class="mono">run.jsonl</span> event stream, and the structured result document.</p>
+      </div>
+      <button type="button" class="icon-btn" data-close="evidence-modal" aria-label="Close">&times;</button>
+    </div>
+    <div id="evidence-body" class="modal-body scroll"></div>
+  </div>
+</dialog>
+
+<dialog id="lightbox" class="modal modal-light">
+  <div class="lightbox-inner">
+    <div class="lightbox-head"><span id="lightbox-caption" class="mono"></span><button type="button" class="icon-btn" data-close="lightbox" aria-label="Close">&times;</button></div>
+    <img id="lightbox-img" alt="Run screenshot">
+  </div>
+</dialog>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

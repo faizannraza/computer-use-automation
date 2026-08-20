@@ -1,0 +1,270 @@
+/**
+ * Invoking a capability by name — the single path every caller (HTTP, chatbot,
+ * dashboard) goes through.
+ *
+ * There is deliberately no "fast path" here. An invocation resolves the same
+ * artifact, applies the same profile and overlay, and calls the same
+ * `replayCapability` the CLI does, so the ActionGate, the policy, redaction,
+ * and the escalation path apply identically. The wrapper must not become a way
+ * around the guardrails, so it is not allowed to do anything the engine cannot.
+ */
+import path from 'node:path';
+import { findByName } from '../catalog/catalog.js';
+import { loadPolicy } from '../policy/policy.js';
+import type { Policy } from '../policy/policy.js';
+import { Redactor } from '../policy/redact.js';
+import { applyProfile, envOverridesForRole, loadProfile, policyPathFor } from '../profile/appProfile.js';
+import type { AppProfile } from '../profile/appProfile.js';
+import { replayCapability } from '../replay/engine.js';
+import type { ReplayOptions } from '../replay/engine.js';
+import { loadCapability } from '../schema/capability.js';
+import type { CapabilityArtifact } from '../schema/capability.js';
+import type { ReplayResult } from '../schema/result.js';
+import { newRunId } from '../evidence/runLog.js';
+import { HttpOperator } from './httpOperator.js';
+import type { RunStore } from './runStore.js';
+
+export interface InvokeOptions {
+  role?: string;
+  headed?: boolean;
+  slowMoMs?: number;
+  inject?: { kind: string; atStepId?: string };
+}
+
+export interface InvokeRequest {
+  name: string;
+  params: Record<string, string>;
+  options?: InvokeOptions;
+}
+
+export interface ApiContext {
+  profileFile: string;
+  profile: AppProfile;
+  policy: Policy;
+  capabilitiesDir: string;
+  evidenceBaseDir: string;
+  store: RunStore;
+  interventionTimeoutMs: number;
+  /** Concurrency cap: each run drives its own browser, so this is a real
+   * resource bound rather than a throughput knob. */
+  maxConcurrentRuns: number;
+}
+
+export function loadContext(opts: {
+  profileFile: string;
+  capabilitiesDir: string;
+  evidenceBaseDir: string;
+  store: RunStore;
+  policyFile?: string;
+  interventionTimeoutMs?: number;
+  maxConcurrentRuns?: number;
+}): ApiContext {
+  const profile = loadProfile(opts.profileFile);
+  const policy = loadPolicy(opts.policyFile ?? policyPathFor(opts.profileFile, profile));
+  return {
+    profileFile: opts.profileFile,
+    profile,
+    policy,
+    capabilitiesDir: opts.capabilitiesDir,
+    evidenceBaseDir: opts.evidenceBaseDir,
+    store: opts.store,
+    interventionTimeoutMs: opts.interventionTimeoutMs ?? 180_000,
+    maxConcurrentRuns: opts.maxConcurrentRuns ?? 2,
+  };
+}
+
+export class InvocationError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+let active = 0;
+
+/**
+ * Which operator role each run was invoked as.
+ *
+ * `RunSummary` is reconstructed from evidence on disk, and the role is not in
+ * the artifact — it is a property of the INVOCATION. Recording it here is what
+ * lets `/api/runs` answer "who ran this", which is the field an auditor asks
+ * for first and which nothing recorded before. Bounded so a long-lived server
+ * does not accumulate one entry per run forever; the authoritative copy is the
+ * run's own evidence (see the engine dependency noted at the call site).
+ */
+const invocationRoles = new Map<string, string>();
+const MAX_TRACKED_ROLES = 1000;
+
+/** The operator role a run was invoked as, if this process started it. */
+export function roleForRun(runId: string): string | undefined {
+  return invocationRoles.get(runId);
+}
+
+function recordRole(runId: string, role: string): void {
+  invocationRoles.set(runId, role);
+  while (invocationRoles.size > MAX_TRACKED_ROLES) {
+    const oldest = invocationRoles.keys().next();
+    if (oldest.done === true) break;
+    invocationRoles.delete(oldest.value);
+  }
+}
+
+export interface StartedInvocation {
+  runId: string;
+  /** Resolves when the run reaches a terminal state. */
+  done: Promise<ReplayResult>;
+}
+
+/**
+ * Start a run and return immediately with its id, so a caller can subscribe to
+ * the live stream before the first event fires — and so a run that pauses for
+ * a human approval is not riding on a held-open HTTP request.
+ */
+export function startInvocation(ctx: ApiContext, req: InvokeRequest): StartedInvocation {
+  const entry = findByName(req.name, ctx.capabilitiesDir);
+  const { artifact, verified } = loadCapability(entry.artifactFile);
+  const merged = applyProfile(artifact, ctx.profile);
+  const runId = newRunId();
+
+  if (active >= ctx.maxConcurrentRuns) {
+    throw new InvocationError(429, `already driving ${active} browser session(s); retry shortly`);
+  }
+
+  // Unknown params are refused rather than ignored: silently dropping one
+  // would run a different invocation than the caller asked for.
+  const declared = new Set(Object.keys(merged.artifact.params));
+  const unknown = Object.keys(req.params).filter((p) => !declared.has(p));
+  if (unknown.length > 0) {
+    throw new InvocationError(400, `unknown param(s): ${unknown.join(', ')}. Declared: ${[...declared].join(', ')}`);
+  }
+
+  // `requiresRole` reached the catalog and the dashboard badge but nothing ever
+  // checked it, so any caller could run a supervisor-only function as a teller
+  // — and, just as bad, run a routine teller function on supervisor
+  // credentials with no field an auditor could query. The app's own refusal is
+  // still the real authorization boundary; this refuses the mismatch BEFORE a
+  // browser exists, and refuses in both directions rather than silently
+  // upgrading the caller to the role the artifact wants.
+  const resolvedRole = req.options?.role ?? ctx.profile.credentials?.defaultRole;
+  const requiresRole = merged.artifact.policy.requiresRole;
+  if (requiresRole !== undefined && resolvedRole !== requiresRole) {
+    throw new InvocationError(
+      403,
+      `capability '${req.name}' declares requiresRole '${requiresRole}'; this invocation resolves to role '${resolvedRole ?? '(none)'}' — invoke it with options.role '${requiresRole}'`,
+    );
+  }
+
+  let envOverrides: Record<string, string>;
+  try {
+    envOverrides = envOverridesForRole(ctx.profile, req.options?.role);
+  } catch (err) {
+    throw new InvocationError(400, err instanceof Error ? err.message : String(err));
+  }
+
+  ctx.store.start(runId, 'replay', merged.artifact.capability.id, merged.artifact.capability.version);
+  if (resolvedRole !== undefined) recordRole(runId, resolvedRole);
+  active += 1;
+
+  // The redaction boundary for anything this invocation exposes OUTSIDE the
+  // evidence log — today that is the open-intervention listing, which carries
+  // a summary of the target screen. Seeded here with the declared params by
+  // sensitivity, exactly as the engine seeds its own.
+  //
+  // DEPENDENCY (engine, owned elsewhere): `replayCapability` still does
+  // `const redactor = new Redactor()` and ignores the instance below, so this
+  // one does not yet learn the values `classifyObservation` registers at run
+  // time (member names, balances read off the screen). One line in the engine
+  // — `const redactor = opts.redactor ?? new Redactor()` — makes the whole run
+  // share this instance and closes that gap; the field is passed already so
+  // nothing here changes when it lands.
+  const redactor = new Redactor();
+  for (const [name, spec] of Object.entries(merged.artifact.params)) {
+    const raw = spec.source === 'env' ? (envOverrides[spec.env ?? ''] ?? process.env[spec.env ?? '']) : req.params[name];
+    if (raw !== undefined && raw !== '') redactor.register(name, raw, spec.sensitivity);
+  }
+
+  const operator = new HttpOperator(runId, { timeoutMs: ctx.interventionTimeoutMs, redactor });
+  const replayOptions: ReplayOptions & { redactor?: Redactor } = {
+    policy: ctx.policy,
+    paramValues: req.params,
+    verified,
+    runId,
+    evidenceBaseDir: ctx.evidenceBaseDir,
+    profile: ctx.profile,
+    envOverrides,
+    operator,
+    redactor,
+    onEvent: (line) => ctx.store.publish(runId, line),
+    ...(req.options?.headed !== undefined ? { headed: req.options.headed } : {}),
+    ...(req.options?.slowMoMs !== undefined ? { slowMoMs: req.options.slowMoMs } : {}),
+    ...(req.options?.inject !== undefined ? { inject: req.options.inject } : {}),
+    // The DURABLE copy of "which authority did this run use". The in-process
+    // map above only answers for runs this process started and only while it
+    // lives; the engine writes this into run.jsonl and result.json, which is
+    // where an auditor would actually look.
+    ...(resolvedRole !== undefined ? { role: resolvedRole } : {}),
+  };
+  const done = replayCapability({ artifact: merged.artifact, bindings: { baseUrl: ctx.profile.baseUrl } }, replayOptions)
+    .then((result) => {
+      ctx.store.finish(runId, result);
+      return result;
+    })
+    .catch((err: unknown) => {
+      ctx.store.fail(runId, err instanceof Error ? err.message : String(err));
+      throw err;
+    })
+    .finally(() => {
+      active -= 1;
+    });
+
+  return { runId, done };
+}
+
+/**
+ * Outputs as a caller wants them: declared `table` outputs are carried as JSON
+ * strings internally (one redaction boundary covers them) and parsed back into
+ * structure here, at the contract edge.
+ */
+export function shapeOutputs(artifact: CapabilityArtifact, outputs: Record<string, string>): Record<string, unknown> {
+  const shaped: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(outputs)) {
+    if (artifact.outputs[name]?.type === 'table') {
+      try {
+        shaped[name] = JSON.parse(value);
+        continue;
+      } catch {
+        /* fall through to the raw string rather than dropping the value */
+      }
+    }
+    shaped[name] = value;
+  }
+  return shaped;
+}
+
+export function artifactFor(ctx: ApiContext, name: string): CapabilityArtifact {
+  const entry = findByName(name, ctx.capabilitiesDir);
+  return loadCapability(entry.artifactFile).artifact;
+}
+
+/** Evidence file path for a run, guarded against traversal outside the run. */
+export function evidencePath(ctx: ApiContext, kind: string, runId: string, rel: string): string {
+  // `kind` and `runId` are URL path segments, and they build the ROOT that the
+  // containment check below is measured against — a `..` in either MOVES the
+  // root, so checking only `rel` confines the read to a directory the caller
+  // chose (`/api/runs/../././evidence/.env` served the process's own secrets).
+  // Both are therefore pinned to what a run can actually be called.
+  if (kind !== 'discovery' && kind !== 'replay') throw new InvocationError(400, `unknown run kind '${kind}'`);
+  if (!/^[A-Za-z0-9_][A-Za-z0-9._-]*$/.test(runId) || runId.includes('..')) {
+    throw new InvocationError(400, `invalid run id '${runId}'`);
+  }
+  const root = path.resolve(ctx.evidenceBaseDir, kind, runId);
+  const target = path.resolve(root, rel);
+  // The run directory itself is inside the run: `rel === '.'` is how the
+  // evidence LISTING asks for it, and rejecting it 400'd every listing.
+  if (target !== root && !target.startsWith(root + path.sep)) {
+    throw new InvocationError(400, 'path outside the run directory');
+  }
+  return target;
+}

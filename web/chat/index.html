@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Capability Console — Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div class="brand-text">
+        <h1 id="app-title">Capability Console</h1>
+        <p class="sub">
+          <span id="app-base">connecting…</span>
+          <span class="dot" aria-hidden="true">·</span>
+          <span id="cap-count">—</span>
+          <span class="dot" aria-hidden="true">·</span>
+          <span id="mode-state">mode: auto</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="mode" role="group" aria-label="Planner mode">
+        <button type="button" class="mode-btn" data-mode="llm">
+          <span class="mode-name">model planner</span>
+          <span class="mode-note">Claude chooses capabilities</span>
+        </button>
+        <button type="button" class="mode-btn" data-mode="scripted">
+          <span class="mode-name">deterministic planner</span>
+          <span class="mode-note">no model</span>
+        </button>
+      </div>
+      <a class="dash-link" id="dash-link" href="/" target="_blank" rel="noopener">Dashboard →</a>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="transcript" id="transcript" role="log" aria-live="polite" aria-relevant="additions"></div>
+  </main>
+
+  <footer class="composer-wrap">
+    <div class="chips" id="chips" aria-label="Suggested prompts"></div>
+    <form class="composer" id="composer" autocomplete="off">
+      <textarea
+        id="input"
+        rows="1"
+        placeholder="Ask for something — the agent will invoke a recorded capability."
+        aria-label="Message"></textarea>
+      <button type="submit" id="send" class="send">Send</button>
+    </form>
+    <p class="disclaimer">
+      Every action runs as a reviewed, recorded capability against
+      <span id="foot-base">the target application</span>. Nothing here improvises against the UI.
+    </p>
+  </footer>
+
+  <script src="chat.js"></script>
+</body>
+</html>
