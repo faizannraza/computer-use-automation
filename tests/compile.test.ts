@@ -12,12 +12,14 @@ import type { DiscoveryTrace, RecordedAction, StateDigest } from '../src/discove
 
 const BASE = 'http://localhost:4173';
 
-const loginDigest: StateDigest = { location: `${BASE}/login`, title: 'Sign In', markers: ['MockCore™ Teller — Operator Sign In'] };
-const homeDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: ['Main Menu', 'Announcements'] };
-const searchDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: ['Main Menu', 'Member Search'] };
-const resultsDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: ['Main Menu', 'Member Search', 'Member No.', 'Standing'] };
-const detailDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: ['Main Menu', 'Member Information', 'Accounts', 'Balance'] };
-const notFoundDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: ['Main Menu', 'Member Search'] };
+// Markers are frame-tagged, exactly as digestOf records them: 'menu' is the
+// persistent nav chrome, 'work' is the frame the flow actually happens in.
+const loginDigest: StateDigest = { location: `${BASE}/login`, title: 'Sign In', markers: [{ text: 'MockCore™ Teller — Operator Sign In' }] };
+const homeDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Main Menu', frame: 'menu' }, { text: 'Announcements', frame: 'work' }] };
+const searchDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Main Menu', frame: 'menu' }, { text: 'Member Search', frame: 'work' }] };
+const resultsDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Main Menu', frame: 'menu' }, { text: 'Member Search', frame: 'work' }, { text: 'Member No.', frame: 'work' }, { text: 'Standing', frame: 'work' }] };
+const detailDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Main Menu', frame: 'menu' }, { text: 'Member Information', frame: 'work' }, { text: 'Accounts', frame: 'work' }, { text: 'Balance', frame: 'work' }] };
+const notFoundDigest: StateDigest = { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Main Menu', frame: 'menu' }, { text: 'Member Search', frame: 'work' }] };
 
 let seq = 0;
 function act(a: Omit<RecordedAction, 'seq' | 'probe'> & { probe?: boolean }): RecordedAction {
@@ -124,12 +126,54 @@ describe('compileTrace', () => {
     expect(json).not.toContain('1987-03-14');
   });
 
-  it('mines checkpoints from observed marker deltas', () => {
+  it('mines checkpoints from observed marker deltas, scoped to the frame they appeared in', () => {
     const { artifact } = compiled();
     const signIn = artifact.steps.find((s) => s.intent === 'Sign in')!;
-    expect(signIn.post).toContainEqual({ c: 'textPresent', pattern: 'Announcements' });
+    expect(signIn.post).toContainEqual({ c: 'textPresent', pattern: 'Announcements', frame: { name: 'work' } });
     const open = artifact.steps.find((s) => s.intent === 'Open the member')!;
-    expect(open.post.map((p) => JSON.stringify(p))).toContain(JSON.stringify({ c: 'textPresent', pattern: 'Accounts' }));
+    expect(open.post.map((p) => JSON.stringify(p))).toContain(
+      JSON.stringify({ c: 'textPresent', pattern: 'Member Information', frame: { name: 'work' } }),
+    );
+  });
+
+  it('prefers the most specific markers: same frame as the action, then longest text', () => {
+    const { artifact } = compiled();
+    // After opening the member, three new work-frame markers appeared:
+    // "Member Information" (18), "Accounts" (8), "Balance" (7). The compiler
+    // must take the LONGEST two — short markers are the least specific.
+    const open = artifact.steps.find((s) => s.intent === 'Open the member')!;
+    expect(open.post.map((p) => (p.c === 'textPresent' ? p.pattern : ''))).toEqual(['Member Information', 'Accounts']);
+  });
+
+  it('lints checkpoints that had to assert markers outside the action frame', () => {
+    // A work-frame click whose only new marker appeared in the nav chrome:
+    // the checkpoint still compiles, but the report flags it for review.
+    const chromeTrace: DiscoveryTrace = {
+      goal: 'lint test',
+      actions: [
+        act({ kind: 'navigate', intent: 'Open the app', risk: 'read', url: `${BASE}/login`, before: { location: 'about:blank', title: '', markers: [] }, after: loginDigest }),
+        act({
+          kind: 'activate', intent: 'Click something in the work frame', risk: 'reversible',
+          element: { role: 'button', name: 'Refresh', framePath: workFrame },
+          before: searchDigest,
+          after: { ...searchDigest, markers: [...searchDigest.markers, { text: 'Session refreshed', frame: 'menu' }] },
+        }),
+      ],
+      outcomes: [],
+      done: { capabilityId: 'lint.case', title: 't', description: 'd' },
+    };
+    const { report } = compileTrace({
+      trace: chromeTrace,
+      paramSpecs: {},
+      callerParamValues: {},
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'lintrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(report.notes.some((n) => n.includes('may be non-specific') && n.includes("'work'"))).toBe(true);
   });
 
   it('builds table-cell targeting for reads (never keyed on the data itself)', () => {

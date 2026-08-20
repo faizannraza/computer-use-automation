@@ -21,7 +21,7 @@ import type { CapabilityArtifact, OutcomeSpec, ParamSpec, Sensitivity, Step } fr
 import { CapabilityArtifactSchema, computeContentHash } from '../schema/capability.js';
 import type { Condition } from '../schema/conditions.js';
 import type { Locator, TargetRef } from '../schema/locators.js';
-import type { DiscoveryTrace, RecordedAction, RecordedElement, StateDigest } from './recorder.js';
+import type { DiscoveryTrace, MarkerInfo, RecordedAction, RecordedElement, StateDigest } from './recorder.js';
 
 export interface OutputHint {
   type?: 'string' | 'integer' | 'money';
@@ -111,10 +111,39 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     steps.push(buildStep(id, action, stepNo === 1));
   }
 
+  /** Innermost named frame the action's element lived in (undefined = main frame / navigate). */
+  function actionFrameOf(action: RecordedAction): string | undefined {
+    return action.element?.framePath[action.element.framePath.length - 1]?.name;
+  }
+
+  /**
+   * Rank checkpoint-marker candidates by specificity: markers in the same
+   * frame the action happened in first, then LONGEST text first. (An earlier
+   * version preferred the shortest markers — exactly backwards: short markers
+   * like "Home" are the least specific text on a screen.)
+   */
+  function rankMarkers(markers: MarkerInfo[], actionFrame: string | undefined): MarkerInfo[] {
+    return [...markers].sort((a, b) => {
+      const aSame = a.frame === actionFrame ? 0 : 1;
+      const bSame = b.frame === actionFrame ? 0 : 1;
+      if (aSame !== bSame) return aSame - bSame;
+      return b.text.length - a.text.length || a.text.localeCompare(b.text);
+    });
+  }
+
+  /** A mined marker becomes a textPresent scoped to the frame it was seen in. */
+  function markerCondition(m: MarkerInfo, where: string): Condition {
+    return {
+      c: 'textPresent',
+      pattern: paramize(m.text, where),
+      ...(m.frame !== undefined ? { frame: { name: m.frame } } : {}),
+    };
+  }
+
   function buildStep(id: string, action: RecordedAction, isFirst: boolean): Step {
     const pre: Condition[] =
       isFirst && action.before.markers.length > 0
-        ? [{ c: 'textPresent', pattern: paramize(action.before.markers[0]!, `${id}.pre`) }]
+        ? [markerCondition(rankMarkers(action.before.markers, actionFrameOf(action))[0]!, `${id}.pre`)]
         : [];
     const post = postConditionsFor(id, action);
     const base = {
@@ -166,19 +195,38 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
 
   /**
    * Checkpoints are mined from the observed delta: markers (headings, row/
-   * column headers) present after the action and absent before. Falls back
-   * to the canonicalized URL when a screen transition left no new markers.
+   * column headers) present after the action and absent before, ranked by
+   * specificity (same frame as the action, then longest text) and scoped to
+   * the frame they were observed in. Falls back to the canonicalized URL
+   * when a screen transition left no new markers. Weak choices are LINTED
+   * into the compile report so a reviewer sees them at approval time, not
+   * in production.
    */
   function postConditionsFor(id: string, action: RecordedAction): Condition[] {
     if (action.kind !== 'activate' && action.kind !== 'navigate') return [];
-    const fresh = action.after.markers
-      .filter((m) => !action.before.markers.includes(m))
-      .sort((a, b) => a.length - b.length || a.localeCompare(b))
-      .slice(0, 2)
-      .map((m): Condition => ({ c: 'textPresent', pattern: paramize(m, `${id}.post`) }));
-    if (fresh.length > 0) return fresh;
-    report.notes.push(`${id}: no new markers after action — using urlMatches checkpoint`);
-    return [{ c: 'urlMatches', pattern: canonicalUrl(action.after.location, `${id}.post`) }];
+    const beforeTexts = new Set(action.before.markers.map((m) => m.text));
+    const actionFrame = actionFrameOf(action);
+    const chosen = rankMarkers(
+      action.after.markers.filter((m) => !beforeTexts.has(m.text)),
+      actionFrame,
+    ).slice(0, 2);
+    if (chosen.length === 0) {
+      report.notes.push(`${id}: no new markers after action — using urlMatches checkpoint`);
+      return [{ c: 'urlMatches', pattern: canonicalUrl(action.after.location, `${id}.post`) }];
+    }
+    if (actionFrame !== undefined && chosen.every((m) => m.frame !== actionFrame)) {
+      report.notes.push(
+        `${id}: checkpoint may be non-specific — no new marker appeared in the action's frame ('${actionFrame}'); asserting markers from other frames`,
+      );
+    }
+    for (const m of chosen) {
+      if (m.frame === undefined && m.text.length < 8) {
+        report.notes.push(
+          `${id}: checkpoint may be non-specific — unscoped short marker ${JSON.stringify(m.text)}; review before approval`,
+        );
+      }
+    }
+    return chosen.map((m) => markerCondition(m, `${id}.post`));
   }
 
   function buildTarget(id: string, el: RecordedElement, action: RecordedAction): TargetRef {
@@ -298,11 +346,13 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     };
   }
 
-  // ---- success criteria: the final observed state of the spine ----
-  const lastDigest: StateDigest = spine[spine.length - 1]!.after;
-  const successCriteria: Condition[] = lastDigest.markers
+  // ---- success criteria: the final observed state of the spine, most
+  // specific markers first, scoped to the frames they were seen in ----
+  const lastAction = spine[spine.length - 1]!;
+  const lastDigest: StateDigest = lastAction.after;
+  const successCriteria: Condition[] = rankMarkers(lastDigest.markers, actionFrameOf(lastAction))
     .slice(0, 3)
-    .map((m): Condition => ({ c: 'textPresent', pattern: paramize(m, 'successCriteria') }));
+    .map((m): Condition => markerCondition(m, 'successCriteria'));
 
   const artifactRaw = {
     schemaVersion: '1' as const,

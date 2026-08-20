@@ -14,12 +14,19 @@ export interface RecordedElement {
   bboxPct?: { x: number; y: number; w: number; h: number };
 }
 
+/** One checkpoint-marker candidate: what text appeared, and in which frame. */
+export interface MarkerInfo {
+  text: string;
+  /** Innermost frame name the marker was observed in; absent = main frame or unnamed. */
+  frame?: string;
+}
+
 /** Compact digest of an observation for postcondition mining. */
 export interface StateDigest {
   location: string;
   title: string;
-  /** Names of headings / row headers / column headers — checkpoint marker candidates. */
-  markers: string[];
+  /** Headings / row headers / column headers — checkpoint marker candidates, frame-tagged. */
+  markers: MarkerInfo[];
   dialogText?: string;
 }
 
@@ -62,15 +69,22 @@ export interface DiscoveryTrace {
 }
 
 export function digestOf(obs: Observation): StateDigest {
-  const markers = obs.elements
-    .filter((e) => e.role === 'heading' || e.role === 'rowheader' || e.role === 'columnheader')
-    .map((e) => e.name)
-    .filter((n) => n.length > 0)
-    .slice(0, 40);
+  const markers: MarkerInfo[] = [];
+  const seen = new Set<string>();
+  for (const e of obs.elements) {
+    if (e.role !== 'heading' && e.role !== 'rowheader' && e.role !== 'columnheader') continue;
+    if (e.name.length === 0) continue;
+    const frame = e.framePath[e.framePath.length - 1]?.name;
+    const key = `${frame ?? ''}\u0000${e.name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    markers.push({ text: e.name, ...(frame !== undefined ? { frame } : {}) });
+    if (markers.length >= 40) break;
+  }
   return {
     location: obs.location,
     title: obs.title,
-    markers: [...new Set(markers)],
+    markers,
     ...(obs.dialog ? { dialogText: obs.dialog.text } : {}),
   };
 }
