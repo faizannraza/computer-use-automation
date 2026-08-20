@@ -32,6 +32,11 @@ export class PlaywrightWebSurface implements Surface {
   private constructor(
     private readonly browser: Browser,
     readonly page: Page,
+    /**
+     * Per-keystroke delay for `setValue`, derived from slowMo. Zero in
+     * production, where the value is set in one operation.
+     */
+    private readonly typeDelayMs = 0,
   ) {
     page.on('dialog', (dialog) => {
       // Holding the dialog: no accept/dismiss until an explicit answerDialog
@@ -106,7 +111,15 @@ export class PlaywrightWebSurface implements Surface {
       ...(opts.slowMoMs !== undefined && opts.slowMoMs > 0 ? { slowMo: opts.slowMoMs } : {}),
     });
     const page = await browser.newPage({ viewport: opts.viewport ?? { width: 1280, height: 800 } });
-    return new PlaywrightWebSurface(browser, page);
+    // Playwright's slowMo throttles each DRIVER OPERATION, and filling a field
+    // is one operation — so with slowMo alone a form snaps to its final state
+    // instantly and an audience sees nothing happen. When a caller has asked
+    // for a paced run, pace the typing too. Derived from slowMo rather than
+    // configured separately: one knob, and it stays zero unless someone
+    // deliberately slowed the run down.
+    const slow = opts.slowMoMs ?? 0;
+    const typeDelayMs = slow > 0 ? Math.min(70, Math.max(25, Math.round(slow / 10))) : 0;
+    return new PlaywrightWebSurface(browser, page, typeDelayMs);
   }
 
   lastObservation(): Observation | undefined {
@@ -319,6 +332,18 @@ export class PlaywrightWebSurface implements Surface {
       }
       case 'setValue': {
         const handle = await this.elementHandle(action.ref);
+        if (this.typeDelayMs > 0) {
+          // Same end state as fill(), reached visibly. fill() first so the
+          // field is cleared and any framework listener sees a reset, then the
+          // characters go in one at a time.
+          await handle.fill('', { timeout: 5000 });
+          // `type` on an ElementHandle rather than Locator.pressSequentially:
+          // the gate hands us a ref into the current observation, and turning
+          // that back into a Locator would re-query the page and could bind to
+          // a different node than the one authorised.
+          await handle.type(action.value, { delay: this.typeDelayMs, timeout: 15000 });
+          return {};
+        }
         await handle.fill(action.value, { timeout: 5000 });
         return {};
       }

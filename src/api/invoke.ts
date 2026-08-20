@@ -49,6 +49,16 @@ export interface ApiContext {
   /** Concurrency cap: each run drives its own browser, so this is a real
    * resource bound rather than a throughput knob. */
   maxConcurrentRuns: number;
+  /**
+   * Presentation pacing for runs this server drives, when the caller did not
+   * ask for its own. It exists because a run started from the CHATBOT has no
+   * way to ask: the planner deliberately chooses capabilities and parameters
+   * and nothing else, so "show me this one slowly" cannot be its decision.
+   * This is the operator's decision, taken once when the server starts.
+   *
+   * Unset in production, where a replay should run headless at full speed.
+   */
+  demoPacing?: { headed?: boolean; slowMoMs?: number };
 }
 
 export function loadContext(opts: {
@@ -59,6 +69,7 @@ export function loadContext(opts: {
   policyFile?: string;
   interventionTimeoutMs?: number;
   maxConcurrentRuns?: number;
+  demoPacing?: { headed?: boolean; slowMoMs?: number };
 }): ApiContext {
   const profile = loadProfile(opts.profileFile);
   const policy = loadPolicy(opts.policyFile ?? policyPathFor(opts.profileFile, profile));
@@ -71,6 +82,7 @@ export function loadContext(opts: {
     store: opts.store,
     interventionTimeoutMs: opts.interventionTimeoutMs ?? 180_000,
     maxConcurrentRuns: opts.maxConcurrentRuns ?? 2,
+    ...(opts.demoPacing !== undefined ? { demoPacing: opts.demoPacing } : {}),
   };
 }
 
@@ -247,6 +259,8 @@ export function startInvocation(ctx: ApiContext, req: InvokeRequest): StartedInv
   }
 
   const operator = new HttpOperator(runId, { timeoutMs: ctx.interventionTimeoutMs, redactor });
+  const headed = req.options?.headed ?? ctx.demoPacing?.headed;
+  const slowMoMs = req.options?.slowMoMs ?? ctx.demoPacing?.slowMoMs;
   const replayOptions: ReplayOptions & { redactor?: Redactor } = {
     policy: ctx.policy,
     paramValues: req.params,
@@ -258,8 +272,11 @@ export function startInvocation(ctx: ApiContext, req: InvokeRequest): StartedInv
     operator,
     redactor,
     onEvent: (line) => ctx.store.publish(runId, line),
-    ...(req.options?.headed !== undefined ? { headed: req.options.headed } : {}),
-    ...(req.options?.slowMoMs !== undefined ? { slowMoMs: req.options.slowMoMs } : {}),
+    // Request wins, server pacing is the fallback. `??` and not `||`, so an
+    // explicit `headed: false` or `slowMoMs: 0` still means what it says
+    // instead of falling through to the demo default.
+    ...(headed !== undefined ? { headed } : {}),
+    ...(slowMoMs !== undefined ? { slowMoMs } : {}),
     ...(req.options?.inject !== undefined ? { inject: req.options.inject } : {}),
     // The DURABLE copy of "which authority did this run use". The in-process
     // map above only answers for runs this process started and only while it

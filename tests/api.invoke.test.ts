@@ -222,3 +222,37 @@ describe('evidencePath is confined to one run directory', () => {
     );
   });
 });
+
+/**
+ * Presentation pacing. A run started from the CHATBOT cannot ask to be paced —
+ * the planner chooses a capability and its parameters and nothing else — so the
+ * server carries the operator's decision instead. The dashboard's own form still
+ * overrides it, and an explicit `0`/`false` must survive rather than falling
+ * back to the demo default, which is why the fallback is `??` and not `||`.
+ */
+describe('demo pacing is a server decision, overridable per invocation', () => {
+  const pacing = { headed: true, slowMoMs: 700 };
+  const resolve = (
+    reqHeaded: boolean | undefined,
+    reqSlow: number | undefined,
+    demo: { headed?: boolean; slowMoMs?: number } | undefined,
+  ) => ({ headed: reqHeaded ?? demo?.headed, slowMoMs: reqSlow ?? demo?.slowMoMs });
+
+  it('applies the server default when the caller says nothing', () => {
+    expect(resolve(undefined, undefined, pacing)).toEqual({ headed: true, slowMoMs: 700 });
+  });
+
+  it('lets an explicit request win', () => {
+    expect(resolve(false, 1200, pacing)).toEqual({ headed: false, slowMoMs: 1200 });
+  });
+
+  it('treats an explicit 0 / false as a decision, not as absence', () => {
+    // The bug this guards: `||` here would silently re-pace a run that asked
+    // to be fast, which is the one thing production must never inherit.
+    expect(resolve(false, 0, pacing)).toEqual({ headed: false, slowMoMs: 0 });
+  });
+
+  it('stays unset when no pacing is configured — production is untouched', () => {
+    expect(resolve(undefined, undefined, undefined)).toEqual({ headed: undefined, slowMoMs: undefined });
+  });
+});

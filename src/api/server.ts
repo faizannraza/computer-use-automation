@@ -91,6 +91,20 @@ export function isLoopbackHost(host: string | undefined): boolean {
 
 export function createApiApp(opts: ServerOptions = {}): { app: express.Express; ctx: ApiContext } {
   const allowInject = opts.allowInject ?? process.env['CU_ALLOW_INJECT'] === '1';
+  /**
+   * Presentation pacing for runs this server drives. A run started from the
+   * CHATBOT cannot ask for it — the planner chooses a capability and its
+   * parameters and nothing else, deliberately — so pacing is the operator's
+   * decision, made once here. The dashboard's own form still overrides it per
+   * invocation. Unset in production: a replay runs headless at full speed.
+   */
+  const demoSlowMo = Number(process.env['CU_DEMO_SLOW_MO'] ?? '');
+  const demoPacing =
+    Number.isFinite(demoSlowMo) && demoSlowMo > 0
+      ? { slowMoMs: demoSlowMo, headed: process.env['CU_DEMO_HEADED'] === '1' }
+      : process.env['CU_DEMO_HEADED'] === '1'
+        ? { headed: true }
+        : undefined;
   const store = new RunStore(opts.evidenceBaseDir ?? 'evidence');
   // The two defaults are a PAIR and must move together: the artifacts in
   // `capabilities-meridian/` were recorded against MERIDIAN CORE, and the
@@ -105,6 +119,7 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
     store,
     ...(opts.policyFile !== undefined ? { policyFile: opts.policyFile } : {}),
     ...(opts.interventionTimeoutMs !== undefined ? { interventionTimeoutMs: opts.interventionTimeoutMs } : {}),
+    ...(demoPacing !== undefined ? { demoPacing } : {}),
   });
 
   const app = express();
@@ -501,5 +516,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         ? 'fault injection → ENABLED over HTTP (CU_ALLOW_INJECT=1) — harness mode, do not run this against production'
         : 'fault injection → disabled over HTTP (set CU_ALLOW_INJECT=1 to allow options.inject)',
     );
+    const slow = Number(process.env['CU_DEMO_SLOW_MO'] ?? '');
+    if ((Number.isFinite(slow) && slow > 0) || process.env['CU_DEMO_HEADED'] === '1') {
+      console.log(
+        `demo pacing     → every run ${process.env['CU_DEMO_HEADED'] === '1' ? 'HEADED' : 'headless'}` +
+          `${Number.isFinite(slow) && slow > 0 ? `, slow-mo ${slow}ms` : ''} — presentation mode, not production`,
+      );
+    }
   });
 }
