@@ -1,0 +1,851 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.transferFunds",
+    "version": "1.0.0",
+    "title": "Member Funds Transfer",
+    "description": "Signs on to MERIDIAN CORE, opens Member Inquiry, searches by Member Number for memberId and selects the member, then posts a Funds Transfer. Inputs: memberId, fromShare and toShare (share value attributes), amount, memo, plus operator credentials from the environment. Executes the transfer (irreversible Post Transfer) and returns the receipt's confirmationNumber. Outcome: transfer posted successfully.",
+    "app": {
+      "appId": "meridian-core",
+      "vendor": "Cornerstone Financial Systems"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-20T19:49:16.295Z",
+    "recordedBy": {
+      "kind": "llm-discovery",
+      "model": "claude-opus-4-8",
+      "discoveryRunId": "20260820-124803-5o6z"
+    },
+    "evidenceRef": "evidence/meridian/discovery/20260820-124803-5o6z",
+    "approval": {
+      "state": "approved",
+      "by": "Muhammad Faizan Raza",
+      "at": "2026-08-20T19:53:11.552Z"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "integer",
+      "description": "Caller-supplied parameter 'memberId'.",
+      "required": true,
+      "pattern": "^[0-9]+$",
+      "example": "101555",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "fromShare": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'fromShare'.",
+      "required": true,
+      "example": "101555-S0001",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "toShare": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'toShare'.",
+      "required": true,
+      "example": "101555-CERT",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "amount": {
+      "type": "money",
+      "description": "Caller-supplied parameter 'amount'.",
+      "required": true,
+      "pattern": "^\\$?[0-9][0-9,]*\\.[0-9]{2}$",
+      "example": "5.00",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "memo": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'memo'.",
+      "required": true,
+      "example": "Capability recording",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_ID"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_PASSWORD"
+    }
+  },
+  "outputs": {
+    "confirmationNumber": {
+      "type": "string",
+      "description": "Capture the confirmation/reference number from the receipt.",
+      "sensitivity": "internal",
+      "source": {
+        "stepId": "s15",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [],
+  "recoveries": [],
+  "anomalies": [],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "setValue",
+      "activate",
+      "choose",
+      "read"
+    ],
+    "maxRisk": "irreversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter the Operator ID.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Operator ID:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Operator ID:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 12.1,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "OPERATOR SIGN ON"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter the operator «secret:operatorPassword».",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Password:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Password:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 15,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Click Sign On to authenticate.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign On",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 22.8,
+              "w": 5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/002-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MAIN MENU"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "1."
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Inquiry / Selection",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | Member Inquiry / Selection",
+            "bboxPct": {
+              "x": 25.4,
+              "y": 15.8,
+              "w": 11.8,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/003-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER INQUIRY / SELECTION"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Search by:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter the member number to search.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Value:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Value:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Value:",
+            "bboxPct": {
+              "x": 28.2,
+              "y": 17.6,
+              "w": 15.1,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Search for the member.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 44.2,
+              "y": 17.4,
+              "w": 4.5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/004-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No."
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Shares"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s7",
+      "intent": "Select the member to open their record.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Select",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "{memberId} | … | … | Select",
+            "bboxPct": {
+              "x": 69.6,
+              "y": 27.1,
+              "w": 2.6,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/005-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER RECORD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member No.:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Open the Funds Transfer form.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Funds Transfer",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Funds Transfer",
+            "bboxPct": {
+              "x": 21.5,
+              "y": 43.6,
+              "w": 6.4,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/006-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "FUNDS TRANSFER"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "From Share:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s9",
+      "intent": "Select the From Share by its underlying value attribute (fromShare parameter).",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "From Share:"
+            },
+            {
+              "s": "roleName",
+              "role": "combobox",
+              "name": "From Share:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "From Share:",
+            "bboxPct": {
+              "x": 29.9,
+              "y": 15.9,
+              "w": 22.1,
+              "h": 2.4
+            }
+          }
+        },
+        "option": {
+          "param": "fromShare"
+        },
+        "by": "value"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s10",
+      "intent": "Select the To Share by its underlying value attribute (toShare parameter).",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "To Share:"
+            },
+            {
+              "s": "roleName",
+              "role": "combobox",
+              "name": "To Share:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "To Share:",
+            "bboxPct": {
+              "x": 29.9,
+              "y": 19.1,
+              "w": 22.1,
+              "h": 2.4
+            }
+          }
+        },
+        "option": {
+          "param": "toShare"
+        },
+        "by": "value"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s11",
+      "intent": "Enter the transfer amount.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Amount:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Amount:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Amount:",
+            "bboxPct": {
+              "x": 30.5,
+              "y": 22.3,
+              "w": 8,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "amount"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s12",
+      "intent": "Enter the memo.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Memo:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Memo:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Memo:",
+            "bboxPct": {
+              "x": 29.9,
+              "y": 25.3,
+              "w": 21.2,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "memo"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s13",
+      "intent": "Click Continue to review the transfer.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Continue",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.9,
+              "y": 29.9,
+              "w": 5.4,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/007-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "CONFIRM FUNDS TRANSFER"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s14",
+      "intent": "Post the funds transfer (pre-authorised for recording).",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Post Transfer",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Post Transfer",
+            "bboxPct": {
+              "x": 21.5,
+              "y": 33.1,
+              "w": 7.2,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/009-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "TRANSFER POSTED"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "{memberId}-S0001:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "irreversible",
+      "onDetect": []
+    },
+    {
+      "id": "s15",
+      "intent": "Capture the confirmation/reference number from the receipt.",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Confirmation:"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Confirmation: | …",
+            "bboxPct": {
+              "x": 30.5,
+              "y": 17.5,
+              "w": 11.9,
+              "h": 2.4
+            }
+          }
+        },
+        "into": "confirmationNumber"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "TRANSFER POSTED"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "{memberId}-S0001:"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Confirmation:"
+    }
+  ],
+  "integrity": {
+    "contentHash": "1bde941db48a0255de42ab6d1e86ba5284c6082ce5012ffacd496656dd4457ae"
+  }
+}

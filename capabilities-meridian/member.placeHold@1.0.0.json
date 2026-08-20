@@ -1,0 +1,803 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.placeHold",
+    "version": "1.0.0",
+    "title": "Place Account Hold",
+    "description": "Signs on as a supervisor, opens Member Inquiry, searches by Member Number (memberId), selects the member, and places a restricted Account Hold on a specified share (share) with a given reason code (reasonCode) and notes. It commits the irreversible 'Apply Hold' action on the review screen and returns the resulting confirmation/reference number as output 'confirmationNumber'. Requires operator credentials (operatorId/operatorPassword) resolved from the environment.",
+    "app": {
+      "appId": "meridian-core",
+      "vendor": "Cornerstone Financial Systems"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-20T19:57:49.256Z",
+    "recordedBy": {
+      "kind": "llm-discovery",
+      "model": "claude-opus-4-8",
+      "discoveryRunId": "20260820-125646-713v"
+    },
+    "evidenceRef": "evidence/meridian/discovery/20260820-125646-713v",
+    "approval": {
+      "state": "approved",
+      "by": "Muhammad Faizan Raza",
+      "at": "2026-08-20T19:58:02.191Z"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "integer",
+      "description": "Caller-supplied parameter 'memberId'.",
+      "required": true,
+      "pattern": "^[0-9]+$",
+      "example": "100234",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "share": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'share'.",
+      "required": true,
+      "example": "100234-S0001-3",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "reasonCode": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'reasonCode'.",
+      "required": true,
+      "example": "LEGAL",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'notes'.",
+      "required": true,
+      "example": "Capability recording",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_ID"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_PASSWORD"
+    }
+  },
+  "outputs": {
+    "confirmationNumber": {
+      "type": "string",
+      "description": "Capture the confirmation/reference number for the placed hold.",
+      "sensitivity": "internal",
+      "source": {
+        "stepId": "s14",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [],
+  "recoveries": [],
+  "anomalies": [],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "setValue",
+      "activate",
+      "choose",
+      "read"
+    ],
+    "maxRisk": "irreversible",
+    "requiresRole": "supervisor"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter the operator ID for supervisor sign on.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Operator ID:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Operator ID:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 12.1,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "OPERATOR SIGN ON"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Password:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Password:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 15,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Submit the sign on form.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign On",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 22.8,
+              "w": 5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/002-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MAIN MENU"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "1."
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Inquiry / Selection",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | Member Inquiry / Selection",
+            "bboxPct": {
+              "x": 25.4,
+              "y": 15.8,
+              "w": 11.8,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/003-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER INQUIRY / SELECTION"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Search by:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter the member number to search for.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Value:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Value:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Value:",
+            "bboxPct": {
+              "x": 28.2,
+              "y": 17.6,
+              "w": 15.1,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Run the member search.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 44.2,
+              "y": 17.4,
+              "w": 4.5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/004-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No."
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Shares"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s7",
+      "intent": "Select the matching member to open their record.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Select",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "{memberId} | … | … | Select",
+            "bboxPct": {
+              "x": 69.5,
+              "y": 27.1,
+              "w": 2.6,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/005-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER RECORD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member No.:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Open the Place Account Hold form for this member.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Place Account Hold",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Place Account Hold",
+            "bboxPct": {
+              "x": 51.9,
+              "y": 40.6,
+              "w": 8.2,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/006-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "PLACE ACCOUNT HOLD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Reason Code:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s9",
+      "intent": "Select the target share by its underlying value (share parameter).",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Share:"
+            },
+            {
+              "s": "roleName",
+              "role": "combobox",
+              "name": "Share:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Share:",
+            "bboxPct": {
+              "x": 30.6,
+              "y": 15.9,
+              "w": 19.5,
+              "h": 2.4
+            }
+          }
+        },
+        "option": {
+          "param": "share"
+        },
+        "by": "value"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s10",
+      "intent": "Select the reason code by its underlying value (reasonCode parameter).",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Reason Code:"
+            },
+            {
+              "s": "roleName",
+              "role": "combobox",
+              "name": "Reason Code:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Reason Code:",
+            "bboxPct": {
+              "x": 30.6,
+              "y": 19.1,
+              "w": 15.6,
+              "h": 2.4
+            }
+          }
+        },
+        "option": {
+          "param": "reasonCode"
+        },
+        "by": "value"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s11",
+      "intent": "Enter the hold notes.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Notes:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Notes:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Notes:",
+            "bboxPct": {
+              "x": 30.6,
+              "y": 22.3,
+              "w": 25.2,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "notes"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s12",
+      "intent": "Continue to the hold review screen.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Continue",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 30.6,
+              "y": 26.9,
+              "w": 5.4,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/007-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "CONFIRM ACCOUNT HOLD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s13",
+      "intent": "Apply the account hold — commits the restricted, irreversible action (human pre-authorised).",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Apply Hold",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:{memberId} - ***da Share:{memberId}-S0001-3 - Regular Shares Reason:{reasonCode} Notes:{notes} Cancel",
+              "relation": "rowOf",
+              "targetRole": "button"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:{memberId} - ***da Share:{memberId}-S0001-3 - Regular Shares Reason:{reasonCode} Notes:{notes} Cancel",
+            "bboxPct": {
+              "x": 21.5,
+              "y": 30.7,
+              "w": 6.2,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/009-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "ACCOUNT HOLD APPLIED"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Confirmation:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "irreversible",
+      "onDetect": []
+    },
+    {
+      "id": "s14",
+      "intent": "Capture the confirmation/reference number for the placed hold.",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Confirmation:"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Confirmation: | …",
+            "bboxPct": {
+              "x": 29.7,
+              "y": 17.5,
+              "w": 13.9,
+              "h": 2.4
+            }
+          }
+        },
+        "into": "confirmationNumber"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "ACCOUNT HOLD APPLIED"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Confirmation:"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Applied:"
+    }
+  ],
+  "integrity": {
+    "contentHash": "d8b74377b4559d91967501ece7873db8df593e99039a1a11473a254da81fc609"
+  }
+}
