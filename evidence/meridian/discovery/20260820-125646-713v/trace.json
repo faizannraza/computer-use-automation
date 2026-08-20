@@ -1,0 +1,932 @@
+{
+  "goal": "Record the PLACE ACCOUNT HOLD capability against MERIDIAN CORE. You are signed on as a SUPERVISOR, authorised for this restricted function. (1) Sign on. (2) Member Inquiry -> search by Member Number for the memberId parameter -> Select. (3) Click 'Place Account Hold'. (4) For Share call choose with option = the share parameter value verbatim (the option's underlying value); for Reason Code choose the reasonCode parameter value verbatim; type notes into Notes; click Continue. (5) On the review screen the hold is NOT yet placed - click the committing button with irreversible=true (a human pre-authorised this recording). (6) On the confirmation screen use read to capture the confirmation/reference number into an output named 'confirmationNumber' - target the value cell next to its 'Confirmation:' label. (7) Then declare_done with capability_id 'member.placeHold'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open the bank back-office application to begin sign on.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator ID for supervisor sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12.1,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 15,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Submit the sign on form.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.8,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry / Selection",
+        "framePath": [],
+        "nearText": "1. | Member Inquiry / Selection",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 15.8,
+          "w": 11.8,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the member number to search for.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.6,
+          "w": 15.1,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "memberId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Run the member search.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 44.2,
+          "y": 17.4,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=100234",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 7,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Select the matching member to open their record.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Select",
+        "framePath": [],
+        "nearText": "100234 | ***da | 4 | Select",
+        "bboxPct": {
+          "x": 69.5,
+          "y": 27.1,
+          "w": 2.6,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=100234",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "screenshotRef": "steps/005-click.png",
+      "seq": 8,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open the Place Account Hold form for this member.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Place Account Hold",
+        "framePath": [],
+        "bboxPct": {
+          "x": 51.9,
+          "y": 40.6,
+          "w": 8.2,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/006-click.png",
+      "seq": 9,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the target share by its underlying value (share parameter).",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "Share:",
+        "framePath": [],
+        "label": "Share:",
+        "options": [
+          "100234-S0001 - Regular Shares",
+          "100234-S0070 - Share Draft (Checking)",
+          "100234-S0001-3 - Regular Shares",
+          "100234-MMKT-4 - Money Market"
+        ],
+        "optionValues": [
+          "100234-S0001",
+          "100234-S0070",
+          "100234-S0001-3",
+          "100234-MMKT-4"
+        ],
+        "bboxPct": {
+          "x": 30.6,
+          "y": 15.9,
+          "w": 19.5,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "100234-S0001-3"
+      },
+      "optionBy": "value",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "seq": 10,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the reason code by its underlying value (reasonCode parameter).",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "Reason Code:",
+        "framePath": [],
+        "label": "Reason Code:",
+        "options": [
+          "FRAUD - Suspected fraud",
+          "LEGAL - Legal / levy",
+          "DECEASED - Member deceased"
+        ],
+        "optionValues": [
+          "FRAUD",
+          "LEGAL",
+          "DECEASED"
+        ],
+        "bboxPct": {
+          "x": 30.6,
+          "y": 19.1,
+          "w": 15.6,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "LEGAL"
+      },
+      "optionBy": "value",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "seq": 11,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the hold notes.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Notes:",
+        "framePath": [],
+        "label": "Notes:",
+        "bboxPct": {
+          "x": 30.6,
+          "y": 22.3,
+          "w": 25.2,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "notes"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "seq": 12,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Continue to the hold review screen.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Continue",
+        "framePath": [],
+        "nearText": " | Cancel",
+        "bboxPct": {
+          "x": 30.6,
+          "y": 26.9,
+          "w": 5.4,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold",
+        "title": "Place Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "PLACE ACCOUNT HOLD"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason Code:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold/review",
+        "title": "Confirm Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "CONFIRM ACCOUNT HOLD"
+          },
+          {
+            "text": "Member:"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/007-click.png",
+      "seq": 13,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Apply the account hold — commits the restricted, irreversible action (human pre-authorised).",
+      "risk": "irreversible",
+      "element": {
+        "role": "button",
+        "name": "Apply Hold",
+        "framePath": [],
+        "nearText": "CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member:100234 - ***da Share:100234-S0001-3 - Regular Shares Reason:LEGAL Notes:Capability recording Cancel",
+        "bboxPct": {
+          "x": 21.5,
+          "y": 30.7,
+          "w": 6.2,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold/review",
+        "title": "Confirm Account Hold - Meridian Core",
+        "markers": [
+          {
+            "text": "CONFIRM ACCOUNT HOLD"
+          },
+          {
+            "text": "Member:"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Reason:"
+          },
+          {
+            "text": "Notes:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold/post",
+        "title": "Hold Applied - Meridian Core",
+        "markers": [
+          {
+            "text": "ACCOUNT HOLD APPLIED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Applied:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/009-click.png",
+      "approvedIntervention": "int-01",
+      "seq": 14,
+      "probe": false
+    },
+    {
+      "kind": "read",
+      "intent": "Capture the confirmation/reference number for the placed hold.",
+      "risk": "read",
+      "element": {
+        "role": "cell",
+        "name": "CN480081",
+        "framePath": [],
+        "label": "Confirmation:",
+        "nearText": "Confirmation: | CN480081",
+        "bboxPct": {
+          "x": 29.7,
+          "y": 17.5,
+          "w": 13.9,
+          "h": 2.4
+        }
+      },
+      "outputName": "confirmationNumber",
+      "readValue": "CN480081",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold/post",
+        "title": "Hold Applied - Meridian Core",
+        "markers": [
+          {
+            "text": "ACCOUNT HOLD APPLIED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Applied:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234/hold/post",
+        "title": "Hold Applied - Meridian Core",
+        "markers": [
+          {
+            "text": "ACCOUNT HOLD APPLIED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "Share:"
+          },
+          {
+            "text": "Applied:"
+          }
+        ]
+      },
+      "seq": 15,
+      "probe": false
+    }
+  ],
+  "outcomes": [],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "member.placeHold",
+    "title": "Place Account Hold",
+    "description": "Signs on as a supervisor, opens Member Inquiry, searches by Member Number (memberId), selects the member, and places a restricted Account Hold on a specified share (share) with a given reason code (reasonCode) and notes. It commits the irreversible 'Apply Hold' action on the review screen and returns the resulting confirmation/reference number as output 'confirmationNumber'. Requires operator credentials (operatorId/operatorPassword) resolved from the environment."
+  }
+}

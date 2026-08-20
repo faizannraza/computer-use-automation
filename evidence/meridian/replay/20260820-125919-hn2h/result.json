@@ -1,0 +1,49 @@
+{
+  "capabilityId": "member.readBalances",
+  "version": "1.0.0",
+  "runId": "20260820-125919-hn2h",
+  "evidenceDir": "evidence/meridian/replay/20260820-125919-hn2h",
+  "startedAt": "2026-08-20T19:59:19.097Z",
+  "role": "teller",
+  "status": "failed",
+  "failure": {
+    "class": "UNEXPECTED_STATE",
+    "stepId": "s4",
+    "expected": "textPresent \"MEMBER INQUIRY / SELECTION\" AND textPresent \"Search by:\"",
+    "observed": "anomaly APPLICATION_ERROR (MERIDIAN returned a hard application error (HTTP 500). Nothing on this screen can be trusted, so fail fast with the observed state rather than waiting out the step's clock.); at https://web-sample.interface-hiring.com/members; title \"Application Error - Meridian Core\"; frames observed: (main); text: \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off APPLICATION ERROR An unexpected error occurred while processing you…\"",
+    "screenshotRef": "steps/005-failure.png"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter Operator ID.",
+      "status": "ok",
+      "ms": 108,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator «secret:operatorPassword».",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Sign on to MERIDIAN CORE as the operator.",
+      "status": "ok",
+      "ms": 204,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T19:59:20.272Z"
+}

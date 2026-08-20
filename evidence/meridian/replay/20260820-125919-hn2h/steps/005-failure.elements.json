@@ -1,0 +1,129 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members",
+  "count": 8,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "link",
+      "name": "Return to previous screen",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 22.9,
+        "y": 22.3,
+        "w": 11.1,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 5,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 6,
+      "role": "cell",
+      "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:20 | SID 681D121B",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 27.6,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:20 | SID 681D121B",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:20 | SID 681D121B"
+      ]
+    },
+    {
+      "ref": 7,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 30.1,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    }
+  ]
+}

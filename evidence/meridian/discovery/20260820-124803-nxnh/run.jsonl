@@ -1,0 +1,49 @@
+{"ts":"2026-08-20T19:48:03.957Z","type":"run_start","goal":"Record a MEMBER INQUIRY capability against MERIDIAN CORE that searches by LAST NAME. (1) Sign on. (2) Open Member Inquiry / Selection. (3) In 'Search by' call choose with option = the searchBy parameter value verbatim (it is the option's underlying value: 'name' or 'number'). (4) Type the query parameter into the Value field. (5) Click Search. (6) A results table appears - use read_table ONCE to capture it into an output named 'matches', requesting exactly these columns: Member No., Name, Shares. (7) Then probe one exceptional state: begin_probe MEMBER_NOT_FOUND, search again for a last name that does not exist such as Zzzznomatch, and declare_outcome MEMBER_NOT_FOUND with a marker you can literally see. (8) declare_done with capability_id 'member.inquire'.","model":"claude-opus-4-8","params":{"query":"Lovelace","searchBy":"name","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T19:48:10.961Z","type":"llm_turn","turn":1,"stopReason":"tool_use","inputTokens":4165,"outputTokens":116}
+{"ts":"2026-08-20T19:48:10.962Z","type":"tool_use","turn":1,"tool":"navigate","input":{"url":"https://web-sample.interface-hiring.com","intent":"Open the MERIDIAN CORE application to begin sign on."}}
+{"ts":"2026-08-20T19:48:11.011Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T19:48:11.395Z","type":"screenshot","name":"navigate","file":"steps/001-navigate.png"}
+{"ts":"2026-08-20T19:48:15.708Z","type":"llm_turn","turn":2,"stopReason":"tool_use","inputTokens":6242,"outputTokens":102}
+{"ts":"2026-08-20T19:48:15.708Z","type":"tool_use","turn":2,"tool":"type","input":{"ref":0,"intent":"Enter the operator ID for sign on.","param":"operatorId"}}
+{"ts":"2026-08-20T19:48:15.708Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:48:18.551Z","type":"llm_turn","turn":3,"stopReason":"tool_use","inputTokens":5027,"outputTokens":103}
+{"ts":"2026-08-20T19:48:18.552Z","type":"tool_use","turn":3,"tool":"type","input":{"ref":1,"intent":"Enter the operator «secret:operatorPassword» for sign on.","param":"operatorPassword"}}
+{"ts":"2026-08-20T19:48:18.552Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:48:20.412Z","type":"llm_turn","turn":4,"stopReason":"tool_use","inputTokens":5154,"outputTokens":74}
+{"ts":"2026-08-20T19:48:20.412Z","type":"tool_use","turn":4,"tool":"click","input":{"ref":3,"intent":"Submit the sign on form."}}
+{"ts":"2026-08-20T19:48:20.412Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:48:20.756Z","type":"screenshot","name":"click","file":"steps/002-click.png"}
+{"ts":"2026-08-20T19:48:24.484Z","type":"llm_turn","turn":5,"stopReason":"tool_use","inputTokens":7580,"outputTokens":81}
+{"ts":"2026-08-20T19:48:24.484Z","type":"tool_use","turn":5,"tool":"click","input":{"ref":4,"intent":"Open Member Inquiry / Selection screen."}}
+{"ts":"2026-08-20T19:48:24.484Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T19:48:24.771Z","type":"screenshot","name":"click","file":"steps/003-click.png"}
+{"ts":"2026-08-20T19:48:30.830Z","type":"llm_turn","turn":6,"stopReason":"tool_use","inputTokens":8380,"outputTokens":309}
+{"ts":"2026-08-20T19:48:30.831Z","type":"tool_use","turn":6,"tool":"choose","input":{"ref":4,"option":"name","intent":"Select the Search by option using the searchBy underlying value."}}
+{"ts":"2026-08-20T19:48:30.831Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:48:34.790Z","type":"llm_turn","turn":7,"stopReason":"tool_use","inputTokens":7373,"outputTokens":99}
+{"ts":"2026-08-20T19:48:34.790Z","type":"tool_use","turn":7,"tool":"type","input":{"ref":5,"intent":"Enter the last name query into the Value field.","param":"query"}}
+{"ts":"2026-08-20T19:48:34.790Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:48:37.253Z","type":"llm_turn","turn":8,"stopReason":"tool_use","inputTokens":7491,"outputTokens":74}
+{"ts":"2026-08-20T19:48:37.253Z","type":"tool_use","turn":8,"tool":"click","input":{"ref":6,"intent":"Run the member search by last name."}}
+{"ts":"2026-08-20T19:48:37.254Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:48:37.551Z","type":"classified_fields","registered":1}
+{"ts":"2026-08-20T19:48:37.552Z","type":"screenshot","name":"click","file":"steps/004-click.png"}
+{"ts":"2026-08-20T19:48:42.053Z","type":"llm_turn","turn":9,"stopReason":"tool_use","inputTokens":9869,"outputTokens":130}
+{"ts":"2026-08-20T19:48:42.053Z","type":"tool_use","turn":9,"tool":"read_table","input":{"columns":["Member No.","Name","Shares"],"output_name":"matches","intent":"Capture the member search results table."}}
+{"ts":"2026-08-20T19:48:42.054Z","type":"gate","kind":"readTable","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=name&q=Lovelace","risk":"read"}
+{"ts":"2026-08-20T19:48:45.471Z","type":"llm_turn","turn":10,"stopReason":"tool_use","inputTokens":8735,"outputTokens":115}
+{"ts":"2026-08-20T19:48:45.471Z","type":"tool_use","turn":10,"tool":"begin_probe","input":{"outcome_code":"MEMBER_NOT_FOUND","intent":"Probe how the system responds when a last name has no matches."}}
+{"ts":"2026-08-20T19:48:45.472Z","type":"probe_started","code":"MEMBER_NOT_FOUND"}
+{"ts":"2026-08-20T19:48:54.374Z","type":"llm_turn","turn":11,"stopReason":"tool_use","inputTokens":8899,"outputTokens":114}
+{"ts":"2026-08-20T19:48:54.374Z","type":"tool_use","turn":11,"tool":"type","input":{"ref":5,"intent":"Enter a last name that does not exist to trigger the not-found state.","text":"Zzzznomatch"}}
+{"ts":"2026-08-20T19:48:54.374Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=name&q=Lovelace","risk":"reversible"}
+{"ts":"2026-08-20T19:48:56.524Z","type":"llm_turn","turn":12,"stopReason":"tool_use","inputTokens":9037,"outputTokens":77}
+{"ts":"2026-08-20T19:48:56.524Z","type":"tool_use","turn":12,"tool":"click","input":{"ref":6,"intent":"Search for the nonexistent last name."}}
+{"ts":"2026-08-20T19:48:56.525Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=name&q=Lovelace","risk":"reversible"}
+{"ts":"2026-08-20T19:48:56.834Z","type":"screenshot","name":"click","file":"steps/005-click.png"}
+{"ts":"2026-08-20T19:49:01.623Z","type":"llm_turn","turn":13,"stopReason":"tool_use","inputTokens":11206,"outputTokens":151}
+{"ts":"2026-08-20T19:49:01.624Z","type":"tool_use","turn":13,"tool":"declare_outcome","input":{"code":"MEMBER_NOT_FOUND","description":"Searching by last name for a value that matches no member returns no results table; instead an error message is shown. T…","marker":"No member records matched your search."}}
+{"ts":"2026-08-20T19:49:01.625Z","type":"outcome_declared","code":"MEMBER_NOT_FOUND","marker":"No member records matched your search."}
+{"ts":"2026-08-20T19:49:06.679Z","type":"llm_turn","turn":14,"stopReason":"tool_use","inputTokens":10053,"outputTokens":240}
+{"ts":"2026-08-20T19:49:06.679Z","type":"tool_use","turn":14,"tool":"declare_done","input":{"capability_id":"member.inquire","title":"Member Inquiry by Last Name or Number","description":"Signs on to MERIDIAN CORE, opens Member Inquiry / Selection, and searches for members using the 'searchBy' parameter (un…"}}
+{"ts":"2026-08-20T19:49:06.728Z","type":"run_result","status":"compiled","artifactPath":"/tmp/cu-regen/member.inquire@1.0.0.json","usage":{"inputTokens":109211,"outputTokens":1785,"turns":14}}

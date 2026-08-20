@@ -1,0 +1,18 @@
+{
+  "spineActions": 9,
+  "prunedProbeActions": 3,
+  "parameterizations": [
+    "s7.target.near: \"100234\" → {memberId}",
+    "s7.snapshot: \"100234\" → {memberId}"
+  ],
+  "outcomeAttachments": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "stepId": "s6"
+    }
+  ],
+  "notes": [
+    "s3: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval",
+    "s6: checkpoint may be non-specific — unscoped short marker \"Shares\"; review before approval"
+  ]
+}

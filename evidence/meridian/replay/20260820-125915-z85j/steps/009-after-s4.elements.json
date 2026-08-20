@@ -1,0 +1,219 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members",
+  "count": 13,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "combobox",
+      "name": "Search by:",
+      "framePath": [],
+      "interactive": true,
+      "value": "Member Number",
+      "label": "Search by:",
+      "bboxPct": {
+        "x": 28.2,
+        "y": 14.1,
+        "w": 9.3,
+        "h": 2.4
+      },
+      "options": [
+        "Member Number",
+        "Last Name"
+      ],
+      "optionValues": [
+        "number",
+        "name"
+      ]
+    },
+    {
+      "ref": 5,
+      "role": "textbox",
+      "name": "Value:",
+      "framePath": [],
+      "interactive": true,
+      "value": "",
+      "label": "Value:",
+      "bboxPct": {
+        "x": 28.2,
+        "y": 17.4,
+        "w": 16.1,
+        "h": 2.1
+      }
+    },
+    {
+      "ref": 6,
+      "role": "button",
+      "name": "Search",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 45.2,
+        "y": 17.3,
+        "w": 4.5,
+        "h": 2.4
+      },
+      "nearText": "Value: | "
+    },
+    {
+      "ref": 7,
+      "role": "heading",
+      "name": "MEMBER INQUIRY / SELECTION",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 8,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 9,
+      "role": "cell",
+      "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:17 | SID 60A5F551",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 26.3,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:17 | SID 60A5F551",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:17 | SID 60A5F551"
+      ]
+    },
+    {
+      "ref": 10,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 28.8,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 11,
+      "role": "rowheader",
+      "name": "Search by:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 13.8,
+        "w": 5.6,
+        "h": 3.1
+      },
+      "nearText": "Search by: | Member Number Last Name",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Search by:",
+        "Member Number Last Name"
+      ]
+    },
+    {
+      "ref": 12,
+      "role": "rowheader",
+      "name": "Value:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 16.9,
+        "w": 5.6,
+        "h": 3.1
+      },
+      "nearText": "Value: | ",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Value:",
+        ""
+      ]
+    }
+  ]
+}

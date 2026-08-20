@@ -1,0 +1,481 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "text",
+        "text": "TASK:\nRecord a SIGN ON / SESSION capability against MERIDIAN CORE. (1) On the OPERATOR SIGN ON screen type the operatorId parameter into Operator ID and the operatorPassword parameter into Password. (2) For Branch call choose with option = the branch parameter value verbatim (it is the option's underlying value, e.g. MAIN-001). (3) Click Sign On. (4) You land on the MAIN MENU. Use read to capture the signed-on operator identity shown in the status bar into an output named 'sessionBanner'. (5) Then probe one exceptional state: begin_probe BAD_CREDENTIALS, sign off, and attempt to sign on again with a deliberately wrong «secret:operatorPassword» such as 'wrong«secret:operatorPassword»', then declare_outcome BAD_CREDENTIALS with a marker you can literally see on the failed sign-on screen. (6) declare_done with capability_id 'session.signOn'.\n\nPARAMETERS:\n- branch (none): Caller-supplied parameter 'branch'. — value: \"MAIN-001\"\n- operatorId (internal): Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact. — value: \"teller1\"\n- operatorPassword (secret): Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact. — value: (secret — reference with param, never typed literally)\n\nThe application is served at https://web-sample.interface-hiring.com. The browser is currently blank — begin by navigating to the application."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "EqECCpABCBAYAipAKtmrnhbniAaG5jzM5NIqVZX3Ea1/rsxD5fnONnvZTW1E6mAToFnni8t4TLqsMPV8bZvuWPaYCD3dhaYPQSi58TIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjeoAfqzndQGEgwZVkDe/51CgSS4ps4aDEcrcLyQ+NImWP6TMCIwTBTaoNWWmWzHRmCOD+ZcjF9dsr0GEXH2Q2iaHJak/9ZHMbW1uli7RTJThoiXgtt+Kj7dC0xCxH9ClH4PPTymWd/OS9nfAnvBoSxWea1oxtNsyh+AZXetF9M5oLebjFGcR+zBnMbhoCqNC/NIqUT6nBgB"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_015S4VPSNbN5fLnnQiKhtr76",
+        "name": "navigate",
+        "input": {
+          "url": "https://web-sample.interface-hiring.com",
+          "intent": "Open the MERIDIAN CORE application to reach the OPERATOR SIGN ON screen."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_015S4VPSNbN5fLnnQiKhtr76",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #2]\nlocation: https://web-sample.interface-hiring.com/signon\ntitle: Sign On - Meridian Core\nelements (11):\n  [0] textbox \"Operator ID:\"\n  [1] textbox \"Password:\"\n  [2] combobox \"Branch:\" value=\"MAIN-001 - Main Office\" options=[\"MAIN-001 - Main Office\", \"WEST-014 - Westside\", \"EAST-022 - Eastgate\"]\n  [3] button \"Sign On\" row=\" | \"\n  [4] heading \"OPERATOR SIGN ON\"\n  [5] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [6] cell \"NOT SIGNED ON | 08/20/2026 19:48:10\"\n  [7] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [8] rowheader \"Operator ID:\" row=\"Operator ID: | \"\n  [9] rowheader \"Password:\" row=\"Password: | \"\n  [10] rowheader \"Branch:\" row=\"Branch: | MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ OPERATOR SIGN ON Operator ID: Password: Branch: MAIN-001 - Main Office WEST-014 - Westside EAST-022 - Eastgate Demo operators: teller1 / «secret:operatorPassword» · super1 / «secret:operatorPassword» (supervisor) NOT SIGNED ON | 08/20/2026 19:48:10 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "I'm on the OPERATOR SIGN ON screen. Let me fill in the fields."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01CqiKXcUxrf9KzggvGnJkvm",
+        "name": "type",
+        "input": {
+          "ref": 0,
+          "intent": "Enter the operatorId parameter into the Operator ID field.",
+          "param": "operatorId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01CqiKXcUxrf9KzggvGnJkvm",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorId} into [0]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_012hsf3Ek26ofVUa1UmTwNoK",
+        "name": "type",
+        "input": {
+          "ref": 1,
+          "intent": "Enter the operatorPassword secret parameter into the Password field.",
+          "param": "operatorPassword"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_012hsf3Ek26ofVUa1UmTwNoK",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorPassword} into [1]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_019i4MqRSMiB5KvxCbwS6f6b",
+        "name": "choose",
+        "input": {
+          "ref": 2,
+          "option": "MAIN-001 - Main Office",
+          "intent": "Select the Branch option whose underlying value is the branch parameter (MAIN-001)."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_019i4MqRSMiB5KvxCbwS6f6b",
+        "content": [
+          {
+            "type": "text",
+            "text": "Chose \"MAIN-001 - Main Office\" in [2] (matched by label)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_019NxMpxMLXQ8GgtEFW1nV8z",
+        "name": "click",
+        "input": {
+          "ref": 3,
+          "intent": "Click Sign On to authenticate and reach the MAIN MENU."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_019NxMpxMLXQ8GgtEFW1nV8z",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #3]\nlocation: https://web-sample.interface-hiring.com/menu\ntitle: Main Menu - Meridian Core\nelements (22):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] link \"Member Inquiry / Selection\" row=\"1. | Member Inquiry / Selection\"\n  [5] link \"Funds Transfer\" row=\"2. | Funds Transfer\"\n  [6] link \"Open New Share\" row=\"3. | Open New Share\"\n  [7] link \"Update Member Information\" row=\"4. | Update Member Information\"\n  [8] link \"Place Account Hold\" row=\"5. | Place Account Hold\"\n  [9] link \"System Settings (error injection)\" row=\"8. | System Settings (error injection)\"\n  [10] link \"Sign Off\" row=\"9. | Sign Off\"\n  [11] heading \"MAIN MENU\"\n  [12] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [13] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:21 | SID E1563289\"\n  [14] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [15] rowheader \"1.\" row=\"1. | Member Inquiry / Selection\"\n  [16] rowheader \"2.\" row=\"2. | Funds Transfer\"\n  [17] rowheader \"3.\" row=\"3. | Open New Share\"\n  [18] rowheader \"4.\" row=\"4. | Update Member Information\"\n  [19] rowheader \"5.\" row=\"5. | Place Account Hold\"\n  [20] rowheader \"8.\" row=\"8. | System Settings (error injection)\"\n  [21] rowheader \"9.\" row=\"9. | Sign Off\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MAIN MENU Signed on as J. TELLER (TELLER) 1. Member Inquiry / Selection 2. Funds Transfer 3. Open New Share 4. Update Member Information 5. Place Account Hold 8. System Settings (error injection) 9. Sign Off Type or click a menu option to continue. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:21 | SID E1563289 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "I'm on the MAIN MENU. Let me capture the signed-on operator identity from the status bar."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_018LCk7zccEfCRd8dnNqZpki",
+        "name": "read",
+        "input": {
+          "ref": 13,
+          "output_name": "sessionBanner",
+          "intent": "Capture the signed-on operator identity shown in the status bar."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_018LCk7zccEfCRd8dnNqZpki",
+        "content": [
+          {
+            "type": "text",
+            "text": "Read \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:21 | SID E1563289\" as output 'sessionBanner'."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Now let me probe the BAD_CREDENTIALS exceptional state."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_0127nPpq9ismG7UjMkBY4vyh",
+        "name": "begin_probe",
+        "input": {
+          "outcome_code": "BAD_CREDENTIALS",
+          "intent": "Sign off and attempt to sign on with a deliberately wrong «secret:operatorPassword» to observe the failed sign-on behavior."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_0127nPpq9ismG7UjMkBY4vyh",
+        "content": [
+          {
+            "type": "text",
+            "text": "Probe started for BAD_CREDENTIALS. Actions until declare_outcome are excluded from the replayable flow."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01NbyrpcsQmoiwh29WkGUb7F",
+        "name": "click",
+        "input": {
+          "ref": 10,
+          "intent": "Sign off to return to the OPERATOR SIGN ON screen."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01NbyrpcsQmoiwh29WkGUb7F",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #4]\nlocation: https://web-sample.interface-hiring.com/signon\ntitle: Sign On - Meridian Core\nelements (11):\n  [0] textbox \"Operator ID:\"\n  [1] textbox \"Password:\"\n  [2] combobox \"Branch:\" value=\"MAIN-001 - Main Office\" options=[\"MAIN-001 - Main Office\", \"WEST-014 - Westside\", \"EAST-022 - Eastgate\"]\n  [3] button \"Sign On\" row=\" | \"\n  [4] heading \"OPERATOR SIGN ON\"\n  [5] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [6] cell \"NOT SIGNED ON | 08/20/2026 19:48:30\"\n  [7] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [8] rowheader \"Operator ID:\" row=\"Operator ID: | \"\n  [9] rowheader \"Password:\" row=\"Password: | \"\n  [10] rowheader \"Branch:\" row=\"Branch: | MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ OPERATOR SIGN ON Operator ID: Password: Branch: MAIN-001 - Main Office WEST-014 - Westside EAST-022 - Eastgate Demo operators: teller1 / «secret:operatorPassword» · super1 / «secret:operatorPassword» (supervisor) NOT SIGNED ON | 08/20/2026 19:48:30 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "Eu0ICpABCBAYAipAS1HeeUVlT3qzZSfeMpraAqdQ93Kscfx4N58TUMggUnrvl3a/V4Ike/tS1YHVlqM8yszrD6xjwicXsE/IBLfx3jIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjeoAZa0ndQGEgycCcFhJErbPJdsfM4aDOCkYE6f3c/ZNwZ7pyIwOoZ04MSBAEEMTd1pHrHGMibjaXZyNRGIyoC1Uas9f0aureWhIg+7AhTjjTFyUPHuKokHEpnzEYCUwvBwtSc6uBuQC+Jprjf0+2kHYhsOdVaYqP9OfkI7/QpfTe/hpGIG0SDLf3rNgHMeElIFhrrIr1LI8yEGMwyOS2/s7TcBVNWiZS7W3steXgk6SvysQ/bSnG4j7ejQy8aw2gNkhrVjZeDYhDuZl4ihjWP9YLdvc7AKKeETt0dFTHGJLJPqnJtIKz9yINdkE5y5tnZ1f1189FEcJKraDogx+QPS+OStnRS5jPFymbuNt85yJWIo1q1SWUCAY5Kj/Hmdiz1ioTXyTdYP8+rFLGj5EMvMf2kOd7K7qMc84IL96aKHNByJwxLoHHJXqRkjeiWGYi1eAVlCnF0frmbPaPLKTBFThq2txN6gstG5a56mzRR77l8SQiSE04XIwqpHC18NIGQnzuTQSGOtCkVj2xipv+e9+v2cupr9W5u1xMsaU3ToduHfWFGcd1ffvLkih0h3OMRiiu+2o8cgWE5qvkvi8MY+feX9Qs80YlPNbfGwyZ8MpxC6og264/eb1iIj/rb9IO2ea/k5RlBHblO6udNnA7I/s2HyAf9fS3y81MtW8YQkO5LenjE+j9TbxlASL488gBj07ZhUmrBfrekaoIXzJ9KjAYAFH/F8QZCSTh53N4Vzn68P3K47zZRZTpHYziiPXsnMeVH72BXsUkUfnwAu2aB5GujsR0sNUzvbmNMZ/7qZ0lz1PQZNwzECsyZRB7xM8n7OAj8oZ/8oGq5qVILfrp2a/R81msnRwxKhgwEWeQTxui0SDvERTYhd4Uzc5HdA91oh6jRBjAWZ83UDYzUKw67ZKAeLTPtY+f6jqy78fOq6wuK3g2cn1Yq6scB+GWfFfdI658v+NhyYqIhzt3IH5YTyrQkLHh8ZyogO9Bu8Oh8Mf336liKSW8YPifIN+iPtq1c69ARhSEIuG0yvglQGlV1tYuUzegjMEyiXli0m2IdRp/7Aae+Z6ns1uzFcEVqehw5WuFsQ7aYX8XZPXsonF1sivQ8FPCt0F1C+88PbXKM8UBybxAUWAM2OxKYi8sJruDRv1NekYHG0WadN65piDr9bJq5xmH4q6VaddtoMLHbKoyKyHjp43WFKdpmd6vJvMShvfrp2qox1nM+ZUQVQwVL8qKGEBP9bEO/HE2MYBzUeEQRS3Gu9qoCpaKTrvudiyc4nRYT5hy8RLgsNoDmrzUXn5+OrFKWQ/yUlGsB9mZ09VY4YAQ=="
+      },
+      {
+        "type": "text",
+        "text": "Now I'll enter the operatorId and a deliberately wrong «secret:operatorPassword» to trigger the failed sign-on."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01EbTDrHUBRxvHozaQz2FTV7",
+        "name": "type",
+        "input": {
+          "ref": 0,
+          "intent": "Enter the operatorId parameter into Operator ID for the bad-credentials probe.",
+          "param": "operatorId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01EbTDrHUBRxvHozaQz2FTV7",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorId} into [0]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01YTL3HNrDrHQ5q7w3QxYeUw",
+        "name": "type",
+        "input": {
+          "ref": 1,
+          "intent": "Enter a deliberately wrong «secret:operatorPassword» to trigger the bad-credentials outcome.",
+          "text": "wrong-«secret:operatorPassword»-xyz"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01YTL3HNrDrHQ5q7w3QxYeUw",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered \"wrong-«secret:operatorPassword»-xyz\" into [1]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_018sUzXbQMUnxfSwFcSjPS3A",
+        "name": "click",
+        "input": {
+          "ref": 3,
+          "intent": "Attempt sign on with wrong credentials to observe the failure state."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_018sUzXbQMUnxfSwFcSjPS3A",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #5]\nlocation: https://web-sample.interface-hiring.com/signon?err=Invalid%20operator%20ID%20or%20«secret:operatorPassword».\ntitle: Sign On - Meridian Core\nelements (11):\n  [0] textbox \"Operator ID:\"\n  [1] textbox \"Password:\"\n  [2] combobox \"Branch:\" value=\"MAIN-001 - Main Office\" options=[\"MAIN-001 - Main Office\", \"WEST-014 - Westside\", \"EAST-022 - Eastgate\"]\n  [3] button \"Sign On\" row=\" | \"\n  [4] heading \"OPERATOR SIGN ON\"\n  [5] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [6] cell \"NOT SIGNED ON | 08/20/2026 19:48:45\"\n  [7] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [8] rowheader \"Operator ID:\" row=\"Operator ID: | \"\n  [9] rowheader \"Password:\" row=\"Password: | \"\n  [10] rowheader \"Branch:\" row=\"Branch: | MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ OPERATOR SIGN ON Invalid operator ID or «secret:operatorPassword». Operator ID: Password: Branch: MAIN-001 - Main Office WEST-014 - Westside EAST-022 - Eastgate Demo operators: teller1 / «secret:operatorPassword» · super1 / «secret:operatorPassword» (supervisor) NOT SIGNED ON | 08/20/2026 19:48:45 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "The failed sign-on shows the error message. Let me declare the outcome."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01JZH4WELuPBh3DRhz7QL9Gb",
+        "name": "declare_outcome",
+        "input": {
+          "code": "BAD_CREDENTIALS",
+          "description": "Signing on with an incorrect «secret:operatorPassword» is rejected: the OPERATOR SIGN ON screen redisplays with an error and no session is established.",
+          "marker": "Invalid operator ID or «secret:operatorPassword»."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01JZH4WELuPBh3DRhz7QL9Gb",
+        "content": [
+          {
+            "type": "text",
+            "text": "Outcome BAD_CREDENTIALS declared (marker verified visible)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01WbrvUfF9p7rAnhp8YJms68",
+        "name": "declare_done",
+        "input": {
+          "capability_id": "session.signOn",
+          "title": "Operator Sign On to Meridian Core",
+          "description": "Signs an operator on to MERIDIAN CORE from the OPERATOR SIGN ON screen using operatorId, operatorPassword (secret), and branch parameters, then lands on the MAIN MENU and returns the signed-on operator identity from the status bar as output 'sessionBanner'. Exceptional outcome BAD_CREDENTIALS occurs when an invalid «secret:operatorPassword» is supplied (marker: \"Invalid operator ID or «secret:operatorPassword».\")."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01WbrvUfF9p7rAnhp8YJms68",
+        "content": [
+          {
+            "type": "text",
+            "text": "Recorded. Compiling the artifact."
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "kind": "approve_risky",
+  "origin": "discovery",
+  "capabilityId": "(discovery)",
+  "version": "—",
+  "runId": "20260820-125646-713v",
+  "stepIntent": "[model-authored] Apply the account hold — commits the restricted, irreversible action (human pre-authorised).",
+  "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate); target (harness-verified): button \"Apply Hold\"",
+  "suggestedResolution": "Review the pending irreversible action in the live window — do NOT perform it yourself. approve = the recording performs it exactly once; abort = refuse it (the model must steer another way).",
+  "options": [
+    "approve",
+    "abort"
+  ],
+  "observationSummary": "at https://web-sample.interface-hiring.com/members/100234/hold/review; title \"Confirm Account Hold - Meridian Core\"; headings: CONFIRM ACCOUNT HOLD | Member: | Share: | Reason: | Notes:; frames observed: (main); text: \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off CONFIRM ACCOUNT HOLD IRREVERSIBLE ACTION Member: 100234 - ***da Sha…\"",
+  "screenshotRef": "steps/008-intervention.png",
+  "id": "int-01",
+  "at": "2026-08-20T19:57:40.188Z"
+}

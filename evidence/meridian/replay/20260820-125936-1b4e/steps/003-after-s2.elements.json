@@ -1,0 +1,198 @@
+{
+  "location": "https://web-sample.interface-hiring.com/signon",
+  "count": 11,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "textbox",
+      "name": "Operator ID:",
+      "framePath": [],
+      "interactive": true,
+      "value": "teller1",
+      "label": "Operator ID:",
+      "bboxPct": {
+        "x": 29.3,
+        "y": 12,
+        "w": 11.7,
+        "h": 2.1
+      }
+    },
+    {
+      "ref": 1,
+      "role": "textbox",
+      "name": "Password:",
+      "framePath": [],
+      "interactive": true,
+      "label": "Password:",
+      "bboxPct": {
+        "x": 29.3,
+        "y": 14.9,
+        "w": 11.7,
+        "h": 2.1
+      }
+    },
+    {
+      "ref": 2,
+      "role": "combobox",
+      "name": "Branch:",
+      "framePath": [],
+      "interactive": true,
+      "value": "MAIN-001 - Main Office",
+      "label": "Branch:",
+      "bboxPct": {
+        "x": 29.3,
+        "y": 17.8,
+        "w": 12.2,
+        "h": 2.4
+      },
+      "options": [
+        "MAIN-001 - Main Office",
+        "WEST-014 - Westside",
+        "EAST-022 - Eastgate"
+      ],
+      "optionValues": [
+        "MAIN-001",
+        "WEST-014",
+        "EAST-022"
+      ]
+    },
+    {
+      "ref": 3,
+      "role": "button",
+      "name": "Sign On",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 29.3,
+        "y": 22.5,
+        "w": 5,
+        "h": 2.4
+      },
+      "nearText": " | "
+    },
+    {
+      "ref": 4,
+      "role": "heading",
+      "name": "OPERATOR SIGN ON",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 6.5,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 5,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 6,
+      "role": "cell",
+      "name": "NOT SIGNED ON | 08/20/2026 19:59:36",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 31.5,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "NOT SIGNED ON | 08/20/2026 19:59:36",
+      "rowId": "t0r2",
+      "cellTexts": [
+        "NOT SIGNED ON | 08/20/2026 19:59:36"
+      ]
+    },
+    {
+      "ref": 7,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 34,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 8,
+      "role": "rowheader",
+      "name": "Operator ID:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 11.6,
+        "w": 6.6,
+        "h": 2.9
+      },
+      "nearText": "Operator ID: | ",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Operator ID:",
+        ""
+      ]
+    },
+    {
+      "ref": 9,
+      "role": "rowheader",
+      "name": "Password:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 14.5,
+        "w": 6.6,
+        "h": 2.9
+      },
+      "nearText": "Password: | ",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Password:",
+        ""
+      ]
+    },
+    {
+      "ref": 10,
+      "role": "rowheader",
+      "name": "Branch:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 17.4,
+        "w": 6.6,
+        "h": 3.1
+      },
+      "nearText": "Branch: | MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Branch:",
+        "MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate"
+      ]
+    }
+  ]
+}

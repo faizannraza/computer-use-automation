@@ -1,0 +1,29 @@
+{"ts":"2026-08-20T19:59:19.098Z","type":"run_start","capability":"member.readBalances@1.0.0","tenant":null,"role":"teller","params":{"memberId":"100234","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T19:59:19.249Z","type":"fault_armed","kind":"server","at":"(entrypoint)","mechanism":"inject=server"}
+{"ts":"2026-08-20T19:59:19.250Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T19:59:19.729Z","type":"screenshot","name":"entrypoint","file":"steps/001-entrypoint.png"}
+{"ts":"2026-08-20T19:59:19.729Z","type":"elements","name":"entrypoint","file":"steps/001-entrypoint.elements.json","count":11}
+{"ts":"2026-08-20T19:59:19.729Z","type":"step_start","stepId":"s1","intent":"Enter Operator ID.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:19.773Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:19.774Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:19.837Z","type":"step_ok","stepId":"s1","ms":108}
+{"ts":"2026-08-20T19:59:19.838Z","type":"screenshot","name":"after-s1","file":"steps/002-after-s1.png"}
+{"ts":"2026-08-20T19:59:19.838Z","type":"elements","name":"after-s1","file":"steps/002-after-s1.elements.json","count":11}
+{"ts":"2026-08-20T19:59:19.838Z","type":"step_start","stepId":"s2","intent":"Enter operator «secret:operatorPassword».","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:19.871Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:19.871Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:19.920Z","type":"step_ok","stepId":"s2","ms":82}
+{"ts":"2026-08-20T19:59:19.920Z","type":"screenshot","name":"after-s2","file":"steps/003-after-s2.png"}
+{"ts":"2026-08-20T19:59:19.921Z","type":"elements","name":"after-s2","file":"steps/003-after-s2.elements.json","count":11}
+{"ts":"2026-08-20T19:59:19.921Z","type":"step_start","stepId":"s3","intent":"Sign on to MERIDIAN CORE as the operator.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:19.954Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:19.954Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:20.125Z","type":"step_ok","stepId":"s3","ms":204}
+{"ts":"2026-08-20T19:59:20.125Z","type":"screenshot","name":"after-s3","file":"steps/004-after-s3.png"}
+{"ts":"2026-08-20T19:59:20.125Z","type":"elements","name":"after-s3","file":"steps/004-after-s3.elements.json","count":22}
+{"ts":"2026-08-20T19:59:20.125Z","type":"step_start","stepId":"s4","intent":"Open Member Inquiry / Selection.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:20.153Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:20.153Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T19:59:20.272Z","type":"screenshot","name":"failure","file":"steps/005-failure.png"}
+{"ts":"2026-08-20T19:59:20.272Z","type":"elements","name":"failure","file":"steps/005-failure.elements.json","count":8}
+{"ts":"2026-08-20T19:59:20.272Z","type":"run_result","status":"failed","failure":{"class":"UNEXPECTED_STATE","stepId":"s4","expected":"textPresent \"MEMBER INQUIRY / SELECTION\" AND textPresent \"Search by:\"","observed":"anomaly APPLICATION_ERROR (MERIDIAN returned a hard application error (HTTP 500). Nothing on this screen can be trusted, so fail fast with the observed state rather than waiting out the step's clock.); at https://web-sample.interface-hiring.com/members; title \"Application Error - Meridian Core\"; frames observed: (main); text: \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off APPLICATION ERROR An unexpected error occurred while processing you…\"","screenshotRef":"steps/005-failure.png"}}

@@ -1,0 +1,122 @@
+{
+  "capabilityId": "member.placeHold",
+  "version": "1.0.0",
+  "runId": "20260820-125933-9yut",
+  "evidenceDir": "evidence/meridian/replay/20260820-125933-9yut",
+  "startedAt": "2026-08-20T19:59:33.686Z",
+  "role": "teller",
+  "status": "escalated",
+  "interventionId": "none",
+  "reason": "SUPERVISOR_OVERRIDE_REQUIRED: The signed-on operator is not authorised for this restricted function. Only a person can clear it: a supervisor must authorise the action on the live session.",
+  "resolution": "no_operator_available",
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID for supervisor sign on.",
+      "status": "ok",
+      "ms": 108,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "status": "ok",
+      "ms": 83,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the sign on form.",
+      "status": "ok",
+      "ms": 185,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "status": "ok",
+      "ms": 147,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search for.",
+      "status": "ok",
+      "ms": 63,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Run the member search.",
+      "status": "ok",
+      "ms": 136,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Select the matching member to open their record.",
+      "status": "ok",
+      "ms": 220,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the Place Account Hold form for this member.",
+      "status": "ok",
+      "ms": 161,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Select the target share by its underlying value (share parameter).",
+      "status": "ok",
+      "ms": 98,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s10",
+      "intent": "Select the reason code by its underlying value (reasonCode parameter).",
+      "status": "ok",
+      "ms": 100,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s11",
+      "intent": "Enter the hold notes.",
+      "status": "ok",
+      "ms": 100,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [
+    {
+      "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+      "attempts": 1
+    }
+  ],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T19:59:35.755Z"
+}

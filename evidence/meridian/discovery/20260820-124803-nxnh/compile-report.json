@@ -1,0 +1,16 @@
+{
+  "spineActions": 9,
+  "prunedProbeActions": 2,
+  "parameterizations": [],
+  "outcomeAttachments": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "stepId": "s7"
+    }
+  ],
+  "notes": [
+    "s3: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval",
+    "s5: option bound to {searchBy} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s7: checkpoint may be non-specific — unscoped short marker \"Shares\"; review before approval"
+  ]
+}

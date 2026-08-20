@@ -1,0 +1,22 @@
+{
+  "spineActions": 14,
+  "prunedProbeActions": 0,
+  "parameterizations": [
+    "s7.target.near: \"100987\" → {memberId}",
+    "s7.snapshot: \"100987\" → {memberId}",
+    "s12.target.near: \"100987\" → {memberId}",
+    "s12.target.near: \"MMKT\" → {shareType}",
+    "s12.target.near: \"25.00\" → {initialDeposit}",
+    "s12.snapshot: \"100987\" → {memberId}",
+    "s12.snapshot: \"MMKT\" → {shareType}",
+    "s12.snapshot: \"25.00\" → {initialDeposit}"
+  ],
+  "outcomeAttachments": [],
+  "notes": [
+    "s3: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval",
+    "s6: checkpoint may be non-specific — unscoped short marker \"Shares\"; review before approval",
+    "s9: option bound to {shareType} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s11: checkpoint may be non-specific — unscoped short marker \"Member:\"; review before approval",
+    "s12: irreversible action was human-approved during discovery (intervention int-01) — replay will escalate it the same way under the default policy"
+  ]
+}

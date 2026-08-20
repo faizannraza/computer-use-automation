@@ -1,0 +1,135 @@
+{
+  "capabilityId": "member.transferFunds",
+  "version": "1.0.0",
+  "runId": "20260820-125936-1b4e",
+  "evidenceDir": "evidence/meridian/replay/20260820-125936-1b4e",
+  "startedAt": "2026-08-20T19:59:36.536Z",
+  "role": "teller",
+  "status": "escalated",
+  "interventionId": "none",
+  "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate)",
+  "resolution": "no_operator_available",
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the Operator ID.",
+      "status": "ok",
+      "ms": 126,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword».",
+      "status": "ok",
+      "ms": 98,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Click Sign On to authenticate.",
+      "status": "ok",
+      "ms": 184,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "status": "ok",
+      "ms": 150,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter the member number to search.",
+      "status": "ok",
+      "ms": 63,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member.",
+      "status": "ok",
+      "ms": 155,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Select the member to open their record.",
+      "status": "ok",
+      "ms": 167,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Open the Funds Transfer form.",
+      "status": "ok",
+      "ms": 182,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s9",
+      "intent": "Select the From Share by its underlying value attribute (fromShare parameter).",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s10",
+      "intent": "Select the To Share by its underlying value attribute (toShare parameter).",
+      "status": "ok",
+      "ms": 66,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s11",
+      "intent": "Enter the transfer amount.",
+      "status": "ok",
+      "ms": 66,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s12",
+      "intent": "Enter the memo.",
+      "status": "ok",
+      "ms": 65,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s13",
+      "intent": "Click Continue to review the transfer.",
+      "status": "ok",
+      "ms": 167,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T19:59:38.638Z"
+}

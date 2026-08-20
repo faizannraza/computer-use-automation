@@ -1,0 +1,87 @@
+{
+  "capabilityId": "member.inquire",
+  "version": "1.0.0",
+  "runId": "20260820-125913-vt04",
+  "evidenceDir": "evidence/meridian/replay/20260820-125913-vt04",
+  "startedAt": "2026-08-20T19:59:13.643Z",
+  "role": "teller",
+  "status": "success",
+  "outputs": {
+    "matches": "[{\"Member No.\":\"100234\",\"Name\":\"***da\",\"Shares\":\"4\"}]"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter the operator ID for sign on.",
+      "status": "ok",
+      "ms": 108,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Submit the sign on form.",
+      "status": "ok",
+      "ms": 187,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection screen.",
+      "status": "ok",
+      "ms": 130,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Select the Search by option using the searchBy underlying value.",
+      "status": "ok",
+      "ms": 82,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Enter the last name query into the Value field.",
+      "status": "ok",
+      "ms": 67,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Run the member search by last name.",
+      "status": "ok",
+      "ms": 151,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Capture the member search results table.",
+      "status": "ok",
+      "ms": 99
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T19:59:15.072Z"
+}

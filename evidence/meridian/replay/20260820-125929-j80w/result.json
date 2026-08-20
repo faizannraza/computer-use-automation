@@ -1,0 +1,72 @@
+{
+  "capabilityId": "member.readBalances",
+  "version": "1.0.0",
+  "runId": "20260820-125929-j80w",
+  "evidenceDir": "evidence/meridian/replay/20260820-125929-j80w",
+  "startedAt": "2026-08-20T19:59:29.619Z",
+  "role": "teller",
+  "status": "business_outcome",
+  "code": "MEMBER_NOT_FOUND",
+  "message": "Searching Member Inquiry by member number for a value that does not exist returns no results and displays a not-found message instead of a selectable member row.",
+  "outputs": {},
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter Operator ID.",
+      "status": "ok",
+      "ms": 90,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator «secret:operatorPassword».",
+      "status": "ok",
+      "ms": 84,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Sign on to MERIDIAN CORE as the operator.",
+      "status": "ok",
+      "ms": 186,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "status": "ok",
+      "ms": 145,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter member number to search.",
+      "status": "ok",
+      "ms": 65,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member by number.",
+      "status": "ok",
+      "ms": 136,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T19:59:30.822Z"
+}

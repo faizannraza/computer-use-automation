@@ -1,0 +1,18 @@
+{
+  "kind": "approve_risky",
+  "origin": "discovery",
+  "capabilityId": "(discovery)",
+  "version": "—",
+  "runId": "20260820-124803-5o6z",
+  "stepIntent": "[model-authored] Post the funds transfer (pre-authorised for recording).",
+  "reason": "RISK_NEEDS_ESCALATION: irreversible action requires human approval (policy mode: escalate); target (harness-verified): button \"Post Transfer\"",
+  "suggestedResolution": "Review the pending irreversible action in the live window — do NOT perform it yourself. approve = the recording performs it exactly once; abort = refuse it (the model must steer another way).",
+  "options": [
+    "approve",
+    "abort"
+  ],
+  "observationSummary": "at https://web-sample.interface-hiring.com/members/101555/transfer/review; title \"Confirm Transfer - Meridian Core\"; headings: CONFIRM FUNDS TRANSFER | Member: | From: | To: | Amount: | Memo:; frames observed: (main); text: \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off CONFIRM FUNDS TRANSFER Member: 101555 - ***ce From: 101555-…\"",
+  "screenshotRef": "steps/008-intervention.png",
+  "id": "int-01",
+  "at": "2026-08-20T19:49:06.325Z"
+}

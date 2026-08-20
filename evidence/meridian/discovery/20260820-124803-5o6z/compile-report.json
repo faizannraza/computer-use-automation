@@ -1,0 +1,19 @@
+{
+  "spineActions": 16,
+  "prunedProbeActions": 0,
+  "parameterizations": [
+    "s7.target.near: \"101555\" → {memberId}",
+    "s7.snapshot: \"101555\" → {memberId}",
+    "s14.post: \"101555\" → {memberId}",
+    "successCriteria: \"101555\" → {memberId}"
+  ],
+  "outcomeAttachments": [],
+  "notes": [
+    "s3: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval",
+    "s6: checkpoint may be non-specific — unscoped short marker \"Shares\"; review before approval",
+    "s9: option bound to {fromShare} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s10: option bound to {toShare} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s13: checkpoint may be non-specific — unscoped short marker \"Member:\"; review before approval",
+    "s14: irreversible action was human-approved during discovery (intervention int-01) — replay will escalate it the same way under the default policy"
+  ]
+}

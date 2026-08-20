@@ -1,0 +1,350 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members/101555/transfer/post",
+  "count": 20,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "link",
+      "name": "Return to Member Record",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 32.5,
+        "w": 11.1,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 5,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 34.1,
+        "y": 32.5,
+        "w": 4.6,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 6,
+      "role": "heading",
+      "name": "TRANSFER POSTED",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 7,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 8,
+      "role": "cell",
+      "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 20:02:34 | SID 71CEB5E9",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 35.6,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 20:02:34 | SID 71CEB5E9",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR TELLER1 | BR MAIN-001 | 08/20/2026 20:02:34 | SID 71CEB5E9"
+      ]
+    },
+    {
+      "ref": 9,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 38.1,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 10,
+      "role": "rowheader",
+      "name": "Confirmation:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 17.3,
+        "w": 7.9,
+        "h": 2.4
+      },
+      "nearText": "Confirmation: | CN480088",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Confirmation:",
+        "CN480088"
+      ]
+    },
+    {
+      "ref": 11,
+      "role": "cell",
+      "name": "CN480088",
+      "framePath": [],
+      "interactive": false,
+      "label": "Confirmation:",
+      "bboxPct": {
+        "x": 30.5,
+        "y": 17.3,
+        "w": 11.9,
+        "h": 2.4
+      },
+      "nearText": "Confirmation: | CN480088",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Confirmation:",
+        "CN480088"
+      ]
+    },
+    {
+      "ref": 12,
+      "role": "rowheader",
+      "name": "Posted:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 19.6,
+        "w": 7.9,
+        "h": 2.4
+      },
+      "nearText": "Posted: | 08/20/2026 20:02:34",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Posted:",
+        "08/20/2026 20:02:34"
+      ]
+    },
+    {
+      "ref": 13,
+      "role": "cell",
+      "name": "08/20/2026 20:02:34",
+      "framePath": [],
+      "interactive": false,
+      "label": "Posted:",
+      "bboxPct": {
+        "x": 30.5,
+        "y": 19.6,
+        "w": 11.9,
+        "h": 2.4
+      },
+      "nearText": "Posted: | 08/20/2026 20:02:34",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "Posted:",
+        "08/20/2026 20:02:34"
+      ]
+    },
+    {
+      "ref": 14,
+      "role": "rowheader",
+      "name": "Amount:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 22,
+        "w": 7.9,
+        "h": 2.4
+      },
+      "nearText": "Amount: | $3.00",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Amount:",
+        "$3.00"
+      ]
+    },
+    {
+      "ref": 15,
+      "role": "cell",
+      "name": "$3.00",
+      "framePath": [],
+      "interactive": false,
+      "label": "Amount:",
+      "bboxPct": {
+        "x": 30.5,
+        "y": 22,
+        "w": 11.9,
+        "h": 2.4
+      },
+      "nearText": "Amount: | $3.00",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Amount:",
+        "$3.00"
+      ]
+    },
+    {
+      "ref": 16,
+      "role": "rowheader",
+      "name": "101555-S0001:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 24.4,
+        "w": 7.9,
+        "h": 2.4
+      },
+      "nearText": "101555-S0001: | ***e)",
+      "rowId": "t1r3",
+      "cellTexts": [
+        "101555-S0001:",
+        "***e)"
+      ]
+    },
+    {
+      "ref": 17,
+      "role": "cell",
+      "name": "***e)",
+      "framePath": [],
+      "interactive": false,
+      "label": "101555-S0001:",
+      "bboxPct": {
+        "x": 30.5,
+        "y": 24.4,
+        "w": 11.9,
+        "h": 2.4
+      },
+      "nearText": "101555-S0001: | ***e)",
+      "rowId": "t1r3",
+      "cellTexts": [
+        "101555-S0001:",
+        "***e)"
+      ]
+    },
+    {
+      "ref": 18,
+      "role": "rowheader",
+      "name": "101555-CERT:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.6,
+        "y": 26.8,
+        "w": 7.9,
+        "h": 2.4
+      },
+      "nearText": "101555-CERT: | ***e)",
+      "rowId": "t1r4",
+      "cellTexts": [
+        "101555-CERT:",
+        "***e)"
+      ]
+    },
+    {
+      "ref": 19,
+      "role": "cell",
+      "name": "***e)",
+      "framePath": [],
+      "interactive": false,
+      "label": "101555-CERT:",
+      "bboxPct": {
+        "x": 30.5,
+        "y": 26.8,
+        "w": 11.9,
+        "h": 2.4
+      },
+      "nearText": "101555-CERT: | ***e)",
+      "rowId": "t1r4",
+      "cellTexts": [
+        "101555-CERT:",
+        "***e)"
+      ]
+    }
+  ]
+}

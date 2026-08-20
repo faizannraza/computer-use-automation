@@ -1,0 +1,78 @@
+{"ts":"2026-08-20T19:59:33.687Z","type":"run_start","capability":"member.placeHold@1.0.0","tenant":null,"role":"teller","params":{"memberId":"102777","share":"102777-S0001","reasonCode":"FRAUD","notes":"demo","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T19:59:33.820Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T19:59:34.196Z","type":"screenshot","name":"entrypoint","file":"steps/001-entrypoint.png"}
+{"ts":"2026-08-20T19:59:34.196Z","type":"elements","name":"entrypoint","file":"steps/001-entrypoint.elements.json","count":11}
+{"ts":"2026-08-20T19:59:34.197Z","type":"step_start","stepId":"s1","intent":"Enter the operator ID for supervisor sign on.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.240Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:34.241Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.304Z","type":"step_ok","stepId":"s1","ms":108}
+{"ts":"2026-08-20T19:59:34.304Z","type":"screenshot","name":"after-s1","file":"steps/002-after-s1.png"}
+{"ts":"2026-08-20T19:59:34.304Z","type":"elements","name":"after-s1","file":"steps/002-after-s1.elements.json","count":11}
+{"ts":"2026-08-20T19:59:34.304Z","type":"step_start","stepId":"s2","intent":"Enter the operator «secret:operatorPassword» for sign on.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.337Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:34.337Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.387Z","type":"step_ok","stepId":"s2","ms":83}
+{"ts":"2026-08-20T19:59:34.387Z","type":"screenshot","name":"after-s2","file":"steps/003-after-s2.png"}
+{"ts":"2026-08-20T19:59:34.388Z","type":"elements","name":"after-s2","file":"steps/003-after-s2.elements.json","count":11}
+{"ts":"2026-08-20T19:59:34.388Z","type":"step_start","stepId":"s3","intent":"Submit the sign on form.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.420Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:34.420Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.573Z","type":"step_ok","stepId":"s3","ms":185}
+{"ts":"2026-08-20T19:59:34.573Z","type":"screenshot","name":"after-s3","file":"steps/004-after-s3.png"}
+{"ts":"2026-08-20T19:59:34.574Z","type":"elements","name":"after-s3","file":"steps/004-after-s3.elements.json","count":22}
+{"ts":"2026-08-20T19:59:34.574Z","type":"step_start","stepId":"s4","intent":"Open Member Inquiry / Selection to search for the member.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.604Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:34.604Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.721Z","type":"step_ok","stepId":"s4","ms":147}
+{"ts":"2026-08-20T19:59:34.721Z","type":"screenshot","name":"after-s4","file":"steps/005-after-s4.png"}
+{"ts":"2026-08-20T19:59:34.722Z","type":"elements","name":"after-s4","file":"steps/005-after-s4.elements.json","count":13}
+{"ts":"2026-08-20T19:59:34.722Z","type":"step_start","stepId":"s5","intent":"Enter the member number to search for.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.753Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:34.753Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.785Z","type":"step_ok","stepId":"s5","ms":63}
+{"ts":"2026-08-20T19:59:34.785Z","type":"screenshot","name":"after-s5","file":"steps/006-after-s5.png"}
+{"ts":"2026-08-20T19:59:34.785Z","type":"elements","name":"after-s5","file":"steps/006-after-s5.elements.json","count":13}
+{"ts":"2026-08-20T19:59:34.786Z","type":"step_start","stepId":"s6","intent":"Run the member search.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.819Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:34.819Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.922Z","type":"classified_fields","registered":1}
+{"ts":"2026-08-20T19:59:34.922Z","type":"step_ok","stepId":"s6","ms":136}
+{"ts":"2026-08-20T19:59:34.922Z","type":"screenshot","name":"after-s6","file":"steps/007-after-s6.png"}
+{"ts":"2026-08-20T19:59:34.923Z","type":"elements","name":"after-s6","file":"steps/007-after-s6.elements.json","count":20}
+{"ts":"2026-08-20T19:59:34.923Z","type":"step_start","stepId":"s7","intent":"Select the matching member to open their record.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:34.955Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:34.955Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=number&q=102777","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.143Z","type":"classified_fields","registered":6}
+{"ts":"2026-08-20T19:59:35.143Z","type":"step_ok","stepId":"s7","ms":220}
+{"ts":"2026-08-20T19:59:35.144Z","type":"screenshot","name":"after-s7","file":"steps/008-after-s7.png"}
+{"ts":"2026-08-20T19:59:35.144Z","type":"elements","name":"after-s7","file":"steps/008-after-s7.elements.json","count":38}
+{"ts":"2026-08-20T19:59:35.144Z","type":"step_start","stepId":"s8","intent":"Open the Place Account Hold form for this member.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.190Z","type":"resolved","stepId":"s8","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:35.190Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/102777","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.305Z","type":"step_ok","stepId":"s8","ms":161}
+{"ts":"2026-08-20T19:59:35.306Z","type":"screenshot","name":"after-s8","file":"steps/009-after-s8.png"}
+{"ts":"2026-08-20T19:59:35.306Z","type":"elements","name":"after-s8","file":"steps/009-after-s8.elements.json","count":17}
+{"ts":"2026-08-20T19:59:35.306Z","type":"step_start","stepId":"s9","intent":"Select the target share by its underlying value (share parameter).","kind":"choose","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.351Z","type":"resolved","stepId":"s9","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:35.351Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/102777/hold","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.404Z","type":"step_ok","stepId":"s9","ms":98}
+{"ts":"2026-08-20T19:59:35.404Z","type":"screenshot","name":"after-s9","file":"steps/010-after-s9.png"}
+{"ts":"2026-08-20T19:59:35.405Z","type":"elements","name":"after-s9","file":"steps/010-after-s9.elements.json","count":17}
+{"ts":"2026-08-20T19:59:35.405Z","type":"step_start","stepId":"s10","intent":"Select the reason code by its underlying value (reasonCode parameter).","kind":"choose","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.455Z","type":"resolved","stepId":"s10","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:35.455Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/102777/hold","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.505Z","type":"step_ok","stepId":"s10","ms":100}
+{"ts":"2026-08-20T19:59:35.505Z","type":"screenshot","name":"after-s10","file":"steps/011-after-s10.png"}
+{"ts":"2026-08-20T19:59:35.505Z","type":"elements","name":"after-s10","file":"steps/011-after-s10.elements.json","count":17}
+{"ts":"2026-08-20T19:59:35.505Z","type":"step_start","stepId":"s11","intent":"Enter the hold notes.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.555Z","type":"resolved","stepId":"s11","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:35.555Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/102777/hold","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.605Z","type":"step_ok","stepId":"s11","ms":100}
+{"ts":"2026-08-20T19:59:35.605Z","type":"screenshot","name":"after-s11","file":"steps/012-after-s11.png"}
+{"ts":"2026-08-20T19:59:35.606Z","type":"elements","name":"after-s11","file":"steps/012-after-s11.elements.json","count":17}
+{"ts":"2026-08-20T19:59:35.606Z","type":"step_start","stepId":"s12","intent":"Continue to the hold review screen.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.655Z","type":"resolved","stepId":"s12","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:35.655Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/102777/hold","risk":"reversible"}
+{"ts":"2026-08-20T19:59:35.754Z","type":"recovery_applied","code":"SUPERVISOR_OVERRIDE_REQUIRED","attempt":1,"handler":"escalate","risk":"irreversible"}
+{"ts":"2026-08-20T19:59:35.754Z","type":"escalation_unattended","kind":"human_action_required","reason":"SUPERVISOR_OVERRIDE_REQUIRED: The signed-on operator is not authorised for this restricted function. Only a person can clear it: a supervisor must authorise the action on the live session."}
+{"ts":"2026-08-20T19:59:35.755Z","type":"run_result","status":"escalated"}

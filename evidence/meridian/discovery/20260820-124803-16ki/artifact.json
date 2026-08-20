@@ -1,0 +1,746 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.openShare",
+    "version": "1.0.0",
+    "title": "Open New Share for Member",
+    "description": "Signs on to MERIDIAN CORE, looks up a member by Member Number (memberId), opens a new share of the given shareType with the given initialDeposit, and commits the opening after the review screen. Inputs: memberId, shareType (underlying value e.g. MMKT), initialDeposit, plus operator credentials. Returns the confirmation number (output 'confirmationNumber') from the Share Opened screen. The commit step is irreversible.",
+    "app": {
+      "appId": "meridian-core",
+      "vendor": "Cornerstone Financial Systems"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-20T19:49:07.952Z",
+    "recordedBy": {
+      "kind": "llm-discovery",
+      "model": "claude-opus-4-8",
+      "discoveryRunId": "20260820-124803-16ki"
+    },
+    "evidenceRef": "evidence/meridian/discovery/20260820-124803-16ki",
+    "approval": {
+      "state": "draft"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "integer",
+      "description": "Caller-supplied parameter 'memberId'.",
+      "required": true,
+      "pattern": "^[0-9]+$",
+      "example": "100987",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "shareType": {
+      "type": "string",
+      "description": "Caller-supplied parameter 'shareType'.",
+      "required": true,
+      "example": "MMKT",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "initialDeposit": {
+      "type": "money",
+      "description": "Caller-supplied parameter 'initialDeposit'.",
+      "required": true,
+      "pattern": "^\\$?[0-9][0-9,]*\\.[0-9]{2}$",
+      "example": "25.00",
+      "sensitivity": "none",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_ID"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_PASSWORD"
+    }
+  },
+  "outputs": {
+    "confirmationNumber": {
+      "type": "string",
+      "description": "Capture the confirmation number value from the confirmation screen.",
+      "sensitivity": "internal",
+      "source": {
+        "stepId": "s13",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [],
+  "recoveries": [],
+  "anomalies": [],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "setValue",
+      "activate",
+      "choose",
+      "read"
+    ],
+    "maxRisk": "irreversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter the operator ID for sign on.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Operator ID:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Operator ID:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 12.1,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "OPERATOR SIGN ON"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Password:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Password:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 15,
+              "w": 11,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Submit sign on credentials.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign On",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 22.8,
+              "w": 5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/002-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MAIN MENU"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "1."
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Inquiry / Selection",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | Member Inquiry / Selection",
+            "bboxPct": {
+              "x": 25.4,
+              "y": 15.8,
+              "w": 11.8,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/003-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER INQUIRY / SELECTION"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Search by:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter the member number to search for.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Value:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Value:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Value:",
+            "bboxPct": {
+              "x": 28.2,
+              "y": 17.6,
+              "w": 15.1,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Run the member search.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 44.2,
+              "y": 17.4,
+              "w": 4.5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/004-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No."
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Shares"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s7",
+      "intent": "Select the matched member to open their record.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Select",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "{memberId} | … | … | Select",
+            "bboxPct": {
+              "x": 69.1,
+              "y": 27.1,
+              "w": 2.6,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/005-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER RECORD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member No.:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Open the New Share form for this member.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Open New Share",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Open New Share",
+            "bboxPct": {
+              "x": 29.4,
+              "y": 52.4,
+              "w": 7.3,
+              "h": 1.7
+            },
+            "screenshotRef": "steps/006-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Initial Deposit:"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "OPEN NEW SHARE"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s9",
+      "intent": "Select the share type using the shareType parameter's underlying value.",
+      "action": {
+        "kind": "choose",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Share Type:"
+            },
+            {
+              "s": "roleName",
+              "role": "combobox",
+              "name": "Share Type:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Share Type:",
+            "bboxPct": {
+              "x": 31.3,
+              "y": 15.9,
+              "w": 15.8,
+              "h": 2.4
+            }
+          }
+        },
+        "option": {
+          "param": "shareType"
+        },
+        "by": "value"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s10",
+      "intent": "Enter the initial deposit amount.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Initial Deposit:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Initial Deposit:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Initial Deposit:",
+            "bboxPct": {
+              "x": 31.8,
+              "y": 19.1,
+              "w": 8,
+              "h": 2.2
+            }
+          }
+        },
+        "value": {
+          "param": "initialDeposit"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s11",
+      "intent": "Continue to the review screen for the new share.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Continue",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 31.3,
+              "y": 23.8,
+              "w": 5.4,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/007-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "CONFIRM NEW SHARE"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s12",
+      "intent": "Commit and open the new share (pre-authorised irreversible action).",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Open Share",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "CONFIRM NEW SHARE Member:{memberId} - ***an Share Type:{shareType} - Money Market Initial Deposit:${initialDeposit} Cancel",
+              "relation": "rowOf",
+              "targetRole": "button"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "CONFIRM NEW SHARE Member:{memberId} - ***an Share Type:{shareType} - Money Market Initial Deposit:${initialDeposit} Cancel",
+            "bboxPct": {
+              "x": 21.5,
+              "y": 24.9,
+              "w": 6.7,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/009-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Opening Balance:"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Confirmation:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "irreversible",
+      "onDetect": []
+    },
+    {
+      "id": "s13",
+      "intent": "Capture the confirmation number value from the confirmation screen.",
+      "action": {
+        "kind": "read",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Confirmation:"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Confirmation: | …",
+            "bboxPct": {
+              "x": 31.5,
+              "y": 17.5,
+              "w": 7.6,
+              "h": 2.4
+            }
+          }
+        },
+        "into": "confirmationNumber"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "Opening Balance:"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Confirmation:"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "New Share ID:"
+    }
+  ],
+  "integrity": {
+    "contentHash": "f65ad5bcf494bd8889b85a60205f660afc4170a571b539fe91f592240ce95626"
+  }
+}

@@ -1,0 +1,38 @@
+{"ts":"2026-08-20T19:59:09.063Z","type":"run_start","capability":"session.signOn@1.0.0","tenant":null,"role":"teller","params":{"branch":"MAIN-001","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T19:59:09.467Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T19:59:09.910Z","type":"screenshot","name":"entrypoint","file":"steps/001-entrypoint.png"}
+{"ts":"2026-08-20T19:59:09.910Z","type":"elements","name":"entrypoint","file":"steps/001-entrypoint.elements.json","count":11}
+{"ts":"2026-08-20T19:59:09.910Z","type":"step_start","stepId":"s1","intent":"Enter the operatorId parameter into the Operator ID field.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:09.954Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:09.955Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.037Z","type":"step_ok","stepId":"s1","ms":127}
+{"ts":"2026-08-20T19:59:10.037Z","type":"screenshot","name":"after-s1","file":"steps/002-after-s1.png"}
+{"ts":"2026-08-20T19:59:10.038Z","type":"elements","name":"after-s1","file":"steps/002-after-s1.elements.json","count":11}
+{"ts":"2026-08-20T19:59:10.038Z","type":"step_start","stepId":"s2","intent":"Enter the operatorPassword secret parameter into the Password field.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.088Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:10.088Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.135Z","type":"step_ok","stepId":"s2","ms":97}
+{"ts":"2026-08-20T19:59:10.135Z","type":"screenshot","name":"after-s2","file":"steps/003-after-s2.png"}
+{"ts":"2026-08-20T19:59:10.135Z","type":"elements","name":"after-s2","file":"steps/003-after-s2.elements.json","count":11}
+{"ts":"2026-08-20T19:59:10.135Z","type":"step_start","stepId":"s3","intent":"Select the Branch option whose underlying value is the branch parameter (MAIN-001).","kind":"choose","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.171Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:10.171Z","type":"gate","kind":"choose","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.202Z","type":"step_ok","stepId":"s3","ms":67}
+{"ts":"2026-08-20T19:59:10.203Z","type":"screenshot","name":"after-s3","file":"steps/004-after-s3.png"}
+{"ts":"2026-08-20T19:59:10.203Z","type":"elements","name":"after-s3","file":"steps/004-after-s3.elements.json","count":11}
+{"ts":"2026-08-20T19:59:10.203Z","type":"step_start","stepId":"s4","intent":"Click Sign On to authenticate and reach the MAIN MENU.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.235Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:10.235Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:10.475Z","type":"step_ok","stepId":"s4","ms":272}
+{"ts":"2026-08-20T19:59:10.475Z","type":"screenshot","name":"after-s4","file":"steps/005-after-s4.png"}
+{"ts":"2026-08-20T19:59:10.475Z","type":"elements","name":"after-s4","file":"steps/005-after-s4.elements.json","count":22}
+{"ts":"2026-08-20T19:59:10.476Z","type":"step_start","stepId":"s5","intent":"Capture the signed-on operator identity shown in the status bar.","kind":"read","risk":"read"}
+{"ts":"2026-08-20T19:59:10.504Z","type":"resolved","stepId":"s5","strategyIndex":1,"strategy":"textAnchor","score":0.9}
+{"ts":"2026-08-20T19:59:10.504Z","type":"gate","kind":"read","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"read"}
+{"ts":"2026-08-20T19:59:10.504Z","type":"extracted","stepId":"s5","into":"sessionBanner"}
+{"ts":"2026-08-20T19:59:10.538Z","type":"step_ok","stepId":"s5","ms":62}
+{"ts":"2026-08-20T19:59:10.538Z","type":"screenshot","name":"after-s5","file":"steps/006-after-s5.png"}
+{"ts":"2026-08-20T19:59:10.538Z","type":"elements","name":"after-s5","file":"steps/006-after-s5.elements.json","count":22}
+{"ts":"2026-08-20T19:59:10.588Z","type":"screenshot","name":"final","file":"steps/007-final.png"}
+{"ts":"2026-08-20T19:59:10.589Z","type":"elements","name":"final","file":"steps/007-final.elements.json","count":22}
+{"ts":"2026-08-20T19:59:10.589Z","type":"run_result","status":"success"}

@@ -1,0 +1,57 @@
+{"ts":"2026-08-20T19:59:11.368Z","type":"run_start","capability":"member.readBalances@1.0.0","tenant":null,"role":"teller","params":{"memberId":"100234","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T19:59:11.508Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T19:59:11.862Z","type":"screenshot","name":"entrypoint","file":"steps/001-entrypoint.png"}
+{"ts":"2026-08-20T19:59:11.863Z","type":"elements","name":"entrypoint","file":"steps/001-entrypoint.elements.json","count":11}
+{"ts":"2026-08-20T19:59:11.863Z","type":"step_start","stepId":"s1","intent":"Enter Operator ID.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:11.907Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:11.907Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:11.970Z","type":"step_ok","stepId":"s1","ms":107}
+{"ts":"2026-08-20T19:59:11.970Z","type":"screenshot","name":"after-s1","file":"steps/002-after-s1.png"}
+{"ts":"2026-08-20T19:59:11.971Z","type":"elements","name":"after-s1","file":"steps/002-after-s1.elements.json","count":11}
+{"ts":"2026-08-20T19:59:11.971Z","type":"step_start","stepId":"s2","intent":"Enter operator «secret:operatorPassword».","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.004Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:12.004Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.054Z","type":"step_ok","stepId":"s2","ms":83}
+{"ts":"2026-08-20T19:59:12.054Z","type":"screenshot","name":"after-s2","file":"steps/003-after-s2.png"}
+{"ts":"2026-08-20T19:59:12.054Z","type":"elements","name":"after-s2","file":"steps/003-after-s2.elements.json","count":11}
+{"ts":"2026-08-20T19:59:12.054Z","type":"step_start","stepId":"s3","intent":"Sign on to MERIDIAN CORE as the operator.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.087Z","type":"resolved","stepId":"s3","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:12.087Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/signon","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.223Z","type":"step_ok","stepId":"s3","ms":169}
+{"ts":"2026-08-20T19:59:12.224Z","type":"screenshot","name":"after-s3","file":"steps/004-after-s3.png"}
+{"ts":"2026-08-20T19:59:12.224Z","type":"elements","name":"after-s3","file":"steps/004-after-s3.elements.json","count":22}
+{"ts":"2026-08-20T19:59:12.224Z","type":"step_start","stepId":"s4","intent":"Open Member Inquiry / Selection.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.254Z","type":"resolved","stepId":"s4","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:12.254Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/menu","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.371Z","type":"step_ok","stepId":"s4","ms":147}
+{"ts":"2026-08-20T19:59:12.371Z","type":"screenshot","name":"after-s4","file":"steps/005-after-s4.png"}
+{"ts":"2026-08-20T19:59:12.372Z","type":"elements","name":"after-s4","file":"steps/005-after-s4.elements.json","count":13}
+{"ts":"2026-08-20T19:59:12.372Z","type":"step_start","stepId":"s5","intent":"Enter member number to search.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.404Z","type":"resolved","stepId":"s5","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T19:59:12.404Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.454Z","type":"step_ok","stepId":"s5","ms":82}
+{"ts":"2026-08-20T19:59:12.455Z","type":"screenshot","name":"after-s5","file":"steps/006-after-s5.png"}
+{"ts":"2026-08-20T19:59:12.455Z","type":"elements","name":"after-s5","file":"steps/006-after-s5.elements.json","count":13}
+{"ts":"2026-08-20T19:59:12.455Z","type":"step_start","stepId":"s6","intent":"Search for the member by number.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.487Z","type":"resolved","stepId":"s6","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:12.488Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.606Z","type":"classified_fields","registered":1}
+{"ts":"2026-08-20T19:59:12.606Z","type":"step_ok","stepId":"s6","ms":151}
+{"ts":"2026-08-20T19:59:12.607Z","type":"screenshot","name":"after-s6","file":"steps/007-after-s6.png"}
+{"ts":"2026-08-20T19:59:12.607Z","type":"elements","name":"after-s6","file":"steps/007-after-s6.elements.json","count":20}
+{"ts":"2026-08-20T19:59:12.607Z","type":"step_start","stepId":"s7","intent":"Open the member's record.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.638Z","type":"resolved","stepId":"s7","strategyIndex":0,"strategy":"roleName","score":1}
+{"ts":"2026-08-20T19:59:12.638Z","type":"gate","kind":"activate","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members?by=number&q=100234","risk":"reversible"}
+{"ts":"2026-08-20T19:59:12.757Z","type":"classified_fields","registered":7}
+{"ts":"2026-08-20T19:59:12.758Z","type":"step_ok","stepId":"s7","ms":151}
+{"ts":"2026-08-20T19:59:12.758Z","type":"screenshot","name":"after-s7","file":"steps/008-after-s7.png"}
+{"ts":"2026-08-20T19:59:12.758Z","type":"elements","name":"after-s7","file":"steps/008-after-s7.elements.json","count":42}
+{"ts":"2026-08-20T19:59:12.758Z","type":"step_start","stepId":"s8","intent":"Capture the whole SHARES / BALANCES table for the member.","kind":"readTable","risk":"read"}
+{"ts":"2026-08-20T19:59:12.808Z","type":"gate","kind":"readTable","decision":{"allowed":true},"location":"https://web-sample.interface-hiring.com/members/100234","risk":"read"}
+{"ts":"2026-08-20T19:59:12.808Z","type":"extracted","stepId":"s8","into":"shares"}
+{"ts":"2026-08-20T19:59:12.840Z","type":"step_ok","stepId":"s8","ms":82}
+{"ts":"2026-08-20T19:59:12.840Z","type":"screenshot","name":"after-s8","file":"steps/009-after-s8.png"}
+{"ts":"2026-08-20T19:59:12.840Z","type":"elements","name":"after-s8","file":"steps/009-after-s8.elements.json","count":42}
+{"ts":"2026-08-20T19:59:12.872Z","type":"screenshot","name":"final","file":"steps/010-final.png"}
+{"ts":"2026-08-20T19:59:12.872Z","type":"elements","name":"final","file":"steps/010-final.elements.json","count":42}
+{"ts":"2026-08-20T19:59:12.872Z","type":"run_result","status":"success"}

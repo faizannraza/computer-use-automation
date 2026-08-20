@@ -1,0 +1,848 @@
+{
+  "goal": "Record the OPEN NEW SHARE capability against MERIDIAN CORE. (1) Sign on. (2) Member Inquiry -> search by Member Number for the memberId parameter -> Select. (3) Click 'Open New Share'. (4) For Share Type call choose with option = the shareType parameter value verbatim (the option's underlying value, e.g. MMKT); type the initialDeposit parameter into Initial Deposit; click Continue. (5) A review screen appears - the share is NOT yet opened. Click the committing button with irreversible=true (a human pre-authorised this recording). (6) On the confirmation screen use read to capture the new share identifier or confirmation number into an output named 'confirmationNumber' - target the value cell next to its label. (7) declare_done with capability_id 'member.openShare'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open the MERIDIAN CORE banking application to begin sign on.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator ID for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12.1,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 15,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Submit sign on credentials.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.8,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open Member Inquiry / Selection to search for the member.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry / Selection",
+        "framePath": [],
+        "nearText": "1. | Member Inquiry / Selection",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 15.8,
+          "w": 11.8,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the member number to search for.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.6,
+          "w": 15.1,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "memberId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Run the member search.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 44.2,
+          "y": 17.4,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=100987",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 7,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Select the matched member to open their record.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Select",
+        "framePath": [],
+        "nearText": "100987 | ***an | 8 | Select",
+        "bboxPct": {
+          "x": 69.1,
+          "y": 27.1,
+          "w": 2.6,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=100987",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "screenshotRef": "steps/005-click.png",
+      "seq": 8,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open the New Share form for this member.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Open New Share",
+        "framePath": [],
+        "bboxPct": {
+          "x": 29.4,
+          "y": 52.4,
+          "w": 7.3,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100987",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share",
+        "title": "Open New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "OPEN NEW SHARE"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/006-click.png",
+      "seq": 9,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the share type using the shareType parameter's underlying value.",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "Share Type:",
+        "framePath": [],
+        "label": "Share Type:",
+        "options": [
+          "S0001 - Regular Shares",
+          "S0070 - Share Draft (Checking)",
+          "MMKT - Money Market",
+          "CERT - Certificate"
+        ],
+        "optionValues": [
+          "S0001",
+          "S0070",
+          "MMKT",
+          "CERT"
+        ],
+        "bboxPct": {
+          "x": 31.3,
+          "y": 15.9,
+          "w": 15.8,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "MMKT"
+      },
+      "optionBy": "value",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share",
+        "title": "Open New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "OPEN NEW SHARE"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share",
+        "title": "Open New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "OPEN NEW SHARE"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "seq": 10,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the initial deposit amount.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Initial Deposit:",
+        "framePath": [],
+        "label": "Initial Deposit:",
+        "bboxPct": {
+          "x": 31.8,
+          "y": 19.1,
+          "w": 8,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "initialDeposit"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share",
+        "title": "Open New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "OPEN NEW SHARE"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share",
+        "title": "Open New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "OPEN NEW SHARE"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "seq": 11,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Continue to the review screen for the new share.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Continue",
+        "framePath": [],
+        "nearText": " | Cancel",
+        "bboxPct": {
+          "x": 31.3,
+          "y": 23.8,
+          "w": 5.4,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share",
+        "title": "Open New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "OPEN NEW SHARE"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share/review",
+        "title": "Confirm New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "CONFIRM NEW SHARE"
+          },
+          {
+            "text": "Member:"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/007-click.png",
+      "seq": 12,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Commit and open the new share (pre-authorised irreversible action).",
+      "risk": "irreversible",
+      "element": {
+        "role": "button",
+        "name": "Open Share",
+        "framePath": [],
+        "nearText": "CONFIRM NEW SHARE Member:100987 - ***an Share Type:MMKT - Money Market Initial Deposit:***00 Cancel",
+        "bboxPct": {
+          "x": 21.5,
+          "y": 24.9,
+          "w": 6.7,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share/review",
+        "title": "Confirm New Share - Meridian Core",
+        "markers": [
+          {
+            "text": "CONFIRM NEW SHARE"
+          },
+          {
+            "text": "Member:"
+          },
+          {
+            "text": "Share Type:"
+          },
+          {
+            "text": "Initial Deposit:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share/post",
+        "title": "Share Opened - Meridian Core",
+        "markers": [
+          {
+            "text": "SHARE OPENED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "New Share ID:"
+          },
+          {
+            "text": "Type:"
+          },
+          {
+            "text": "Opening Balance:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/009-click.png",
+      "approvedIntervention": "int-01",
+      "seq": 13,
+      "probe": false
+    },
+    {
+      "kind": "read",
+      "intent": "Capture the confirmation number value from the confirmation screen.",
+      "risk": "read",
+      "element": {
+        "role": "cell",
+        "name": "CN480074",
+        "framePath": [],
+        "label": "Confirmation:",
+        "nearText": "Confirmation: | CN480074",
+        "bboxPct": {
+          "x": 31.5,
+          "y": 17.5,
+          "w": 7.6,
+          "h": 2.4
+        }
+      },
+      "outputName": "confirmationNumber",
+      "readValue": "CN480074",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share/post",
+        "title": "Share Opened - Meridian Core",
+        "markers": [
+          {
+            "text": "SHARE OPENED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "New Share ID:"
+          },
+          {
+            "text": "Type:"
+          },
+          {
+            "text": "Opening Balance:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100987/open-share/post",
+        "title": "Share Opened - Meridian Core",
+        "markers": [
+          {
+            "text": "SHARE OPENED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "New Share ID:"
+          },
+          {
+            "text": "Type:"
+          },
+          {
+            "text": "Opening Balance:"
+          }
+        ]
+      },
+      "seq": 14,
+      "probe": false
+    }
+  ],
+  "outcomes": [],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "member.openShare",
+    "title": "Open New Share for Member",
+    "description": "Signs on to MERIDIAN CORE, looks up a member by Member Number (memberId), opens a new share of the given shareType with the given initialDeposit, and commits the opening after the review screen. Inputs: memberId, shareType (underlying value e.g. MMKT), initialDeposit, plus operator credentials. Returns the confirmation number (output 'confirmationNumber') from the Share Opened screen. The commit step is irreversible."
+  }
+}

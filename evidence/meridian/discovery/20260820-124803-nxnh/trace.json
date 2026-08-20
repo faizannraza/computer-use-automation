@@ -1,0 +1,679 @@
+{
+  "goal": "Record a MEMBER INQUIRY capability against MERIDIAN CORE that searches by LAST NAME. (1) Sign on. (2) Open Member Inquiry / Selection. (3) In 'Search by' call choose with option = the searchBy parameter value verbatim (it is the option's underlying value: 'name' or 'number'). (4) Type the query parameter into the Value field. (5) Click Search. (6) A results table appears - use read_table ONCE to capture it into an output named 'matches', requesting exactly these columns: Member No., Name, Shares. (7) Then probe one exceptional state: begin_probe MEMBER_NOT_FOUND, search again for a last name that does not exist such as Zzzznomatch, and declare_outcome MEMBER_NOT_FOUND with a marker you can literally see. (8) declare_done with capability_id 'member.inquire'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open the MERIDIAN CORE application to begin sign on.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator ID for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 14.9,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Submit the sign on form.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.5,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open Member Inquiry / Selection screen.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry / Selection",
+        "framePath": [],
+        "nearText": "1. | Member Inquiry / Selection",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 15.6,
+          "w": 11.8,
+          "h": 1.6
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the Search by option using the searchBy underlying value.",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "Search by:",
+        "framePath": [],
+        "label": "Search by:",
+        "options": [
+          "Member Number",
+          "Last Name"
+        ],
+        "optionValues": [
+          "number",
+          "name"
+        ],
+        "bboxPct": {
+          "x": 28.2,
+          "y": 14.1,
+          "w": 9.3,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "name"
+      },
+      "optionBy": "value",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the last name query into the Value field.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.4,
+          "w": 16.1,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "query"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 7,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Run the member search by last name.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 45.2,
+          "y": 17.3,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Lovelace",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 8,
+      "probe": false
+    },
+    {
+      "kind": "readTable",
+      "intent": "Capture the member search results table.",
+      "risk": "read",
+      "columns": [
+        "Member No.",
+        "Name",
+        "Shares"
+      ],
+      "outputName": "matches",
+      "readValue": "[{\"Member No.\":\"100234\",\"Name\":\"***da\",\"Shares\":\"4\"}]",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Lovelace",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Lovelace",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "seq": 9,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter a last name that does not exist to trigger the not-found state.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.4,
+          "w": 16.1,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "literal": "Zzzznomatch"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Lovelace",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Lovelace",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "seq": 10,
+      "probe": true,
+      "probeCode": "MEMBER_NOT_FOUND"
+    },
+    {
+      "kind": "activate",
+      "intent": "Search for the nonexistent last name.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 45.2,
+          "y": 17.3,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Lovelace",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Zzzznomatch",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/005-click.png",
+      "seq": 11,
+      "probe": true,
+      "probeCode": "MEMBER_NOT_FOUND"
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "Searching by last name for a value that matches no member returns no results table; instead an error message is shown. This confirms the not-found state.",
+      "marker": "No member records matched your search.",
+      "observedIn": {
+        "location": "https://web-sample.interface-hiring.com/members?by=name&q=Zzzznomatch",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      }
+    }
+  ],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "member.inquire",
+    "title": "Member Inquiry by Last Name or Number",
+    "description": "Signs on to MERIDIAN CORE, opens Member Inquiry / Selection, and searches for members using the 'searchBy' parameter (underlying value 'name' or 'number') and the 'query' value. Returns the results as the 'matches' table (Member No., Name, Shares). Handles the MEMBER_NOT_FOUND outcome when no records match (\"No member records matched your search.\")."
+  }
+}

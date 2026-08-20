@@ -1,0 +1,479 @@
+{
+  "schemaVersion": "1",
+  "capability": {
+    "id": "member.readBalances",
+    "version": "1.0.0",
+    "title": "Read Member Shares/Balances",
+    "description": "Signs on to MERIDIAN CORE as the operator, opens Member Inquiry, searches by member number for the supplied memberId, and opens the member record. Captures the full SHARES / BALANCES table into output 'shares' (columns: Share ID, Type, Balance, Status). Inputs: memberId, operatorId, operatorPassword (secret). Handles the MEMBER_NOT_FOUND outcome when a member number does not exist (marker: \"No member records matched your search.\").",
+    "app": {
+      "appId": "meridian-core",
+      "vendor": "Cornerstone Financial Systems"
+    },
+    "surface": "web",
+    "entrypoint": {
+      "kind": "url",
+      "value": "{baseUrl}/"
+    }
+  },
+  "provenance": {
+    "recordedAt": "2026-08-20T19:48:53.287Z",
+    "recordedBy": {
+      "kind": "llm-discovery",
+      "model": "claude-opus-4-8",
+      "discoveryRunId": "20260820-124803-gz6r"
+    },
+    "evidenceRef": "evidence/meridian/discovery/20260820-124803-gz6r",
+    "approval": {
+      "state": "draft"
+    }
+  },
+  "params": {
+    "memberId": {
+      "type": "integer",
+      "description": "Caller-supplied parameter 'memberId'.",
+      "required": true,
+      "pattern": "^[0-9]+$",
+      "example": "100234",
+      "sensitivity": "internal",
+      "source": "caller"
+    },
+    "operatorId": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "internal",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_ID"
+    },
+    "operatorPassword": {
+      "type": "string",
+      "description": "Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact.",
+      "required": true,
+      "sensitivity": "secret",
+      "source": "env",
+      "env": "MERIDIAN_OPERATOR_PASSWORD"
+    }
+  },
+  "outputs": {
+    "shares": {
+      "type": "table",
+      "description": "Capture the whole SHARES / BALANCES table for the member.",
+      "sensitivity": "none",
+      "source": {
+        "stepId": "s8",
+        "transform": "trim"
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "Searching Member Inquiry by member number for a value that does not exist returns no results and displays a not-found message instead of a selectable member row.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "No member records matched your search."
+      },
+      "terminal": true,
+      "outputs": {}
+    }
+  ],
+  "recoveries": [],
+  "anomalies": [],
+  "policy": {
+    "actionsUsed": [
+      "navigate",
+      "setValue",
+      "activate",
+      "readTable"
+    ],
+    "maxRisk": "reversible"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "intent": "Enter Operator ID.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Operator ID:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Operator ID:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Operator ID:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 12,
+              "w": 11.7,
+              "h": 2.1
+            }
+          }
+        },
+        "value": {
+          "param": "operatorId"
+        }
+      },
+      "pre": [
+        {
+          "c": "textPresent",
+          "pattern": "OPERATOR SIGN ON"
+        }
+      ],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s2",
+      "intent": "Enter operator «secret:operatorPassword».",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Password:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Password:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Password:",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 14.9,
+              "w": 11.7,
+              "h": 2.1
+            }
+          }
+        },
+        "value": {
+          "param": "operatorPassword"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s3",
+      "intent": "Sign on to MERIDIAN CORE as the operator.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Sign On",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 29.3,
+              "y": 22.5,
+              "w": 5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/002-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MAIN MENU"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "1."
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Member Inquiry / Selection",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | Member Inquiry / Selection",
+            "bboxPct": {
+              "x": 25.4,
+              "y": 15.6,
+              "w": 11.8,
+              "h": 1.6
+            },
+            "screenshotRef": "steps/003-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER INQUIRY / SELECTION"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Search by:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s5",
+      "intent": "Enter member number to search.",
+      "action": {
+        "kind": "setValue",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "labelText",
+              "label": "Value:"
+            },
+            {
+              "s": "roleName",
+              "role": "textbox",
+              "name": "Value:",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "Value:",
+            "bboxPct": {
+              "x": 28.2,
+              "y": 17.4,
+              "w": 16.1,
+              "h": 2.1
+            }
+          }
+        },
+        "value": {
+          "param": "memberId"
+        }
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s6",
+      "intent": "Search for the member by number.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "button",
+              "name": "Search",
+              "nameMatch": "exact"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "… | …",
+            "bboxPct": {
+              "x": 45.2,
+              "y": 17.3,
+              "w": 4.5,
+              "h": 2.4
+            },
+            "screenshotRef": "steps/004-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "Member No."
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Shares"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": [
+        "MEMBER_NOT_FOUND"
+      ]
+    },
+    {
+      "id": "s7",
+      "intent": "Open the member's record.",
+      "action": {
+        "kind": "activate",
+        "target": {
+          "framePath": [],
+          "strategies": [
+            {
+              "s": "roleName",
+              "role": "link",
+              "name": "Select",
+              "nameMatch": "exact"
+            },
+            {
+              "s": "textAnchor",
+              "text": "{memberId}",
+              "relation": "rowOf",
+              "targetRole": "link"
+            }
+          ],
+          "disambiguation": {
+            "requireUnique": true,
+            "minScore": 0.6
+          },
+          "snapshot": {
+            "textContext": "{memberId} | … | … | Select",
+            "bboxPct": {
+              "x": 69.5,
+              "y": 26.8,
+              "w": 2.6,
+              "h": 1.6
+            },
+            "screenshotRef": "steps/005-click.png"
+          }
+        }
+      },
+      "pre": [],
+      "post": [
+        {
+          "c": "textPresent",
+          "pattern": "MEMBER RECORD"
+        },
+        {
+          "c": "textPresent",
+          "pattern": "Member No.:"
+        }
+      ],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "reversible",
+      "onDetect": []
+    },
+    {
+      "id": "s8",
+      "intent": "Capture the whole SHARES / BALANCES table for the member.",
+      "action": {
+        "kind": "readTable",
+        "columns": [
+          "Share ID",
+          "Type",
+          "Balance",
+          "Status"
+        ],
+        "into": "shares"
+      },
+      "pre": [],
+      "post": [],
+      "wait": {
+        "timeoutMs": 8000,
+        "pollMs": 250
+      },
+      "risk": "read",
+      "onDetect": []
+    }
+  ],
+  "successCriteria": [
+    {
+      "c": "textPresent",
+      "pattern": "MEMBER RECORD"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Member No.:"
+    },
+    {
+      "c": "textPresent",
+      "pattern": "Address:"
+    }
+  ],
+  "integrity": {
+    "contentHash": "b78195c3368e21c69d3402039977e82020ea6d41ea8f252f0b68b9d002fd5b94"
+  }
+}

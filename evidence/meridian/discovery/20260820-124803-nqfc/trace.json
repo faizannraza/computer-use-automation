@@ -1,0 +1,646 @@
+{
+  "goal": "Record a SIGN ON / SESSION capability against MERIDIAN CORE. (1) On the OPERATOR SIGN ON screen type the operatorId parameter into Operator ID and the operatorPassword parameter into Password. (2) For Branch call choose with option = the branch parameter value verbatim (it is the option's underlying value, e.g. MAIN-001). (3) Click Sign On. (4) You land on the MAIN MENU. Use read to capture the signed-on operator identity shown in the status bar into an output named 'sessionBanner'. (5) Then probe one exceptional state: begin_probe BAD_CREDENTIALS, sign off, and attempt to sign on again with a deliberately wrong «secret:operatorPassword» such as 'wrong«secret:operatorPassword»', then declare_outcome BAD_CREDENTIALS with a marker you can literally see on the failed sign-on screen. (6) declare_done with capability_id 'session.signOn'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open the MERIDIAN CORE application to reach the OPERATOR SIGN ON screen.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operatorId parameter into the Operator ID field.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operatorPassword secret parameter into the Password field.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 14.9,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the Branch option whose underlying value is the branch parameter (MAIN-001).",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "Branch:",
+        "framePath": [],
+        "label": "Branch:",
+        "options": [
+          "MAIN-001 - Main Office",
+          "WEST-014 - Westside",
+          "EAST-022 - Eastgate"
+        ],
+        "optionValues": [
+          "MAIN-001",
+          "WEST-014",
+          "EAST-022"
+        ],
+        "bboxPct": {
+          "x": 29.3,
+          "y": 17.8,
+          "w": 12.2,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "MAIN-001 - Main Office"
+      },
+      "optionBy": "label",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Click Sign On to authenticate and reach the MAIN MENU.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.5,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "read",
+      "intent": "Capture the signed-on operator identity shown in the status bar.",
+      "risk": "read",
+      "element": {
+        "role": "cell",
+        "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:21 | SID E1563289",
+        "framePath": [],
+        "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:21 | SID E1563289",
+        "bboxPct": {
+          "x": 20.4,
+          "y": 36.5,
+          "w": 59.2,
+          "h": 2.5
+        }
+      },
+      "outputName": "sessionBanner",
+      "readValue": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:21 | SID E1563289",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Sign off to return to the OPERATOR SIGN ON screen.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Sign Off",
+        "framePath": [],
+        "nearText": "9. | Sign Off",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 28.4,
+          "w": 3.5,
+          "h": 1.6
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 7,
+      "probe": true,
+      "probeCode": "BAD_CREDENTIALS"
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operatorId parameter into Operator ID for the bad-credentials probe.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 8,
+      "probe": true,
+      "probeCode": "BAD_CREDENTIALS"
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter a deliberately wrong «secret:operatorPassword» to trigger the bad-credentials outcome.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 14.9,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "literal": "wrong-«secret:operatorPassword»-xyz"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 9,
+      "probe": true,
+      "probeCode": "BAD_CREDENTIALS"
+    },
+    {
+      "kind": "activate",
+      "intent": "Attempt sign on with wrong credentials to observe the failure state.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.5,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon?err=Invalid%20operator%20ID%20or%20«secret:operatorPassword».",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 10,
+      "probe": true,
+      "probeCode": "BAD_CREDENTIALS"
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "BAD_CREDENTIALS",
+      "description": "Signing on with an incorrect «secret:operatorPassword» is rejected: the OPERATOR SIGN ON screen redisplays with an error and no session is established.",
+      "marker": "Invalid operator ID or «secret:operatorPassword».",
+      "observedIn": {
+        "location": "https://web-sample.interface-hiring.com/signon?err=Invalid%20operator%20ID%20or%20«secret:operatorPassword».",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      }
+    }
+  ],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "session.signOn",
+    "title": "Operator Sign On to Meridian Core",
+    "description": "Signs an operator on to MERIDIAN CORE from the OPERATOR SIGN ON screen using operatorId, operatorPassword (secret), and branch parameters, then lands on the MAIN MENU and returns the signed-on operator identity from the status bar as output 'sessionBanner'. Exceptional outcome BAD_CREDENTIALS occurs when an invalid «secret:operatorPassword» is supplied (marker: \"Invalid operator ID or «secret:operatorPassword».\")."
+  }
+}

@@ -1,0 +1,1049 @@
+{
+  "goal": "Record a COMPLETE funds-transfer capability against MERIDIAN CORE. (1) Sign on: Operator ID, Password, leave Branch, click Sign On. (2) Open Member Inquiry, search by Member Number for the memberId parameter, click Select. (3) Click 'Funds Transfer'. (4) On the form: for From Share call choose with option = the fromShare parameter value verbatim (it is the option's underlying value attribute, NOT the visible label); for To Share choose the toShare parameter value verbatim; type amount into Amount; type memo into Memo; click Continue. (5) On CONFIRM FUNDS TRANSFER the money has NOT moved — click 'Post Transfer' with irreversible=true (a human pre-authorised this recording). (6) On the receipt screen, use read to capture the confirmation/reference number into an output named 'confirmationNumber' — target the value cell that sits next to the 'Confirmation:' label. (7) Then declare_done with capability_id 'member.transferFunds'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open the MERIDIAN CORE application to begin sign on.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the Operator ID.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12.1,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the operator «secret:operatorPassword».",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 15,
+          "w": 11,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Click Sign On to authenticate.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.8,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open Member Inquiry / Selection.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry / Selection",
+        "framePath": [],
+        "nearText": "1. | Member Inquiry / Selection",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 15.8,
+          "w": 11.8,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the member number to search.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.6,
+          "w": 15.1,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "memberId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Search for the member.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 44.2,
+          "y": 17.4,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=101555",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 7,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Select the member to open their record.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Select",
+        "framePath": [],
+        "nearText": "101555 | ***ce | 5 | Select",
+        "bboxPct": {
+          "x": 69.6,
+          "y": 27.1,
+          "w": 2.6,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=101555",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "screenshotRef": "steps/005-click.png",
+      "seq": 8,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open the Funds Transfer form.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Funds Transfer",
+        "framePath": [],
+        "bboxPct": {
+          "x": 21.5,
+          "y": 43.6,
+          "w": 6.4,
+          "h": 1.7
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/006-click.png",
+      "seq": 9,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the From Share by its underlying value attribute (fromShare parameter).",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "From Share:",
+        "framePath": [],
+        "label": "From Share:",
+        "options": [
+          "101555-S0001 - Regular Shares (***00)",
+          "101555-CERT - Certificate (***00)",
+          "101555-MMKT-3 - Money Market (***00)",
+          "101555-MMKT-4 - Money Market (***00)",
+          "101555-MMKT-5 - Money Market (***00)"
+        ],
+        "optionValues": [
+          "101555-S0001",
+          "101555-CERT",
+          "101555-MMKT-3",
+          "101555-MMKT-4",
+          "101555-MMKT-5"
+        ],
+        "bboxPct": {
+          "x": 29.9,
+          "y": 15.9,
+          "w": 22.1,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "101555-S0001"
+      },
+      "optionBy": "value",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "seq": 10,
+      "probe": false
+    },
+    {
+      "kind": "choose",
+      "intent": "Select the To Share by its underlying value attribute (toShare parameter).",
+      "risk": "reversible",
+      "element": {
+        "role": "combobox",
+        "name": "To Share:",
+        "framePath": [],
+        "label": "To Share:",
+        "options": [
+          "101555-S0001 - Regular Shares (***00)",
+          "101555-CERT - Certificate (***00)",
+          "101555-MMKT-3 - Money Market (***00)",
+          "101555-MMKT-4 - Money Market (***00)",
+          "101555-MMKT-5 - Money Market (***00)"
+        ],
+        "optionValues": [
+          "101555-S0001",
+          "101555-CERT",
+          "101555-MMKT-3",
+          "101555-MMKT-4",
+          "101555-MMKT-5"
+        ],
+        "bboxPct": {
+          "x": 29.9,
+          "y": 19.1,
+          "w": 22.1,
+          "h": 2.4
+        }
+      },
+      "option": {
+        "literal": "101555-CERT"
+      },
+      "optionBy": "value",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "seq": 11,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the transfer amount.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Amount:",
+        "framePath": [],
+        "label": "Amount:",
+        "bboxPct": {
+          "x": 30.5,
+          "y": 22.3,
+          "w": 8,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "amount"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "seq": 12,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter the memo.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Memo:",
+        "framePath": [],
+        "label": "Memo:",
+        "bboxPct": {
+          "x": 29.9,
+          "y": 25.3,
+          "w": 21.2,
+          "h": 2.2
+        }
+      },
+      "value": {
+        "param": "memo"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "seq": 13,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Click Continue to review the transfer.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Continue",
+        "framePath": [],
+        "nearText": " | Cancel",
+        "bboxPct": {
+          "x": 29.9,
+          "y": 29.9,
+          "w": 5.4,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer",
+        "title": "Funds Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "FUNDS TRANSFER"
+          },
+          {
+            "text": "From Share:"
+          },
+          {
+            "text": "To Share:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer/review",
+        "title": "Confirm Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "CONFIRM FUNDS TRANSFER"
+          },
+          {
+            "text": "Member:"
+          },
+          {
+            "text": "From:"
+          },
+          {
+            "text": "To:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/007-click.png",
+      "seq": 14,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Post the funds transfer (pre-authorised for recording).",
+      "risk": "irreversible",
+      "element": {
+        "role": "button",
+        "name": "Post Transfer",
+        "framePath": [],
+        "bboxPct": {
+          "x": 21.5,
+          "y": 33.1,
+          "w": 7.2,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer/review",
+        "title": "Confirm Transfer - Meridian Core",
+        "markers": [
+          {
+            "text": "CONFIRM FUNDS TRANSFER"
+          },
+          {
+            "text": "Member:"
+          },
+          {
+            "text": "From:"
+          },
+          {
+            "text": "To:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "Memo:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer/post",
+        "title": "Transfer Posted - Meridian Core",
+        "markers": [
+          {
+            "text": "TRANSFER POSTED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "Posted:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "101555-S0001:"
+          },
+          {
+            "text": "101555-CERT:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/009-click.png",
+      "approvedIntervention": "int-01",
+      "seq": 15,
+      "probe": false
+    },
+    {
+      "kind": "read",
+      "intent": "Capture the confirmation/reference number from the receipt.",
+      "risk": "read",
+      "element": {
+        "role": "cell",
+        "name": "CN480075",
+        "framePath": [],
+        "label": "Confirmation:",
+        "nearText": "Confirmation: | CN480075",
+        "bboxPct": {
+          "x": 30.5,
+          "y": 17.5,
+          "w": 11.9,
+          "h": 2.4
+        }
+      },
+      "outputName": "confirmationNumber",
+      "readValue": "CN480075",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer/post",
+        "title": "Transfer Posted - Meridian Core",
+        "markers": [
+          {
+            "text": "TRANSFER POSTED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "Posted:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "101555-S0001:"
+          },
+          {
+            "text": "101555-CERT:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/101555/transfer/post",
+        "title": "Transfer Posted - Meridian Core",
+        "markers": [
+          {
+            "text": "TRANSFER POSTED"
+          },
+          {
+            "text": "Confirmation:"
+          },
+          {
+            "text": "Posted:"
+          },
+          {
+            "text": "Amount:"
+          },
+          {
+            "text": "101555-S0001:"
+          },
+          {
+            "text": "101555-CERT:"
+          }
+        ]
+      },
+      "seq": 16,
+      "probe": false
+    }
+  ],
+  "outcomes": [],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "member.transferFunds",
+    "title": "Member Funds Transfer",
+    "description": "Signs on to MERIDIAN CORE, opens Member Inquiry, searches by Member Number for memberId and selects the member, then posts a Funds Transfer. Inputs: memberId, fromShare and toShare (share value attributes), amount, memo, plus operator credentials from the environment. Executes the transfer (irreversible Post Transfer) and returns the receipt's confirmationNumber. Outcome: transfer posted successfully."
+  }
+}

@@ -1,0 +1,360 @@
+{
+  "location": "https://web-sample.interface-hiring.com/menu",
+  "count": 22,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "link",
+      "name": "Member Inquiry / Selection",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 15.6,
+        "w": 11.8,
+        "h": 1.6
+      },
+      "nearText": "1. | Member Inquiry / Selection"
+    },
+    {
+      "ref": 5,
+      "role": "link",
+      "name": "Funds Transfer",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 17.8,
+        "w": 6.4,
+        "h": 1.6
+      },
+      "nearText": "2. | Funds Transfer"
+    },
+    {
+      "ref": 6,
+      "role": "link",
+      "name": "Open New Share",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 19.9,
+        "w": 7.3,
+        "h": 1.6
+      },
+      "nearText": "3. | Open New Share"
+    },
+    {
+      "ref": 7,
+      "role": "link",
+      "name": "Update Member Information",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 22,
+        "w": 12.2,
+        "h": 1.6
+      },
+      "nearText": "4. | Update Member Information"
+    },
+    {
+      "ref": 8,
+      "role": "link",
+      "name": "Place Account Hold",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 24.1,
+        "w": 8.2,
+        "h": 1.6
+      },
+      "nearText": "5. | Place Account Hold"
+    },
+    {
+      "ref": 9,
+      "role": "link",
+      "name": "System Settings (error injection)",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 26.3,
+        "w": 14.3,
+        "h": 1.6
+      },
+      "nearText": "8. | System Settings (error injection)"
+    },
+    {
+      "ref": 10,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 25.4,
+        "y": 28.4,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "9. | Sign Off"
+    },
+    {
+      "ref": 11,
+      "role": "heading",
+      "name": "MAIN MENU",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 12,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 13,
+      "role": "cell",
+      "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:25 | SID 361C9C5D",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 36.5,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:25 | SID 361C9C5D",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:25 | SID 361C9C5D"
+      ]
+    },
+    {
+      "ref": 14,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 39,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 15,
+      "role": "rowheader",
+      "name": "1.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 15.4,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "1. | Member Inquiry / Selection",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "1.",
+        "Member Inquiry / Selection"
+      ]
+    },
+    {
+      "ref": 16,
+      "role": "rowheader",
+      "name": "2.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 17.5,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "2. | Funds Transfer",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "2.",
+        "Funds Transfer"
+      ]
+    },
+    {
+      "ref": 17,
+      "role": "rowheader",
+      "name": "3.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 19.6,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "3. | Open New Share",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "3.",
+        "Open New Share"
+      ]
+    },
+    {
+      "ref": 18,
+      "role": "rowheader",
+      "name": "4.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 21.8,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "4. | Update Member Information",
+      "rowId": "t1r3",
+      "cellTexts": [
+        "4.",
+        "Update Member Information"
+      ]
+    },
+    {
+      "ref": 19,
+      "role": "rowheader",
+      "name": "5.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 23.9,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "5. | Place Account Hold",
+      "rowId": "t1r4",
+      "cellTexts": [
+        "5.",
+        "Place Account Hold"
+      ]
+    },
+    {
+      "ref": 20,
+      "role": "rowheader",
+      "name": "8.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 26,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "8. | System Settings (error injection)",
+      "rowId": "t1r5",
+      "cellTexts": [
+        "8.",
+        "System Settings (error injection)"
+      ]
+    },
+    {
+      "ref": 21,
+      "role": "rowheader",
+      "name": "9.",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 22.4,
+        "y": 28.1,
+        "w": 2.5,
+        "h": 2.1
+      },
+      "nearText": "9. | Sign Off",
+      "rowId": "t1r6",
+      "cellTexts": [
+        "9.",
+        "Sign Off"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,768 @@
+{
+  "goal": "Sign on to MERIDIAN CORE as the operator (fill Operator ID, Password, leave Branch as-is, click Sign On). Then open Member Inquiry, search by Member Number for member 100234, and click Select to open that member's record. On the MEMBER RECORD screen use read_table ONCE to capture the whole SHARES / BALANCES table into an output named 'shares', requesting exactly these columns: Share ID, Type, Balance, Status. Do NOT read individual cells. Then probe one exceptional state: begin_probe MEMBER_NOT_FOUND, go back to Member Inquiry, search by Member Number for 999999 which does not exist, and declare_outcome MEMBER_NOT_FOUND with a marker string you can literally see on that screen. Finally declare_done with capability_id 'member.readBalances'.",
+  "actions": [
+    {
+      "kind": "navigate",
+      "intent": "Open MERIDIAN CORE sign-on page to begin.",
+      "risk": "read",
+      "url": "https://web-sample.interface-hiring.com",
+      "before": {
+        "location": "about:blank",
+        "title": "",
+        "markers": []
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/001-navigate.png",
+      "seq": 1,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter Operator ID.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Operator ID:",
+        "framePath": [],
+        "label": "Operator ID:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 12,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 2,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter operator «secret:operatorPassword».",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Password:",
+        "framePath": [],
+        "label": "Password:",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 14.9,
+          "w": 11.7,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "operatorPassword"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "seq": 3,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Sign on to MERIDIAN CORE as the operator.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Sign On",
+        "framePath": [],
+        "nearText": " | ",
+        "bboxPct": {
+          "x": 29.3,
+          "y": 22.5,
+          "w": 5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/signon",
+        "title": "Sign On - Meridian Core",
+        "markers": [
+          {
+            "text": "OPERATOR SIGN ON"
+          },
+          {
+            "text": "Operator ID:"
+          },
+          {
+            "text": "Password:"
+          },
+          {
+            "text": "Branch:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "screenshotRef": "steps/002-click.png",
+      "seq": 4,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open Member Inquiry / Selection.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry / Selection",
+        "framePath": [],
+        "nearText": "1. | Member Inquiry / Selection",
+        "bboxPct": {
+          "x": 25.4,
+          "y": 15.6,
+          "w": 11.8,
+          "h": 1.6
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/menu",
+        "title": "Main Menu - Meridian Core",
+        "markers": [
+          {
+            "text": "MAIN MENU"
+          },
+          {
+            "text": "1."
+          },
+          {
+            "text": "2."
+          },
+          {
+            "text": "3."
+          },
+          {
+            "text": "4."
+          },
+          {
+            "text": "5."
+          },
+          {
+            "text": "8."
+          },
+          {
+            "text": "9."
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/003-click.png",
+      "seq": 5,
+      "probe": false
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter member number to search.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.4,
+          "w": 16.1,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "param": "memberId"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 6,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Search for the member by number.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 45.2,
+          "y": 17.3,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=100234",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "screenshotRef": "steps/004-click.png",
+      "seq": 7,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Open the member's record.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Select",
+        "framePath": [],
+        "nearText": "100234 | ***da | 4 | Select",
+        "bboxPct": {
+          "x": 69.5,
+          "y": 26.8,
+          "w": 2.6,
+          "h": 1.6
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=100234",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          },
+          {
+            "text": "Member No."
+          },
+          {
+            "text": "Name"
+          },
+          {
+            "text": "Shares"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "screenshotRef": "steps/005-click.png",
+      "seq": 8,
+      "probe": false
+    },
+    {
+      "kind": "readTable",
+      "intent": "Capture the whole SHARES / BALANCES table for the member.",
+      "risk": "read",
+      "columns": [
+        "Share ID",
+        "Type",
+        "Balance",
+        "Status"
+      ],
+      "outputName": "shares",
+      "readValue": "[{\"Share ID\":\"100234-S0001\",\"Type\":\"Regular Shares\",\"Balance\":\"***00\",\"Status\":\"HOLD [HOLD]\"},{\"Share ID\":\"100234-S0070\",\"Type\":\"Share Draft (Checking)\",\"Balance\":\"***54\",\"Status\":\"OPEN\"},{\"Share ID\":\"100234-S0001-3\",\"Type\":\"Regular Shares\",\"Balance\":\"***01\",\"Status\":\"HOLD [HOLD]\"},{\"Share ID\":\"100234-MMKT-4\",\"Type\":\"Money Market\",\"Balance\":\"***00\",\"Status\":\"OPEN\"}]",
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members/100234",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "seq": 9,
+      "probe": false
+    },
+    {
+      "kind": "activate",
+      "intent": "Go back to Member Inquiry to search a nonexistent member.",
+      "risk": "reversible",
+      "element": {
+        "role": "link",
+        "name": "Member Inquiry",
+        "framePath": [],
+        "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off",
+        "bboxPct": {
+          "x": 27.6,
+          "y": 5.3,
+          "w": 6.9,
+          "h": 1.6
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members/100234",
+        "title": "Member Record - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER RECORD"
+          },
+          {
+            "text": "Member No.:"
+          },
+          {
+            "text": "Name:"
+          },
+          {
+            "text": "E-mail:"
+          },
+          {
+            "text": "Phone:"
+          },
+          {
+            "text": "Address:"
+          },
+          {
+            "text": "Share ID"
+          },
+          {
+            "text": "Type"
+          },
+          {
+            "text": "Balance"
+          },
+          {
+            "text": "Status"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/006-click.png",
+      "seq": 10,
+      "probe": true,
+      "probeCode": "MEMBER_NOT_FOUND"
+    },
+    {
+      "kind": "setValue",
+      "intent": "Enter a nonexistent member number.",
+      "risk": "reversible",
+      "element": {
+        "role": "textbox",
+        "name": "Value:",
+        "framePath": [],
+        "label": "Value:",
+        "bboxPct": {
+          "x": 28.2,
+          "y": 17.4,
+          "w": 16.1,
+          "h": 2.1
+        }
+      },
+      "value": {
+        "literal": "999999"
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "seq": 11,
+      "probe": true,
+      "probeCode": "MEMBER_NOT_FOUND"
+    },
+    {
+      "kind": "activate",
+      "intent": "Search for the nonexistent member.",
+      "risk": "reversible",
+      "element": {
+        "role": "button",
+        "name": "Search",
+        "framePath": [],
+        "nearText": "Value: | ",
+        "bboxPct": {
+          "x": 45.2,
+          "y": 17.3,
+          "w": 4.5,
+          "h": 2.4
+        }
+      },
+      "before": {
+        "location": "https://web-sample.interface-hiring.com/members",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "after": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=999999",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      },
+      "screenshotRef": "steps/007-click.png",
+      "seq": 12,
+      "probe": true,
+      "probeCode": "MEMBER_NOT_FOUND"
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "Searching Member Inquiry by member number for a value that does not exist returns no results and displays a not-found message instead of a selectable member row.",
+      "marker": "No member records matched your search.",
+      "observedIn": {
+        "location": "https://web-sample.interface-hiring.com/members?by=number&q=999999",
+        "title": "Member Inquiry - Meridian Core",
+        "markers": [
+          {
+            "text": "MEMBER INQUIRY / SELECTION"
+          },
+          {
+            "text": "Search by:"
+          },
+          {
+            "text": "Value:"
+          }
+        ]
+      }
+    }
+  ],
+  "declinedInterventions": [],
+  "done": {
+    "capabilityId": "member.readBalances",
+    "title": "Read Member Shares/Balances",
+    "description": "Signs on to MERIDIAN CORE as the operator, opens Member Inquiry, searches by member number for the supplied memberId, and opens the member record. Captures the full SHARES / BALANCES table into output 'shares' (columns: Share ID, Type, Balance, Status). Inputs: memberId, operatorId, operatorPassword (secret). Handles the MEMBER_NOT_FOUND outcome when a member number does not exist (marker: \"No member records matched your search.\")."
+  }
+}

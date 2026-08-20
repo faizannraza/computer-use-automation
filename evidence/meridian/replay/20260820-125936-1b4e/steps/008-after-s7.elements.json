@@ -1,0 +1,884 @@
+{
+  "location": "https://web-sample.interface-hiring.com/members/101555",
+  "count": 46,
+  "elements": [
+    {
+      "ref": 0,
+      "role": "link",
+      "name": "Main Menu",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 20.9,
+        "y": 5.3,
+        "w": 5.2,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 1,
+      "role": "link",
+      "name": "Member Inquiry",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 27.6,
+        "y": 5.3,
+        "w": 6.9,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 2,
+      "role": "link",
+      "name": "System Settings",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 36,
+        "y": 5.3,
+        "w": 7.1,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 3,
+      "role": "link",
+      "name": "Sign Off",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 44.6,
+        "y": 5.3,
+        "w": 3.5,
+        "h": 1.6
+      },
+      "nearText": "Main Menu · Member Inquiry · System Settings · Sign Off"
+    },
+    {
+      "ref": 4,
+      "role": "link",
+      "name": "Funds Transfer",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 42.6,
+        "w": 6.4,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 5,
+      "role": "link",
+      "name": "Open New Share",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 29.4,
+        "y": 42.6,
+        "w": 7.3,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 6,
+      "role": "link",
+      "name": "Update Member Information",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 38.1,
+        "y": 42.6,
+        "w": 12.2,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 7,
+      "role": "link",
+      "name": "Place Account Hold",
+      "framePath": [],
+      "interactive": true,
+      "bboxPct": {
+        "x": 51.9,
+        "y": 42.6,
+        "w": 8.2,
+        "h": 1.6
+      }
+    },
+    {
+      "ref": 8,
+      "role": "heading",
+      "name": "MEMBER RECORD",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 8.6,
+        "w": 57,
+        "h": 2
+      }
+    },
+    {
+      "ref": 9,
+      "role": "cell",
+      "name": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 1.9,
+        "w": 59.2,
+        "h": 3.1
+      },
+      "nearText": "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™",
+      "rowId": "t0r0",
+      "cellTexts": [
+        "MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™"
+      ]
+    },
+    {
+      "ref": 10,
+      "role": "cell",
+      "name": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:37 | SID E1D09B67",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 45.8,
+        "w": 59.2,
+        "h": 2.5
+      },
+      "nearText": "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:37 | SID E1D09B67",
+      "rowId": "t0r3",
+      "cellTexts": [
+        "OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:59:37 | SID E1D09B67"
+      ]
+    },
+    {
+      "ref": 11,
+      "role": "cell",
+      "name": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 20.4,
+        "y": 48.3,
+        "w": 59.2,
+        "h": 2.4
+      },
+      "nearText": "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel",
+      "rowId": "t0r4",
+      "cellTexts": [
+        "F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+      ]
+    },
+    {
+      "ref": 12,
+      "role": "rowheader",
+      "name": "Member No.:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 12.3,
+        "w": 9.7,
+        "h": 2.1
+      },
+      "nearText": "Member No.: | 101555 | Name: | ***ce",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member No.:",
+        "101555",
+        "Name:",
+        "***ce"
+      ]
+    },
+    {
+      "ref": 13,
+      "role": "cell",
+      "name": "101555",
+      "framePath": [],
+      "interactive": false,
+      "label": "Member No.:",
+      "bboxPct": {
+        "x": 31.2,
+        "y": 12.3,
+        "w": 27,
+        "h": 2.1
+      },
+      "nearText": "Member No.: | 101555 | Name: | ***ce",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member No.:",
+        "101555",
+        "Name:",
+        "***ce"
+      ]
+    },
+    {
+      "ref": 14,
+      "role": "rowheader",
+      "name": "Name:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 58.2,
+        "y": 12.3,
+        "w": 6.6,
+        "h": 2.1
+      },
+      "nearText": "Member No.: | 101555 | Name: | ***ce",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member No.:",
+        "101555",
+        "Name:",
+        "***ce"
+      ]
+    },
+    {
+      "ref": 15,
+      "role": "cell",
+      "name": "***ce",
+      "framePath": [],
+      "interactive": false,
+      "label": "Name:",
+      "bboxPct": {
+        "x": 64.8,
+        "y": 12.3,
+        "w": 13.7,
+        "h": 2.1
+      },
+      "nearText": "Member No.: | 101555 | Name: | ***ce",
+      "rowId": "t1r0",
+      "cellTexts": [
+        "Member No.:",
+        "101555",
+        "Name:",
+        "***ce"
+      ]
+    },
+    {
+      "ref": 16,
+      "role": "rowheader",
+      "name": "E-mail:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 14.4,
+        "w": 9.7,
+        "h": 2.1
+      },
+      "nearText": "E-mail: | ***om | Phone: | ***99",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "E-mail:",
+        "***om",
+        "Phone:",
+        "***99"
+      ]
+    },
+    {
+      "ref": 17,
+      "role": "cell",
+      "name": "***om",
+      "framePath": [],
+      "interactive": false,
+      "label": "E-mail:",
+      "bboxPct": {
+        "x": 31.2,
+        "y": 14.4,
+        "w": 27,
+        "h": 2.1
+      },
+      "nearText": "E-mail: | ***om | Phone: | ***99",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "E-mail:",
+        "***om",
+        "Phone:",
+        "***99"
+      ]
+    },
+    {
+      "ref": 18,
+      "role": "rowheader",
+      "name": "Phone:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 58.2,
+        "y": 14.4,
+        "w": 6.6,
+        "h": 2.1
+      },
+      "nearText": "E-mail: | ***om | Phone: | ***99",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "E-mail:",
+        "***om",
+        "Phone:",
+        "***99"
+      ]
+    },
+    {
+      "ref": 19,
+      "role": "cell",
+      "name": "***99",
+      "framePath": [],
+      "interactive": false,
+      "label": "Phone:",
+      "bboxPct": {
+        "x": 64.8,
+        "y": 14.4,
+        "w": 13.7,
+        "h": 2.1
+      },
+      "nearText": "E-mail: | ***om | Phone: | ***99",
+      "rowId": "t1r1",
+      "cellTexts": [
+        "E-mail:",
+        "***om",
+        "Phone:",
+        "***99"
+      ]
+    },
+    {
+      "ref": 20,
+      "role": "rowheader",
+      "name": "Address:",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.5,
+        "y": 16.5,
+        "w": 9.7,
+        "h": 2.1
+      },
+      "nearText": "Address: | ***on",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Address:",
+        "***on"
+      ]
+    },
+    {
+      "ref": 21,
+      "role": "cell",
+      "name": "***on",
+      "framePath": [],
+      "interactive": false,
+      "label": "Address:",
+      "bboxPct": {
+        "x": 31.2,
+        "y": 16.5,
+        "w": 47.3,
+        "h": 2.1
+      },
+      "nearText": "Address: | ***on",
+      "rowId": "t1r2",
+      "cellTexts": [
+        "Address:",
+        "***on"
+      ]
+    },
+    {
+      "ref": 22,
+      "role": "columnheader",
+      "name": "Share ID",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.6,
+        "y": 22,
+        "w": 18,
+        "h": 2.9
+      }
+    },
+    {
+      "ref": 23,
+      "role": "columnheader",
+      "name": "Type",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 39.6,
+        "y": 22,
+        "w": 16.8,
+        "h": 2.9
+      }
+    },
+    {
+      "ref": 24,
+      "role": "columnheader",
+      "name": "Balance",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 56.4,
+        "y": 22,
+        "w": 13.2,
+        "h": 2.9
+      }
+    },
+    {
+      "ref": 25,
+      "role": "columnheader",
+      "name": "Status",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 69.6,
+        "y": 22,
+        "w": 8.9,
+        "h": 2.9
+      }
+    },
+    {
+      "ref": 26,
+      "role": "cell",
+      "name": "101555-S0001",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.6,
+        "y": 24.9,
+        "w": 18,
+        "h": 2.9
+      },
+      "nearText": "101555-S0001 | Regular Shares | ***00 | OPEN",
+      "colHeader": "Share ID",
+      "rowId": "t2r1",
+      "cellTexts": [
+        "101555-S0001",
+        "Regular Shares",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 27,
+      "role": "cell",
+      "name": "Regular Shares",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 39.6,
+        "y": 24.9,
+        "w": 16.8,
+        "h": 2.9
+      },
+      "nearText": "101555-S0001 | Regular Shares | ***00 | OPEN",
+      "colHeader": "Type",
+      "rowId": "t2r1",
+      "cellTexts": [
+        "101555-S0001",
+        "Regular Shares",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 28,
+      "role": "cell",
+      "name": "***00",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 56.4,
+        "y": 24.9,
+        "w": 13.2,
+        "h": 2.9
+      },
+      "nearText": "101555-S0001 | Regular Shares | ***00 | OPEN",
+      "colHeader": "Balance",
+      "rowId": "t2r1",
+      "cellTexts": [
+        "101555-S0001",
+        "Regular Shares",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 29,
+      "role": "cell",
+      "name": "OPEN",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 69.6,
+        "y": 24.9,
+        "w": 8.9,
+        "h": 2.9
+      },
+      "nearText": "101555-S0001 | Regular Shares | ***00 | OPEN",
+      "colHeader": "Status",
+      "rowId": "t2r1",
+      "cellTexts": [
+        "101555-S0001",
+        "Regular Shares",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 30,
+      "role": "cell",
+      "name": "101555-CERT",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.6,
+        "y": 27.8,
+        "w": 18,
+        "h": 2.9
+      },
+      "nearText": "101555-CERT | Certificate | ***00 | OPEN",
+      "colHeader": "Share ID",
+      "rowId": "t2r2",
+      "cellTexts": [
+        "101555-CERT",
+        "Certificate",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 31,
+      "role": "cell",
+      "name": "Certificate",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 39.6,
+        "y": 27.8,
+        "w": 16.8,
+        "h": 2.9
+      },
+      "nearText": "101555-CERT | Certificate | ***00 | OPEN",
+      "colHeader": "Type",
+      "rowId": "t2r2",
+      "cellTexts": [
+        "101555-CERT",
+        "Certificate",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 32,
+      "role": "cell",
+      "name": "***00",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 56.4,
+        "y": 27.8,
+        "w": 13.2,
+        "h": 2.9
+      },
+      "nearText": "101555-CERT | Certificate | ***00 | OPEN",
+      "colHeader": "Balance",
+      "rowId": "t2r2",
+      "cellTexts": [
+        "101555-CERT",
+        "Certificate",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 33,
+      "role": "cell",
+      "name": "OPEN",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 69.6,
+        "y": 27.8,
+        "w": 8.9,
+        "h": 2.9
+      },
+      "nearText": "101555-CERT | Certificate | ***00 | OPEN",
+      "colHeader": "Status",
+      "rowId": "t2r2",
+      "cellTexts": [
+        "101555-CERT",
+        "Certificate",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 34,
+      "role": "cell",
+      "name": "101555-MMKT-3",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.6,
+        "y": 30.6,
+        "w": 18,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-3 | Money Market | ***00 | OPEN",
+      "colHeader": "Share ID",
+      "rowId": "t2r3",
+      "cellTexts": [
+        "101555-MMKT-3",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 35,
+      "role": "cell",
+      "name": "Money Market",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 39.6,
+        "y": 30.6,
+        "w": 16.8,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-3 | Money Market | ***00 | OPEN",
+      "colHeader": "Type",
+      "rowId": "t2r3",
+      "cellTexts": [
+        "101555-MMKT-3",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 36,
+      "role": "cell",
+      "name": "***00",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 56.4,
+        "y": 30.6,
+        "w": 13.2,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-3 | Money Market | ***00 | OPEN",
+      "colHeader": "Balance",
+      "rowId": "t2r3",
+      "cellTexts": [
+        "101555-MMKT-3",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 37,
+      "role": "cell",
+      "name": "OPEN",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 69.6,
+        "y": 30.6,
+        "w": 8.9,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-3 | Money Market | ***00 | OPEN",
+      "colHeader": "Status",
+      "rowId": "t2r3",
+      "cellTexts": [
+        "101555-MMKT-3",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 38,
+      "role": "cell",
+      "name": "101555-MMKT-4",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.6,
+        "y": 33.5,
+        "w": 18,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-4 | Money Market | ***00 | OPEN",
+      "colHeader": "Share ID",
+      "rowId": "t2r4",
+      "cellTexts": [
+        "101555-MMKT-4",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 39,
+      "role": "cell",
+      "name": "Money Market",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 39.6,
+        "y": 33.5,
+        "w": 16.8,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-4 | Money Market | ***00 | OPEN",
+      "colHeader": "Type",
+      "rowId": "t2r4",
+      "cellTexts": [
+        "101555-MMKT-4",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 40,
+      "role": "cell",
+      "name": "***00",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 56.4,
+        "y": 33.5,
+        "w": 13.2,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-4 | Money Market | ***00 | OPEN",
+      "colHeader": "Balance",
+      "rowId": "t2r4",
+      "cellTexts": [
+        "101555-MMKT-4",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 41,
+      "role": "cell",
+      "name": "OPEN",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 69.6,
+        "y": 33.5,
+        "w": 8.9,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-4 | Money Market | ***00 | OPEN",
+      "colHeader": "Status",
+      "rowId": "t2r4",
+      "cellTexts": [
+        "101555-MMKT-4",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 42,
+      "role": "cell",
+      "name": "101555-MMKT-5",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 21.6,
+        "y": 36.4,
+        "w": 18,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-5 | Money Market | ***00 | OPEN",
+      "colHeader": "Share ID",
+      "rowId": "t2r5",
+      "cellTexts": [
+        "101555-MMKT-5",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 43,
+      "role": "cell",
+      "name": "Money Market",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 39.6,
+        "y": 36.4,
+        "w": 16.8,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-5 | Money Market | ***00 | OPEN",
+      "colHeader": "Type",
+      "rowId": "t2r5",
+      "cellTexts": [
+        "101555-MMKT-5",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 44,
+      "role": "cell",
+      "name": "***00",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 56.4,
+        "y": 36.4,
+        "w": 13.2,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-5 | Money Market | ***00 | OPEN",
+      "colHeader": "Balance",
+      "rowId": "t2r5",
+      "cellTexts": [
+        "101555-MMKT-5",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    },
+    {
+      "ref": 45,
+      "role": "cell",
+      "name": "OPEN",
+      "framePath": [],
+      "interactive": false,
+      "bboxPct": {
+        "x": 69.6,
+        "y": 36.4,
+        "w": 8.9,
+        "h": 2.9
+      },
+      "nearText": "101555-MMKT-5 | Money Market | ***00 | OPEN",
+      "colHeader": "Status",
+      "rowId": "t2r5",
+      "cellTexts": [
+        "101555-MMKT-5",
+        "Money Market",
+        "***00",
+        "OPEN"
+      ]
+    }
+  ]
+}

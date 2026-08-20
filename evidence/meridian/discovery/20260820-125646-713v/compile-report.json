@@ -1,0 +1,23 @@
+{
+  "spineActions": 15,
+  "prunedProbeActions": 0,
+  "parameterizations": [
+    "s7.target.near: \"100234\" → {memberId}",
+    "s7.snapshot: \"100234\" → {memberId}",
+    "s13.target.near: \"100234\" → {memberId}",
+    "s13.target.near: \"LEGAL\" → {reasonCode}",
+    "s13.target.near: \"Capability recording\" → {notes}",
+    "s13.snapshot: \"100234\" → {memberId}",
+    "s13.snapshot: \"LEGAL\" → {reasonCode}",
+    "s13.snapshot: \"Capability recording\" → {notes}"
+  ],
+  "outcomeAttachments": [],
+  "notes": [
+    "s3: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval",
+    "s6: checkpoint may be non-specific — unscoped short marker \"Shares\"; review before approval",
+    "s9: option bound to {share} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s10: option bound to {reasonCode} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s12: checkpoint may be non-specific — unscoped short marker \"Member:\"; review before approval",
+    "s13: irreversible action was human-approved during discovery (intervention int-01) — replay will escalate it the same way under the default policy"
+  ]
+}

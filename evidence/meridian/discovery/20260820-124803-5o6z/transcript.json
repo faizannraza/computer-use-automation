@@ -1,0 +1,631 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "text",
+        "text": "TASK:\nRecord a COMPLETE funds-transfer capability against MERIDIAN CORE. (1) Sign on: Operator ID, Password, leave Branch, click Sign On. (2) Open Member Inquiry, search by Member Number for the memberId parameter, click Select. (3) Click 'Funds Transfer'. (4) On the form: for From Share call choose with option = the fromShare parameter value verbatim (it is the option's underlying value attribute, NOT the visible label); for To Share choose the toShare parameter value verbatim; type amount into Amount; type memo into Memo; click Continue. (5) On CONFIRM FUNDS TRANSFER the money has NOT moved — click 'Post Transfer' with irreversible=true (a human pre-authorised this recording). (6) On the receipt screen, use read to capture the confirmation/reference number into an output named 'confirmationNumber' — target the value cell that sits next to the 'Confirmation:' label. (7) Then declare_done with capability_id 'member.transferFunds'.\n\nPARAMETERS:\n- memberId (internal): Caller-supplied parameter 'memberId'. — value: \"101555\"\n- fromShare (none): Caller-supplied parameter 'fromShare'. — value: \"101555-S0001\"\n- toShare (none): Caller-supplied parameter 'toShare'. — value: \"101555-CERT\"\n- amount (none): Caller-supplied parameter 'amount'. — value: \"5.00\"\n- memo (none): Caller-supplied parameter 'memo'. — value: \"Capability recording\"\n- operatorId (internal): Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact. — value: \"teller1\"\n- operatorPassword (secret): Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact. — value: (secret — reference with param, never typed literally)\n\nThe application is served at https://web-sample.interface-hiring.com. The browser is currently blank — begin by navigating to the application."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "EqECCpABCBAYAipAKtmrnhbniAaG5jzM5NIqVZX3Ea1/rsxD5fnONnvZTW1E6mAToFnni8t4TLqsMPV8bZvuWPaYCD3dhaYPQSi58TIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjeoAfqzndQGEgwc9Ex68VSJIdEkqlYaDL1I6I6kfToEXsFhbiIw+OzVkOVnB8GpaOR4wCSEk/8mlCzWId1RennBzII2Fh32VXVG1NSsF54OU26aKVnsKj616Y2BiXdqCggQdAZfBSq+RBadcpZCMuyVKLaNX0+PsZHJ/0UjKPiOOMZzJrn333hHIb6nG0KmjMo4E4M92xgB"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_013ET7RgdkQrjiLJczD2qALr",
+        "name": "navigate",
+        "input": {
+          "url": "https://web-sample.interface-hiring.com",
+          "intent": "Open the MERIDIAN CORE application to begin sign on."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_013ET7RgdkQrjiLJczD2qALr",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #2]\nlocation: https://web-sample.interface-hiring.com/signon\ntitle: Sign On - Meridian Core\nelements (11):\n  [0] textbox \"Operator ID:\"\n  [1] textbox \"Password:\"\n  [2] combobox \"Branch:\" value=\"MAIN-001 - Main Office\" options=[\"MAIN-001 - Main Office\", \"WEST-014 - Westside\", \"EAST-022 - Eastgate\"]\n  [3] button \"Sign On\" row=\" | \"\n  [4] heading \"OPERATOR SIGN ON\"\n  [5] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [6] cell \"NOT SIGNED ON | 08/20/2026 19:48:11\"\n  [7] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [8] rowheader \"Operator ID:\" row=\"Operator ID: | \"\n  [9] rowheader \"Password:\" row=\"Password: | \"\n  [10] rowheader \"Branch:\" row=\"Branch: | MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ OPERATOR SIGN ON Operator ID: Password: Branch: MAIN-001 - Main Office WEST-014 - Westside EAST-022 - Eastgate Demo operators: teller1 / «secret:operatorPassword» · super1 / «secret:operatorPassword» (supervisor) NOT SIGNED ON | 08/20/2026 19:48:11 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01PLfvoRYg8uGDSmjv8smghb",
+        "name": "type",
+        "input": {
+          "ref": 0,
+          "intent": "Enter the Operator ID.",
+          "param": "operatorId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01PLfvoRYg8uGDSmjv8smghb",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorId} into [0]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01YNDb4AK7QjpsEFpQW2ZoZ8",
+        "name": "type",
+        "input": {
+          "ref": 1,
+          "intent": "Enter the operator «secret:operatorPassword».",
+          "param": "operatorPassword"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01YNDb4AK7QjpsEFpQW2ZoZ8",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorPassword} into [1]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_018MpWYNGundeeoA3qYRZKaJ",
+        "name": "click",
+        "input": {
+          "ref": 3,
+          "intent": "Click Sign On to authenticate."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_018MpWYNGundeeoA3qYRZKaJ",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #3]\nlocation: https://web-sample.interface-hiring.com/menu\ntitle: Main Menu - Meridian Core\nelements (22):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] link \"Member Inquiry / Selection\" row=\"1. | Member Inquiry / Selection\"\n  [5] link \"Funds Transfer\" row=\"2. | Funds Transfer\"\n  [6] link \"Open New Share\" row=\"3. | Open New Share\"\n  [7] link \"Update Member Information\" row=\"4. | Update Member Information\"\n  [8] link \"Place Account Hold\" row=\"5. | Place Account Hold\"\n  [9] link \"System Settings (error injection)\" row=\"8. | System Settings (error injection)\"\n  [10] link \"Sign Off\" row=\"9. | Sign Off\"\n  [11] heading \"MAIN MENU\"\n  [12] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [13] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:22 | SID EF2E23AC\"\n  [14] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [15] rowheader \"1.\" row=\"1. | Member Inquiry / Selection\"\n  [16] rowheader \"2.\" row=\"2. | Funds Transfer\"\n  [17] rowheader \"3.\" row=\"3. | Open New Share\"\n  [18] rowheader \"4.\" row=\"4. | Update Member Information\"\n  [19] rowheader \"5.\" row=\"5. | Place Account Hold\"\n  [20] rowheader \"8.\" row=\"8. | System Settings (error injection)\"\n  [21] rowheader \"9.\" row=\"9. | Sign Off\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MAIN MENU Signed on as J. TELLER (TELLER) 1. Member Inquiry / Selection 2. Funds Transfer 3. Open New Share 4. Update Member Information 5. Place Account Hold 8. System Settings (error injection) 9. Sign Off Type or click a menu option to continue. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:22 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01So6phy7sJKBHQHyydLo3im",
+        "name": "click",
+        "input": {
+          "ref": 4,
+          "intent": "Open Member Inquiry / Selection."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01So6phy7sJKBHQHyydLo3im",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #4]\nlocation: https://web-sample.interface-hiring.com/members\ntitle: Member Inquiry - Meridian Core\nelements (13):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] combobox \"Search by:\" value=\"Member Number\" options=[\"Member Number\", \"Last Name\"]\n  [5] textbox \"Value:\"\n  [6] button \"Search\" row=\"Value: | \"\n  [7] heading \"MEMBER INQUIRY / SELECTION\"\n  [8] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [9] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:25 | SID EF2E23AC\"\n  [10] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [11] rowheader \"Search by:\" row=\"Search by: | Member Number Last Name\"\n  [12] rowheader \"Value:\" row=\"Value: | \"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MEMBER INQUIRY / SELECTION Search by: Member Number Last Name Value: Try member numbers 100234, 100987, 101555, 102777, 103001. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:25 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Search by is already \"Member Number\". Let me enter the member number."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01VGMcJsyTRFdTH3ypXaVjJb",
+        "name": "type",
+        "input": {
+          "ref": 5,
+          "intent": "Enter the member number to search.",
+          "param": "memberId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01VGMcJsyTRFdTH3ypXaVjJb",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:memberId} into [5]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_016nGtcKqLyKfBXKh9m9etCT",
+        "name": "click",
+        "input": {
+          "ref": 6,
+          "intent": "Search for the member."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_016nGtcKqLyKfBXKh9m9etCT",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #5]\nlocation: https://web-sample.interface-hiring.com/members?by=number&q=101555\ntitle: Member Inquiry - Meridian Core\nelements (20):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] combobox \"Search by:\" value=\"Member Number\" options=[\"Member Number\", \"Last Name\"]\n  [5] textbox \"Value:\" value=\"101555\"\n  [6] button \"Search\" row=\"Value: | \"\n  [7] link \"Select\" row=\"101555 | ***ce | 5 | Select\"\n  [8] heading \"MEMBER INQUIRY / SELECTION\"\n  [9] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [10] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:31 | SID EF2E23AC\"\n  [11] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [12] rowheader \"Search by:\" row=\"Search by: | Member Number Last Name\"\n  [13] rowheader \"Value:\" row=\"Value: | \"\n  [14] columnheader \"Member No.\"\n  [15] columnheader \"Name\"\n  [16] columnheader \"Shares\"\n  [17] cell \"101555\" col=\"Member No.\" row=\"101555 | ***ce | 5 | Select\"\n  [18] cell \"***ce\" col=\"Name\" row=\"101555 | ***ce | 5 | Select\"\n  [19] cell \"5\" col=\"Shares\" row=\"101555 | ***ce | 5 | Select\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MEMBER INQUIRY / SELECTION Search by: Member Number Last Name Value: Member No. Name Shares 101555 ***ce 5 Select Try member numbers 100234, 100987, 101555, 102777, 103001. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:31 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "court"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_0165W6EG6hZNvfuaUyQwuTAc",
+        "name": "click",
+        "input": {
+          "ref": 7,
+          "intent": "Select the member to open their record."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_0165W6EG6hZNvfuaUyQwuTAc",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #6]\nlocation: https://web-sample.interface-hiring.com/members/101555\ntitle: Member Record - Meridian Core\nelements (46):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] link \"Funds Transfer\"\n  [5] link \"Open New Share\"\n  [6] link \"Update Member Information\"\n  [7] link \"Place Account Hold\"\n  [8] heading \"MEMBER RECORD\"\n  [9] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [10] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:36 | SID EF2E23AC\"\n  [11] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [12] rowheader \"Member No.:\" row=\"Member No.: | 101555 | Name: | ***ce\"\n  [13] cell \"101555\" label=\"Member No.:\" row=\"Member No.: | 101555 | Name: | ***ce\"\n  [14] rowheader \"Name:\" row=\"Member No.: | 101555 | Name: | ***ce\"\n  [15] cell \"***ce\" label=\"Name:\" row=\"Member No.: | 101555 | Name: | ***ce\"\n  [16] rowheader \"E-mail:\" row=\"E-mail: | ***om | Phone: | ***99\"\n  [17] cell \"***om\" label=\"E-mail:\" row=\"E-mail: | ***om | Phone: | ***99\"\n  [18] rowheader \"Phone:\" row=\"E-mail: | ***om | Phone: | ***99\"\n  [19] cell \"***99\" label=\"Phone:\" row=\"E-mail: | ***om | Phone: | ***99\"\n  [20] rowheader \"Address:\" row=\"Address: | ***on\"\n  [21] cell \"***on\" label=\"Address:\" row=\"Address: | ***on\"\n  [22] columnheader \"Share ID\"\n  [23] columnheader \"Type\"\n  [24] columnheader \"Balance\"\n  [25] columnheader \"Status\"\n  [26] cell \"101555-S0001\" col=\"Share ID\" row=\"101555-S0001 | Regular Shares | ***00 | OPEN\"\n  [27] cell \"Regular Shares\" col=\"Type\" row=\"101555-S0001 | Regular Shares | ***00 | OPEN\"\n  [28] cell \"***00\" col=\"Balance\" row=\"101555-S0001 | Regular Shares | ***00 | OPEN\"\n  [29] cell \"OPEN\" col=\"Status\" row=\"101555-S0001 | Regular Shares | ***00 | OPEN\"\n  [30] cell \"101555-CERT\" col=\"Share ID\" row=\"101555-CERT | Certificate | ***00 | OPEN\"\n  [31] cell \"Certificate\" col=\"Type\" row=\"101555-CERT | Certificate | ***00 | OPEN\"\n  [32] cell \"***00\" col=\"Balance\" row=\"101555-CERT | Certificate | ***00 | OPEN\"\n  [33] cell \"OPEN\" col=\"Status\" row=\"101555-CERT | Certificate | ***00 | OPEN\"\n  [34] cell \"101555-MMKT-3\" col=\"Share ID\" row=\"101555-MMKT-3 | Money Market | ***00 | OPEN\"\n  [35] cell \"Money Market\" col=\"Type\" row=\"101555-MMKT-3 | Money Market | ***00 | OPEN\"\n  [36] cell \"***00\" col=\"Balance\" row=\"101555-MMKT-3 | Money Market | ***00 | OPEN\"\n  [37] cell \"OPEN\" col=\"Status\" row=\"101555-MMKT-3 | Money Market | ***00 | OPEN\"\n  [38] cell \"101555-MMKT-4\" col=\"Share ID\" row=\"101555-MMKT-4 | Money Market | ***00 | OPEN\"\n  [39] cell \"Money Market\" col=\"Type\" row=\"101555-MMKT-4 | Money Market | ***00 | OPEN\"\n  [40] cell \"***00\" col=\"Balance\" row=\"101555-MMKT-4 | Money Market | ***00 | OPEN\"\n  [41] cell \"OPEN\" col=\"Status\" row=\"101555-MMKT-4 | Money Market | ***00 | OPEN\"\n  [42] cell \"101555-MMKT-5\" col=\"Share ID\" row=\"101555-MMKT-5 | Money Market | ***00 | OPEN\"\n  [43] cell \"Money Market\" col=\"Type\" row=\"101555-MMKT-5 | Money Market | ***00 | OPEN\"\n  [44] cell \"***00\" col=\"Balance\" row=\"101555-MMKT-5 | Money Market | ***00 | OPEN\"\n  [45] cell \"OPEN\" col=\"Status\" row=\"101555-MMKT-5 | Money Market | ***00 | OPEN\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MEMBER RECORD Member No.: 101555 Name: ***ce E-mail: ***om Phone: ***99 Address: ***on SHARES / BALANCES Share ID Type Balance Status 101555-S0001 Regular Shares ***00 OPEN 101555-CERT Certificate ***00 OPEN 101555-MMKT-3 Money Market ***00 OPEN 101555-MMKT-4 Money Market ***00 OPEN 101555-MMKT-5 Money Market ***00 OPEN ACTIONS Funds Transfer · Open New Share · Update Member Information · Place Account Hold OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:36 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "court"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01Bfni1TetNskzNMASf6GAC9",
+        "name": "click",
+        "input": {
+          "ref": 4,
+          "intent": "Open the Funds Transfer form."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Bfni1TetNskzNMASf6GAC9",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #7]\nlocation: https://web-sample.interface-hiring.com/members/101555/transfer\ntitle: Funds Transfer - Meridian Core\nelements (18):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [5] combobox \"From Share:\" value=\"101555-S0001 - Regular Shares (***00)\" options=[\"101555-S0001 - Regular Shares (***00)\", \"101555-CERT - Certificate (***00)\", \"101555-MMKT-3 - Money Market (***00)\", \"101555-MMKT-4 - Money Market (***00)\", \"101555-MMKT-5 - Money Market (***00)\"]\n  [6] combobox \"To Share:\" value=\"101555-S0001 - Regular Shares (***00)\" options=[\"101555-S0001 - Regular Shares (***00)\", \"101555-CERT - Certificate (***00)\", \"101555-MMKT-3 - Money Market (***00)\", \"101555-MMKT-4 - Money Market (***00)\", \"101555-MMKT-5 - Money Market (***00)\"]\n  [7] textbox \"Amount:\"\n  [8] textbox \"Memo:\"\n  [9] button \"Continue\" row=\" | Cancel\"\n  [10] link \"Cancel\" row=\" | Cancel\"\n  [11] heading \"FUNDS TRANSFER\"\n  [12] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [13] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:39 | SID EF2E23AC\"\n  [14] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [15] rowheader \"From Share:\"\n  [16] rowheader \"To Share:\"\n  [17] rowheader \"Amount:\" row=\"Amount: | $\"\n  [18] rowheader \"Memo:\" row=\"Memo: | \"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off FUNDS TRANSFER Member 101555 - ***ce From Share: 101555-S0001 - Regular Shares (***00) 101555-CERT - Certificate (***00) 101555-MMKT-3 - Money Market (***00) 101555-MMKT-4 - Money Market (***00) 101555-MMKT-5 - Money Market (***00) To Share: 101555-S0001 - Regular Shares (***00) 101555-CERT - Certificate (***00) 101555-MMKT-3 - Money Market (***00) 101555-MMKT-4 - Money Market (***00) 101555-MMKT-5 - Money Market (***00) Amount: $ Memo: Cancel OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:39 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "EroGCpABCBAYAipA5c+9uPBW5jLO7LucjhUqg8V3PEVAp53y+uIJiqnSb2i9ycau8HHQQFqHf9FkG//lCCGrMcQzSjAmxn26lifejjIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjeoAZy0ndQGEgywzf7JNgaaStrSX4caDGG8GHm2O1plW+Bk0yIwu4lGD67Tc//R5A3U+KuVeTwzkMM70eXoXHM6VwXP89a5XVPEfsz1OR91zN5LHNxLKtYE/J7JZSENrc/OUTTtb3a3am9hE6jtDUv0VPGn2pfHLz4O0V2w2vuHUnOWGEtUqq0v4yVwghQrk3VYwmMjkwLTwhVDn/I9oTk246xOPJL8JLOcUAU9oPeUAyIkiNVvu7pBMSw9Tq5WB+ugyDInsAjET21Jhjl9wcSd/rNM+4ob6o8tZDlCsut4J6JpYgf7hRkC2iuREt6iEwjOWIabUr0+dhJbpK3blfzbmmmKM8VX6dWEDMWyB8yAgEipxhXqkZySLOQd+T4nt/0558kxauy2wFLeMj8IGwAayLMVpXXwZQlXcPE/ZyrS56meGqnw+aDlU7p2jl143zGKC4csNNDQen6ljiio/YEQN4znrPalIxvUXH17S9M5CYgx3Qlw2ox9M3jcoe+7WcjZpwHqlvLyMgKdfNsuq0yKFRUn3hfhZ9xLyrSAIsOScJ9OmnhL/R4TM/WScpOrjWpH9quJumb/Km27+6pdVTmusMDKL4HCkhYOOE1Qb1x/u/bKkRvGZkPt8IMcrAyd7CmspD9aUlt2yF/Ps1b2qfym3Xj4nJE3a1X/t0GAy8Rar/UDlg3UizlQR4L2euP3ZKoymMZseWVasGC+XgpQ6QGuZUfDX5H/yQ5XeWYKjLA+t8UAbSz81kVO5oFZuckiwPzQkTtUCA1Q0PCIoCc27k2QIXmjX4X6fqlPeMnV0d/Qth/llh4pj+GoJfNb+eDG3WgkGryWjAZndJXxgTPa6D3SY1dvAfOEuAq4Dy446oYlJ9LRH0jOcs4pToMvmgRCsFPjj4mKudlzmRgmM5AWBxgB"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_017cvWNKqLki2CuRUu55GpM6",
+        "name": "choose",
+        "input": {
+          "ref": 5,
+          "option": "101555-S0001",
+          "intent": "Select the From Share by its underlying value attribute (fromShare parameter)."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_017cvWNKqLki2CuRUu55GpM6",
+        "content": [
+          {
+            "type": "text",
+            "text": "Chose \"101555-S0001\" in [5] (matched by value)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01MmYVxpu2JK4fBU5HC7aZDX",
+        "name": "choose",
+        "input": {
+          "ref": 6,
+          "option": "101555-CERT",
+          "intent": "Select the To Share by its underlying value attribute (toShare parameter)."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01MmYVxpu2JK4fBU5HC7aZDX",
+        "content": [
+          {
+            "type": "text",
+            "text": "Chose \"101555-CERT\" in [6] (matched by value)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01L67QD8VAvKg6MGpGJDhZ9b",
+        "name": "type",
+        "input": {
+          "ref": 7,
+          "intent": "Enter the transfer amount.",
+          "param": "amount"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01L67QD8VAvKg6MGpGJDhZ9b",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:amount} into [7]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01GyC54d5zbU6o5ftd9zHcGF",
+        "name": "type",
+        "input": {
+          "ref": 8,
+          "intent": "Enter the memo.",
+          "param": "memo"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01GyC54d5zbU6o5ftd9zHcGF",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:memo} into [8]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "court"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_019KcWKmZo8mVL8JzDxc3GXb",
+        "name": "click",
+        "input": {
+          "ref": 9,
+          "intent": "Click Continue to review the transfer."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_019KcWKmZo8mVL8JzDxc3GXb",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #8]\nlocation: https://web-sample.interface-hiring.com/members/101555/transfer/review\ntitle: Confirm Transfer - Meridian Core\nelements (20):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [9] button \"Post Transfer\"\n  [10] link \"Cancel\"\n  [11] heading \"CONFIRM FUNDS TRANSFER\"\n  [12] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [13] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:49:02 | SID EF2E23AC\"\n  [14] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [15] rowheader \"Member:\" row=\"Member: | 101555 - ***ce\"\n  [16] cell \"101555 - ***ce\" label=\"Member:\" row=\"Member: | 101555 - ***ce\"\n  [17] rowheader \"From:\" row=\"From: | 101555-S0001 (***00)\"\n  [18] cell \"101555-S0001 (***00)\" label=\"From:\" row=\"From: | 101555-S0001 (***00)\"\n  [19] rowheader \"To:\" row=\"To: | 101555-CERT (***00)\"\n  [20] cell \"101555-CERT (***00)\" label=\"To:\" row=\"To: | 101555-CERT (***00)\"\n  [21] rowheader \"Amount:\" row=\"Amount: | $5.00\"\n  [22] cell \"$5.00\" label=\"Amount:\" row=\"Amount: | $5.00\"\n  [23] rowheader \"Memo:\" row=\"Memo: | Capability recording\"\n  [24] cell \"Capability recording\" label=\"Memo:\" row=\"Memo: | Capability recording\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off CONFIRM FUNDS TRANSFER Member: 101555 - ***ce From: 101555-S0001 (***00) To: 101555-CERT (***00) Amount: $5.00 Memo: Capability recording This will post immediately and cannot be reversed from this screen. Cancel OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:49:02 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Details confirmed correct. Posting the transfer."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_018LgrPZLXQKFWWtLCjPVQ9K",
+        "name": "click",
+        "input": {
+          "ref": 9,
+          "intent": "Post the funds transfer (pre-authorised for recording).",
+          "irreversible": true
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_018LgrPZLXQKFWWtLCjPVQ9K",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #11]\nlocation: https://web-sample.interface-hiring.com/members/101555/transfer/post\ntitle: Transfer Posted - Meridian Core\nelements (20):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] link \"Return to Member Record\"\n  [5] link \"Main Menu\"\n  [6] heading \"TRANSFER POSTED\"\n  [7] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [8] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:49:06 | SID EF2E23AC\"\n  [9] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [10] rowheader \"Confirmation:\" row=\"Confirmation: | CN480075\"\n  [11] cell \"CN480075\" label=\"Confirmation:\" row=\"Confirmation: | CN480075\"\n  [12] rowheader \"Posted:\" row=\"Posted: | 08/20/2026 19:49:06\"\n  [13] cell \"08/20/2026 19:49:06\" label=\"Posted:\" row=\"Posted: | 08/20/2026 19:49:06\"\n  [14] rowheader \"Amount:\" row=\"Amount: | $5.00\"\n  [15] cell \"$5.00\" label=\"Amount:\" row=\"Amount: | $5.00\"\n  [16] rowheader \"101555-S0001:\" row=\"101555-S0001: | ***e)\"\n  [17] cell \"***e)\" label=\"101555-S0001:\" row=\"101555-S0001: | ***e)\"\n  [18] rowheader \"101555-CERT:\" row=\"101555-CERT: | ***e)\"\n  [19] cell \"***e)\" label=\"101555-CERT:\" row=\"101555-CERT: | ***e)\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off TRANSFER POSTED TRANSACTION COMPLETE Confirmation: CN480075 Posted: 08/20/2026 19:49:06 Amount: $5.00 101555-S0001: ***e) 101555-CERT: ***e) Return to Member Record · Main Menu OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:49:06 | SID EF2E23AC F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Transfer posted. Now capture the confirmation number."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01YUjdY4cLaDjfAw7Y31JQa5",
+        "name": "read",
+        "input": {
+          "ref": 11,
+          "output_name": "confirmationNumber",
+          "intent": "Capture the confirmation/reference number from the receipt."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01YUjdY4cLaDjfAw7Y31JQa5",
+        "content": [
+          {
+            "type": "text",
+            "text": "Read \"CN480075\" as output 'confirmationNumber'."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01WdiLPA2L6PFCDC613qFAQa",
+        "name": "declare_done",
+        "input": {
+          "capability_id": "member.transferFunds",
+          "title": "Member Funds Transfer",
+          "description": "Signs on to MERIDIAN CORE, opens Member Inquiry, searches by Member Number for memberId and selects the member, then posts a Funds Transfer. Inputs: memberId, fromShare and toShare (share value attributes), amount, memo, plus operator credentials from the environment. Executes the transfer (irreversible Post Transfer) and returns the receipt's confirmationNumber. Outcome: transfer posted successfully."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01WdiLPA2L6PFCDC613qFAQa",
+        "content": [
+          {
+            "type": "text",
+            "text": "Recorded. Compiling the artifact."
+          }
+        ]
+      }
+    ]
+  }
+]

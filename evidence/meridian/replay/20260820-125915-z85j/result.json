@@ -1,0 +1,92 @@
+{
+  "capabilityId": "member.readBalances",
+  "version": "1.0.0",
+  "runId": "20260820-125915-z85j",
+  "evidenceDir": "evidence/meridian/replay/20260820-125915-z85j",
+  "startedAt": "2026-08-20T19:59:15.842Z",
+  "role": "teller",
+  "status": "success",
+  "outputs": {
+    "shares": "[{\"Share ID\":\"100234-S0001\",\"Type\":\"Regular Shares\",\"Balance\":\"***00\",\"Status\":\"HOLD [HOLD]\"},{\"Share ID\":\"100234-S0070\",\"Type\":\"Share Draft (Checking)\",\"Balance\":\"***04\",\"Status\":\"OPEN\"},{\"Share ID\":\"100234-S0001-3\",\"Type\":\"Regular Shares\",\"Balance\":\"***51\",\"Status\":\"HOLD [HOLD]\"},{\"Share ID\":\"100234-MMKT-4\",\"Type\":\"Money Market\",\"Balance\":\"***00\",\"Status\":\"OPEN\"}]"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter Operator ID.",
+      "status": "ok",
+      "ms": 105,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator «secret:operatorPassword».",
+      "status": "ok",
+      "ms": 99,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s3",
+      "intent": "Sign on to MERIDIAN CORE as the operator.",
+      "status": "ok",
+      "ms": 185,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s4",
+      "intent": "Open Member Inquiry / Selection.",
+      "status": "ok",
+      "ms": 127,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s5",
+      "intent": "Enter member number to search.",
+      "status": "ok",
+      "ms": 85,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s6",
+      "intent": "Search for the member by number.",
+      "status": "ok",
+      "ms": 134,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s7",
+      "intent": "Open the member's record.",
+      "status": "ok",
+      "ms": 153,
+      "strategyIndex": 0,
+      "strategy": "roleName",
+      "score": 1
+    },
+    {
+      "stepId": "s8",
+      "intent": "Capture the whole SHARES / BALANCES table for the member.",
+      "status": "ok",
+      "ms": 81
+    }
+  ],
+  "recoveriesUsed": [
+    {
+      "code": "MAINTENANCE_INTERSTITIAL",
+      "attempts": 1
+    }
+  ],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T19:59:18.308Z"
+}

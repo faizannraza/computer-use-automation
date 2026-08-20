@@ -1,0 +1,19 @@
+{
+  "spineActions": 6,
+  "prunedProbeActions": 4,
+  "parameterizations": [
+    "s5.target.name: \"MAIN-001\" → {branch}",
+    "s5.target.near: \"MAIN-001\" → {branch}",
+    "s5.snapshot: \"MAIN-001\" → {branch}"
+  ],
+  "outcomeAttachments": [
+    {
+      "code": "BAD_CREDENTIALS",
+      "stepId": "s4"
+    }
+  ],
+  "notes": [
+    "s3: option bound to {branch} and matched by VALUE — the visible label carries live data and would not survive a balance change",
+    "s4: checkpoint may be non-specific — unscoped short marker \"1.\"; review before approval"
+  ]
+}

@@ -1,0 +1,517 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "text",
+        "text": "TASK:\nRecord a MEMBER INQUIRY capability against MERIDIAN CORE that searches by LAST NAME. (1) Sign on. (2) Open Member Inquiry / Selection. (3) In 'Search by' call choose with option = the searchBy parameter value verbatim (it is the option's underlying value: 'name' or 'number'). (4) Type the query parameter into the Value field. (5) Click Search. (6) A results table appears - use read_table ONCE to capture it into an output named 'matches', requesting exactly these columns: Member No., Name, Shares. (7) Then probe one exceptional state: begin_probe MEMBER_NOT_FOUND, search again for a last name that does not exist such as Zzzznomatch, and declare_outcome MEMBER_NOT_FOUND with a marker you can literally see. (8) declare_done with capability_id 'member.inquire'.\n\nPARAMETERS:\n- query (none): Caller-supplied parameter 'query'. — value: \"Lovelace\"\n- searchBy (none): Caller-supplied parameter 'searchBy'. — value: \"name\"\n- operatorId (internal): Resolved from the environment (MERIDIAN_OPERATOR_ID) at invocation time; never stored in the artifact. — value: \"teller1\"\n- operatorPassword (secret): Resolved from the environment (MERIDIAN_OPERATOR_PASSWORD) at invocation time; never stored in the artifact. — value: (secret — reference with param, never typed literally)\n\nThe application is served at https://web-sample.interface-hiring.com. The browser is currently blank — begin by navigating to the application."
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "EqECCpABCBAYAipAKtmrnhbniAaG5jzM5NIqVZX3Ea1/rsxD5fnONnvZTW1E6mAToFnni8t4TLqsMPV8bZvuWPaYCD3dhaYPQSi58TIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjeoAfqzndQGEgyq7V82fujWwuCsMg0aDJCiaEJaIxEshLVA0SIwDH1QlLeeYSlqwg15zZ3CI8MRDlX2twesd5yYUmMglZRvZm8oq35yZhOd7sSmQQM0Kj75T/eR09R00X1OqvFrrkW31UyrU27K7DYjJBnmF4ajEu5kD3+CztlGa/LoZoBaAh7NdFIOJce1yh+/GwXn2BgB"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_011fAKtFiYS4o2d8dAjcnqdq",
+        "name": "navigate",
+        "input": {
+          "url": "https://web-sample.interface-hiring.com",
+          "intent": "Open the MERIDIAN CORE application to begin sign on."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_011fAKtFiYS4o2d8dAjcnqdq",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #2]\nlocation: https://web-sample.interface-hiring.com/signon\ntitle: Sign On - Meridian Core\nelements (11):\n  [0] textbox \"Operator ID:\"\n  [1] textbox \"Password:\"\n  [2] combobox \"Branch:\" value=\"MAIN-001 - Main Office\" options=[\"MAIN-001 - Main Office\", \"WEST-014 - Westside\", \"EAST-022 - Eastgate\"]\n  [3] button \"Sign On\" row=\" | \"\n  [4] heading \"OPERATOR SIGN ON\"\n  [5] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [6] cell \"NOT SIGNED ON | 08/20/2026 19:48:11\"\n  [7] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [8] rowheader \"Operator ID:\" row=\"Operator ID: | \"\n  [9] rowheader \"Password:\" row=\"Password: | \"\n  [10] rowheader \"Branch:\" row=\"Branch: | MAIN-001 - Main OfficeWEST-014 - WestsideEAST-022 - Eastgate\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ OPERATOR SIGN ON Operator ID: Password: Branch: MAIN-001 - Main Office WEST-014 - Westside EAST-022 - Eastgate Demo operators: teller1 / «secret:operatorPassword» · super1 / «secret:operatorPassword» (supervisor) NOT SIGNED ON | 08/20/2026 19:48:11 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01Hxvc2Aa9Jxxzq4nCfnqrdZ",
+        "name": "type",
+        "input": {
+          "ref": 0,
+          "intent": "Enter the operator ID for sign on.",
+          "param": "operatorId"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Hxvc2Aa9Jxxzq4nCfnqrdZ",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorId} into [0]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01Puh9QqSjQ17JBg5yzKoY4n",
+        "name": "type",
+        "input": {
+          "ref": 1,
+          "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+          "param": "operatorPassword"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Puh9QqSjQ17JBg5yzKoY4n",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:operatorPassword} into [1]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01KgdmruCcV2LBz2AzPKDYQJ",
+        "name": "click",
+        "input": {
+          "ref": 3,
+          "intent": "Submit the sign on form."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01KgdmruCcV2LBz2AzPKDYQJ",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #3]\nlocation: https://web-sample.interface-hiring.com/menu\ntitle: Main Menu - Meridian Core\nelements (22):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] link \"Member Inquiry / Selection\" row=\"1. | Member Inquiry / Selection\"\n  [5] link \"Funds Transfer\" row=\"2. | Funds Transfer\"\n  [6] link \"Open New Share\" row=\"3. | Open New Share\"\n  [7] link \"Update Member Information\" row=\"4. | Update Member Information\"\n  [8] link \"Place Account Hold\" row=\"5. | Place Account Hold\"\n  [9] link \"System Settings (error injection)\" row=\"8. | System Settings (error injection)\"\n  [10] link \"Sign Off\" row=\"9. | Sign Off\"\n  [11] heading \"MAIN MENU\"\n  [12] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [13] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:20 | SID ED74EF17\"\n  [14] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [15] rowheader \"1.\" row=\"1. | Member Inquiry / Selection\"\n  [16] rowheader \"2.\" row=\"2. | Funds Transfer\"\n  [17] rowheader \"3.\" row=\"3. | Open New Share\"\n  [18] rowheader \"4.\" row=\"4. | Update Member Information\"\n  [19] rowheader \"5.\" row=\"5. | Place Account Hold\"\n  [20] rowheader \"8.\" row=\"8. | System Settings (error injection)\"\n  [21] rowheader \"9.\" row=\"9. | Sign Off\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MAIN MENU Signed on as J. TELLER (TELLER) 1. Member Inquiry / Selection 2. Funds Transfer 3. Open New Share 4. Update Member Information 5. Place Account Hold 8. System Settings (error injection) 9. Sign Off Type or click a menu option to continue. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:20 | SID ED74EF17 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01Uqf9U87gL25ffSj9sthqgZ",
+        "name": "click",
+        "input": {
+          "ref": 4,
+          "intent": "Open Member Inquiry / Selection screen."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Uqf9U87gL25ffSj9sthqgZ",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #4]\nlocation: https://web-sample.interface-hiring.com/members\ntitle: Member Inquiry - Meridian Core\nelements (13):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] combobox \"Search by:\" value=\"Member Number\" options=[\"Member Number\", \"Last Name\"]\n  [5] textbox \"Value:\"\n  [6] button \"Search\" row=\"Value: | \"\n  [7] heading \"MEMBER INQUIRY / SELECTION\"\n  [8] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [9] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:24 | SID ED74EF17\"\n  [10] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [11] rowheader \"Search by:\" row=\"Search by: | Member Number Last Name\"\n  [12] rowheader \"Value:\" row=\"Value: | \"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MEMBER INQUIRY / SELECTION Search by: Member Number Last Name Value: Try member numbers 100234, 100987, 101555, 102777, 103001. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:24 | SID ED74EF17 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "Ev4GCpABCBAYAipAaVIbLQVNwxGQPh5HOS+kb2w1vR9XtMxTgEkqtdDR8JQjcjkhlSb68Zi+3ahHpgl6wSd2M6T1J97KA14vRMDZbzIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiQyNDlmYmZjZi01YjQ0LTRlMTktYTdlNy02MDkyZmIwNWVmZjeoAY60ndQGEgwYXNnc2BSdwsxRhQ8aDCyIExPqOiLYdhFBQiIwhO3v3ZOW6uoAxHJ6XIl21cO5wORv8ycJGghXeEW/we0s+mcNM7xaoQhNyDjykIBoKpoFXGFUWH5froR5rmgjzRsN/v9KKSBXrEByl1q+EZL+Y3+h9+f7l2iqwzY+8F2PaSPljojcw8771enRbcXNOhHN9yfS0lFHV9X2pp6YesIsI49S2RnQOPfVirPPZJBXaZZdECSEcn8mSAuVLbLslyyajK/16Arvs0oWAXvDVrCVctAhIzQOTrWdKkqjBL7rPoWzPBV2hEXc/lD5FfP9N03Ori+/RjoXKEk5gmKEHUPpG2Re3f/7CzwpvgHy39biJeHcLQ7XQvjLEsW3FLDkseEI4F6Bmd+Axisda0pnJsVj12pk004APoSVdOS07qkoLtKT/c83HtDG4w7fJgtmcyoybv1LPuvlbD//mimZwfv1LYG9t1Au3m36W7KLMrJ8ET96l2vFOYQBAuBTqp4QaAKnNj2/1ajc2k/EvqQc69/5RlvwkL7pvz0zU8CsN3MjVAnyS7S2WO9q44dHkg8rdSbzHNvxd36hlElHFxMd6hRt6e4UmAHxKd8YzRd+GIMkvDd5sKzy4jEiZwUhQBRuY26UUTL6mzub2VsLXMJtMoJrwfgZ6QZdvHvXPHdGbgcpXQytr4pGkiWnzIMIVrSSjJY2ms7ocJyGJLUTtxXUltfsogSur9qgvk19FITiOn6z6fh8DKcqcZJiRqYlKEEWTl6jQh+imkzp9a73t+fww0hQAtHTpVbL3+lP5WAZlcyKPTMRmpffFGQd8nSMRFB1tt9lghaEcwvKNbGN44kfzqawELfbrkKA2rKRdxeCsHm8zsa/lMrSPMpebfVKfyJzd/fuwFKFQF0bAh1HB4+YYQd9QlhImcr+4O8pL4WO5G02motU909Aw9a173LzrqZisPfx3mAhacois0jVqwvRfgoME+SRr5QXo2SYtK+XGAE="
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_0199gXZrasjFv6fFnbhzKaoj",
+        "name": "choose",
+        "input": {
+          "ref": 4,
+          "option": "name",
+          "intent": "Select the Search by option using the searchBy underlying value."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_0199gXZrasjFv6fFnbhzKaoj",
+        "content": [
+          {
+            "type": "text",
+            "text": "Chose \"name\" in [4] (matched by value)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01TLjAggtMychAEVEbYkeHby",
+        "name": "type",
+        "input": {
+          "ref": 5,
+          "intent": "Enter the last name query into the Value field.",
+          "param": "query"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01TLjAggtMychAEVEbYkeHby",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered {param:query} into [5]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01QAM6izq8SLAHCJR2D5RoKQ",
+        "name": "click",
+        "input": {
+          "ref": 6,
+          "intent": "Run the member search by last name."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01QAM6izq8SLAHCJR2D5RoKQ",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #5]\nlocation: https://web-sample.interface-hiring.com/members?by=name&q=Lovelace\ntitle: Member Inquiry - Meridian Core\nelements (20):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] combobox \"Search by:\" value=\"Last Name\" options=[\"Member Number\", \"Last Name\"]\n  [5] textbox \"Value:\" value=\"Lovelace\"\n  [6] button \"Search\" row=\"Value: | \"\n  [7] link \"Select\" row=\"100234 | ***da | 4 | Select\"\n  [8] heading \"MEMBER INQUIRY / SELECTION\"\n  [9] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [10] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:37 | SID ED74EF17\"\n  [11] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [12] rowheader \"Search by:\" row=\"Search by: | Member Number Last Name\"\n  [13] rowheader \"Value:\" row=\"Value: | \"\n  [14] columnheader \"Member No.\"\n  [15] columnheader \"Name\"\n  [16] columnheader \"Shares\"\n  [17] cell \"100234\" col=\"Member No.\" row=\"100234 | ***da | 4 | Select\"\n  [18] cell \"***da\" col=\"Name\" row=\"100234 | ***da | 4 | Select\"\n  [19] cell \"4\" col=\"Shares\" row=\"100234 | ***da | 4 | Select\"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MEMBER INQUIRY / SELECTION Search by: Member Number Last Name Value: Member No. Name Shares 100234 ***da 4 Select Try member numbers 100234, 100987, 101555, 102777, 103001. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:37 | SID ED74EF17 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Results table appeared. Let me capture it."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01Y6z7uafwQhETbsWwQeehRv",
+        "name": "read_table",
+        "input": {
+          "columns": [
+            "Member No.",
+            "Name",
+            "Shares"
+          ],
+          "output_name": "matches",
+          "intent": "Capture the member search results table."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01Y6z7uafwQhETbsWwQeehRv",
+        "content": [
+          {
+            "type": "text",
+            "text": "Read 1 row(s) into output 'matches' with columns [Member No., Name, Shares]. First row: {\"Member No.\":\"100234\",\"Name\":\"***da\",\"Shares\":\"4\"}"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Now the probe for the not-found state."
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_0192WM1WuQFuoEJFMBAKjmYZ",
+        "name": "begin_probe",
+        "input": {
+          "outcome_code": "MEMBER_NOT_FOUND",
+          "intent": "Probe how the system responds when a last name has no matches."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_0192WM1WuQFuoEJFMBAKjmYZ",
+        "content": [
+          {
+            "type": "text",
+            "text": "Probe started for MEMBER_NOT_FOUND. Actions until declare_outcome are excluded from the replayable flow."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_017CcTQdH9KKD2GRsMY4tFjw",
+        "name": "type",
+        "input": {
+          "ref": 5,
+          "intent": "Enter a last name that does not exist to trigger the not-found state.",
+          "text": "Zzzznomatch"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_017CcTQdH9KKD2GRsMY4tFjw",
+        "content": [
+          {
+            "type": "text",
+            "text": "Entered \"Zzzznomatch\" into [5]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_01RsBs9sQD4FfRYqs6TryRyD",
+        "name": "click",
+        "input": {
+          "ref": 6,
+          "intent": "Search for the nonexistent last name."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01RsBs9sQD4FfRYqs6TryRyD",
+        "content": [
+          {
+            "type": "text",
+            "text": "[observation #6]\nlocation: https://web-sample.interface-hiring.com/members?by=name&q=Zzzznomatch\ntitle: Member Inquiry - Meridian Core\nelements (13):\n  [0] link \"Main Menu\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [1] link \"Member Inquiry\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [2] link \"System Settings\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [3] link \"Sign Off\" row=\"Main Menu · Member Inquiry · System Settings · Sign Off\"\n  [4] combobox \"Search by:\" value=\"Last Name\" options=[\"Member Number\", \"Last Name\"]\n  [5] textbox \"Value:\" value=\"Zzzznomatch\"\n  [6] button \"Search\" row=\"Value: | \"\n  [7] heading \"MEMBER INQUIRY / SELECTION\"\n  [8] cell \"MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™\"\n  [9] cell \"OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:56 | SID ED74EF17\"\n  [10] cell \"F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel\"\n  [11] rowheader \"Search by:\" row=\"Search by: | Member Number Last Name\"\n  [12] rowheader \"Value:\" row=\"Value: | \"\nvisible text: MERIDIAN CORE Member Services Platform v4.2.1 Cornerstone Financial Systems™ Main Menu · Member Inquiry · System Settings · Sign Off MEMBER INQUIRY / SELECTION Search by: Member Number Last Name Value: No member records matched your search. Try member numbers 100234, 100987, 101555, 102777, 103001. OPR TELLER1 | BR MAIN-001 | 08/20/2026 19:48:56 | SID ED74EF17 F3=Sign Off F5=Main Menu F7=Member Inquiry F12=Cancel"
+          },
+          {
+            "type": "text",
+            "text": "[screenshot omitted from context — see evidence]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "court"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01SR6GLknzU7BkL3Dk3PESTK",
+        "name": "declare_outcome",
+        "input": {
+          "code": "MEMBER_NOT_FOUND",
+          "description": "Searching by last name for a value that matches no member returns no results table; instead an error message is shown. This confirms the not-found state.",
+          "marker": "No member records matched your search."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01SR6GLknzU7BkL3Dk3PESTK",
+        "content": [
+          {
+            "type": "text",
+            "text": "Outcome MEMBER_NOT_FOUND declared (marker verified visible)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "court"
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_01SNff9dhQ9LpdroYygAq4yX",
+        "name": "declare_done",
+        "input": {
+          "capability_id": "member.inquire",
+          "title": "Member Inquiry by Last Name or Number",
+          "description": "Signs on to MERIDIAN CORE, opens Member Inquiry / Selection, and searches for members using the 'searchBy' parameter (underlying value 'name' or 'number') and the 'query' value. Returns the results as the 'matches' table (Member No., Name, Shares). Handles the MEMBER_NOT_FOUND outcome when no records match (\"No member records matched your search.\")."
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01SNff9dhQ9LpdroYygAq4yX",
+        "content": [
+          {
+            "type": "text",
+            "text": "Recorded. Compiling the artifact."
+          }
+        ]
+      }
+    ]
+  }
+]
