@@ -24,8 +24,35 @@ const CREDS = {
   pass: process.env.MOCK_CU_PASS ?? 'Passw0rd!',
 };
 
-export function createApp(): express.Express {
+/**
+ * Tenant skins: the same vendor product, branded/configured differently —
+ * the multi-tenant reality the brief describes. A skin renames CONTROL
+ * CAPTIONS only (the thing tenant overlays patch with prependStrategy);
+ * screen headings, labels, and messages are vendor-level and stay identical,
+ * exactly like a real white-labeled core. 'summit' stands in for a second
+ * institution running a re-skinned instance.
+ */
+export type SkinName = 'default' | 'summit';
+
+export interface MockSkin {
+  signInButton: string;
+  searchButton: string;
+  institution: string;
+}
+
+const SKINS: Record<SkinName, MockSkin> = {
+  default: { signInButton: 'Sign In', searchButton: 'Search', institution: '0001 — Demo Federal Credit Union' },
+  summit: { signInButton: 'Log On', searchButton: 'Find Member', institution: '0002 — Summit Federal Credit Union' },
+};
+
+export interface MockAppOptions {
+  skin?: SkinName;
+}
+
+export function createApp(opts: MockAppOptions = {}): express.Express {
+  const skinName: SkinName = opts.skin ?? (process.env.MOCK_CU_SKIN === 'summit' ? 'summit' : 'default');
   const app = express();
+  app.locals['skin'] = SKINS[skinName];
   app.set('view engine', 'ejs');
   app.set('views', path.join(here, 'views'));
   app.use(express.urlencoded({ extended: false }));
@@ -154,8 +181,9 @@ function interstitialGate(req: Request, res: Response, next: NextFunction): void
 // Start directly when run as a script (not when imported by tests).
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.MOCK_CU_PORT ?? 4173);
+  const skin = process.env.MOCK_CU_SKIN === 'summit' ? ' (skin: summit — tenant-re-skinned controls)' : '';
   createApp().listen(port, () => {
-    console.log(`MockCore Teller running at http://localhost:${port}`);
+    console.log(`MockCore Teller running at http://localhost:${port}${skin}`);
     console.log(`Sign in with ${CREDS.user} / ${CREDS.pass}`);
   });
 }

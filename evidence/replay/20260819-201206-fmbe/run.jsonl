@@ -1,0 +1,12 @@
+{"ts":"2026-08-20T01:12:06.143Z","type":"run_start","capability":"member.readSavingsBalance@1.0.0","tenant":null,"params":{"memberId":"12345","operatorId":"teller1","operatorPassword":"«secret:operatorPassword»"}}
+{"ts":"2026-08-20T01:12:06.280Z","type":"gate","kind":"navigate","decision":{"allowed":true},"location":"about:blank","risk":"read"}
+{"ts":"2026-08-20T01:12:06.483Z","type":"step_start","stepId":"s1","intent":"Enter operator ID for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T01:12:06.518Z","type":"resolved","stepId":"s1","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T01:12:06.518Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4174/login","risk":"reversible"}
+{"ts":"2026-08-20T01:12:06.581Z","type":"step_ok","stepId":"s1","ms":98}
+{"ts":"2026-08-20T01:12:06.582Z","type":"step_start","stepId":"s2","intent":"Enter operator password for sign-in.","kind":"setValue","risk":"reversible"}
+{"ts":"2026-08-20T01:12:06.614Z","type":"resolved","stepId":"s2","strategyIndex":0,"strategy":"labelText","score":1}
+{"ts":"2026-08-20T01:12:06.615Z","type":"gate","kind":"setValue","decision":{"allowed":true},"location":"http://localhost:4174/login","risk":"reversible"}
+{"ts":"2026-08-20T01:12:06.681Z","type":"step_ok","stepId":"s2","ms":99}
+{"ts":"2026-08-20T01:12:06.682Z","type":"step_start","stepId":"s3","intent":"Submit sign-in credentials.","kind":"activate","risk":"reversible"}
+{"ts":"2026-08-20T01:12:06.715Z","type":"run_result","status":"failed","failure":{"class":"TARGET_NOT_FOUND","stepId":"s3","expected":"a unique confident match for the step's target (strategies: roleName)","observed":"no strategy (roleName) produced a confident match; candidates: []; at http://localhost:4174/login; title \"MockCore Teller — Sign In\"; headings: MockCore™ Teller — Operator Sign In | Operator ID | Password; text: \"MockCore™ Teller — Operator Sign In Operator ID Password Unauthorized access is prohibited. Activity is monitored.…\"","screenshotRef":"steps/004-failure.png"}}

@@ -4,8 +4,8 @@
 <tr>
   <td class="lbl"><label for="q">Member No. or Name</label></td>
   <td><input type="text" name="txtQuery" id="q" size="26" value="<%= query ?? '' %>"></td>
-  <td><input type="submit" class="btn" value="Search"></td>
-  <% if (duplicateButton) { %><td><input type="submit" class="btn" value="Search"></td><% } %>
+  <td><input type="submit" class="btn" value="<%= skin.searchButton %>"></td>
+  <% if (duplicateButton) { %><td><input type="submit" class="btn" value="<%= skin.searchButton %>"></td><% } %>
 </tr>
 </form>
 <tr><td colspan="3" class="fine">Enter an exact member number, or part of a name.</td></tr>

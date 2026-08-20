@@ -9,6 +9,7 @@
   },
   "scripts": {
     "mock": "tsx apps/mock-cu/server.ts",
+    "mock:summit": "MOCK_CU_SKIN=summit MOCK_CU_PORT=4174 tsx apps/mock-cu/server.ts",
     "cu": "tsx src/cli.ts",
     "discover": "tsx src/cli.ts discover",
     "replay": "tsx src/cli.ts replay",

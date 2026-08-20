@@ -1,0 +1,39 @@
+{
+  "capabilityId": "member.readSavingsBalance",
+  "version": "1.0.0",
+  "runId": "20260819-201206-fmbe",
+  "evidenceDir": "evidence/replay/20260819-201206-fmbe",
+  "startedAt": "2026-08-20T01:12:06.143Z",
+  "status": "failed",
+  "failure": {
+    "class": "TARGET_NOT_FOUND",
+    "stepId": "s3",
+    "expected": "a unique confident match for the step's target (strategies: roleName)",
+    "observed": "no strategy (roleName) produced a confident match; candidates: []; at http://localhost:4174/login; title \"MockCore Teller — Sign In\"; headings: MockCore™ Teller — Operator Sign In | Operator ID | Password; text: \"MockCore™ Teller — Operator Sign In Operator ID Password Unauthorized access is prohibited. Activity is monitored.…\"",
+    "screenshotRef": "steps/004-failure.png"
+  },
+  "stepsRun": [
+    {
+      "stepId": "s1",
+      "intent": "Enter operator ID for sign-in.",
+      "status": "ok",
+      "ms": 98,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    },
+    {
+      "stepId": "s2",
+      "intent": "Enter operator password for sign-in.",
+      "status": "ok",
+      "ms": 99,
+      "strategyIndex": 0,
+      "strategy": "labelText",
+      "score": 1
+    }
+  ],
+  "recoveriesUsed": [],
+  "interventions": [],
+  "irreversibleCompleted": false,
+  "finishedAt": "2026-08-20T01:12:06.715Z"
+}

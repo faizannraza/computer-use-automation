@@ -1,0 +1,22 @@
+{
+  "tenantId": "summit-fcu",
+  "extends": {
+    "capabilityId": "member.readSavingsBalance",
+    "versionRange": "^1"
+  },
+  "bindings": {
+    "baseUrl": "http://localhost:4174"
+  },
+  "patches": [
+    {
+      "op": "prependStrategy",
+      "stepId": "s3",
+      "locator": { "s": "roleName", "role": "button", "name": "Log On", "nameMatch": "exact" }
+    },
+    {
+      "op": "prependStrategy",
+      "stepId": "s6",
+      "locator": { "s": "roleName", "role": "button", "name": "Find Member", "nameMatch": "exact" }
+    }
+  ]
+}
