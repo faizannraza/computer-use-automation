@@ -12,6 +12,13 @@ as soon as they are read and appear only masked (`***97`). All runs below were
 executed against the local mock app and are reproducible with the commands
 in the root README.
 
+> **Runs against the live legacy target — MERIDIAN CORE — are indexed
+> separately in [`meridian/README.md`](meridian/README.md).** That set is the
+> newer and more complete one: seven recorded capabilities and one replay run
+> per row of the runtime-state taxonomy. The runs below remain the MockCore
+> set, and they are what keeps the offline demo path green with no network and
+> no API key.
+
 ## Discovery
 
 | Run | What it shows |
@@ -39,11 +46,15 @@ in the root README.
   for hardening it.
 - `_scratch/` (git-ignored) is working space used by the test suite; the
   committed runs above are the curated set. Running demo commands adds new
-  run folders here — `git clean -fd evidence/` restores the committed set.
+  run folders here; delete them by name. **Do not** run `git clean -fd evidence/`
+  — it would also take any evidence not yet committed.
 - `cu replay --times N` writes a loose `replay/stability-<runid>.json`
   report (not a run folder) alongside the N individual run folders. The
   stability report and `cu discover --hitl` are exercised by the offline
   test suite rather than by committed evidence runs.
-- Screenshots may show fake seed data (members like "Alexis Testmember");
-  the seed is conspicuously synthetic by design. Screenshot redaction is a
-  documented limitation (see REPORT.md § Safety).
+- Screenshots in *these* runs may show fake seed data (members like "Alexis
+  Testmember"); the seed is conspicuously synthetic by design. They predate
+  profile-driven field classification, which is what blacks regulated values
+  out of the image itself — see the MERIDIAN runs for screenshots captured
+  with masking on, and `profiles/mockcore-teller.profile.json` for the
+  equivalent declaration against this app.
