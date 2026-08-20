@@ -48,7 +48,7 @@ cp .env.example .env        # defaults work as-is for everything except discover
 **Keys/config:** only `cu discover` (the LLM-driven discovery run) needs `ANTHROPIC_API_KEY` in `.env`. **Everything else — the mock app, deterministic replay, the catalog, human-in-the-loop, and the entire test suite — runs fully offline with no key**, because the production path never calls a model. The committed artifact under `capabilities/` was produced by a real discovery run (its evidence is in `evidence/discovery/`), so you can exercise replay without re-running discovery.
 
 ```bash
-npm test                    # 104 tests: schema, resolver, gate, engine, compiler, HITL — all local
+npm test                    # 124 tests: schema, resolver, gate, engine, compiler, HITL — all local
 ```
 
 ## Demo path
@@ -85,6 +85,30 @@ npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.j
 # → status failed, TARGET_AMBIGUOUS at s6, expected/observed + both candidates + screenshot
 ```
 
+**Cross-tenant reuse, live** — a second, re-skinned tenant instance ("Summit FCU": Sign In renamed *Log On*, Search renamed *Find Member*). The same discovered artifact fails honestly without the tenant overlay, and succeeds with two additive `prependStrategy` patches — record once, reuse per tenant:
+
+```bash
+# Terminal 1 (replaces the default mock for this demo):
+npm run mock:summit         # same vendor product, tenant-re-skinned, port 4174
+
+# Terminal 2:
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --param memberId=12345 --base-url http://localhost:4174 --policy policies/summit-fcu.policy.json
+# → status failed, TARGET_NOT_FOUND at s3 (the renamed control) — an honest miss, never a guessed click
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --tenant tenants/summit-fcu.overlay.json --param memberId=12345 --policy policies/summit-fcu.policy.json
+# → status success — the tenant's locators fire at strategy 0; the artifact was not re-recorded
+```
+
+**Multi-run stability** (stretch goal) — replay N times and aggregate a flakiness report (status flapping, output consistency, per-step strategy-rank distribution — the drift signal, summed):
+
+```bash
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --param memberId=12345 --times 3
+# → [STABLE] member.readSavingsBalance@1.0.0 over 3 runs + a stability-*.json report
+```
+
 **Human-in-the-loop** — the risky flow: you are the operator. A headed browser opens; the terminal stops you twice (type `approve` for the irreversible confirm; then enter supervisor PIN `7391` in the browser window and type `resume`):
 
 ```bash
@@ -108,6 +132,8 @@ npm run cu -- discover \
 # → compiles a DRAFT artifact; review it, then: npm run cu -- approve <file> --by "your name"
 ```
 
+Discovery also takes `--hitl`: irreversible clicks then pause the *recording* for your approval on the live session (the same control-token handoff replay uses) — which is what makes risky flows discoverable rather than hand-authored.
+
 **Agent-facing catalog** (stretch goal) — capabilities as callable tools, invoked by name with typed args:
 
 ```bash
@@ -122,20 +148,20 @@ Demo runs write new folders under `evidence/` by design (every run leaves eviden
 ## Repo map
 
 ```
-apps/mock-cu/       the target app: legacy-hostile mock credit union + fault injection (POST /__faults)
+apps/mock-cu/       the target app: legacy-hostile mock credit union + fault injection + tenant skins
 src/core/           surface-agnostic vocabulary (Observation, SemanticAction) + templates
 src/surface/        the Surface seam; Playwright web implementation (element map, locator ladder)
 src/policy/         policy config, redaction, and the ActionGate; every action funnels through it
 src/schema/         capability artifact, conditions, tenant overlays, result contract (Zod)
-src/discovery/      LLM agent loop, tool surface, recorder, deterministic compiler
-src/replay/         condition evaluation + the deterministic replay engine
+src/discovery/      LLM agent loop, tool executor (the model-free harness half), recorder, compiler
+src/replay/         condition evaluation, the deterministic replay engine, stability aggregation
 src/hitl/           session controller (control token), human-action capture, terminal operator
 src/catalog/        agent-facing capability catalog
 capabilities/       shipped artifacts (readSavingsBalance is LLM-discovered; openSubAccount hand-authored)
-tenants/            tenant overlay example (bindings + additive patches)
-policies/           the default allowlist/risk policy
+tenants/            tenant overlays (demo-fcu recoveries; summit-fcu re-skin re-ranking)
+policies/           allowlist/risk policies (default + the summit tenant's origin)
 evidence/           discovery + replay runs (see evidence/README.md for the index)
-tests/              104 tests (~20 s) incl. live end-to-end scenarios against the mock app;
+tests/              124 tests (~20 s) incl. live end-to-end scenarios against the mock app;
                     fixtures/ holds a hand-authored gold artifact used only as
                     test fixture and compiler diff baseline
 REPORT.md           design write-up
