@@ -23,14 +23,14 @@
     </div>
 
     <div class="topbar-right">
+      <!-- Two words each. Which planner is driving matters; the explanation of
+           what a planner IS does not belong in a permanent header. -->
       <div class="mode" role="group" aria-label="Planner mode">
-        <button type="button" class="mode-btn" data-mode="llm">
-          <span class="mode-name">model planner</span>
-          <span class="mode-note">Claude chooses capabilities</span>
+        <button type="button" class="mode-btn" data-mode="llm" title="Claude chooses which capability to invoke">
+          <span class="mode-name">model</span>
         </button>
-        <button type="button" class="mode-btn" data-mode="scripted">
-          <span class="mode-name">deterministic planner</span>
-          <span class="mode-note">no model</span>
+        <button type="button" class="mode-btn" data-mode="scripted" title="Deterministic planner — no model in the loop">
+          <span class="mode-name">deterministic</span>
         </button>
       </div>
       <a class="dash-link" id="dash-link" href="/" target="_blank" rel="noopener">Dashboard →</a>

@@ -1,21 +1,21 @@
 /* Capability Console — chat surface.
-   Dark, quiet, high-contrast; sized for a projector at the back of a room. */
+   Light, quiet, high-contrast; sized for a projector at the back of a room. */
 
 :root {
-  --bg:            #0b0f14;
-  --bg-raised:     #111820;
-  --bg-sunken:     #080b10;
-  --line:          #1e2833;
-  --line-soft:     #17202a;
-  --ink:           #e6edf4;
-  --ink-dim:       #93a4b8;
-  --ink-faint:     #63748a;
-  --accent:        #4da3ff;
-  --accent-soft:   rgba(77, 163, 255, 0.12);
-  --ok:            #3fbf88;
-  --warn:          #f0b429;
-  --danger:        #f2686a;
-  --violet:        #a78bfa;
+  --bg:            #f7f8fa;
+  --bg-raised:     #ffffff;
+  --bg-sunken:     #eef1f5;
+  --line:          #e2e7ee;
+  --line-soft:     #edf0f5;
+  --ink:           #131922;
+  --ink-dim:       #55606f;
+  --ink-faint:     #8b95a3;
+  --accent:        #2f5fe0;
+  --accent-soft:   rgba(47, 95, 224, 0.09);
+  --ok:            #1a7f37;
+  --warn:          #9a6100;
+  --danger:        #c0303a;
+  --violet:        #6d4bd8;
 
   --radius:        14px;
   --radius-sm:     9px;
@@ -64,7 +64,7 @@ body {
   flex: 0 0 auto;
   border-radius: 9px;
   background: linear-gradient(150deg, var(--accent), var(--violet));
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  box-shadow: 0 0 0 1px rgba(19, 25, 34, 0.06) inset;
 }
 
 .brand-text { min-width: 0; flex: 1 1 auto; }
@@ -123,12 +123,12 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 
-.mode-btn:hover { color: var(--ink-dim); background: rgba(255, 255, 255, 0.03); }
+.mode-btn:hover { color: var(--ink-dim); background: rgba(19, 25, 34, 0.035); }
 
 .mode-btn[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--ink);
-  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(47, 95, 224, 0.28);
 }
 
 .mode-name { display: block; font-size: 13px; font-weight: 600; }
@@ -144,14 +144,14 @@ body {
   border-radius: 9px;
   white-space: nowrap;
 }
-.dash-link:hover { color: var(--ink); border-color: #2c3947; }
+.dash-link:hover { color: var(--ink); border-color: var(--line); }
 
 /* ------------------------------------------------------------ transcript */
 
 .stage {
   flex: 1 1 auto;
   overflow-y: auto;
-  scrollbar-color: #26313d transparent;
+  scrollbar-color: var(--line) transparent;
 }
 
 .transcript {
@@ -176,7 +176,7 @@ body {
 
 .msg.user .bubble {
   background: var(--accent-soft);
-  border: 1px solid rgba(77, 163, 255, 0.28);
+  border: 1px solid rgba(47, 95, 224, 0.26);
   border-bottom-right-radius: 5px;
 }
 
@@ -220,7 +220,7 @@ body {
 .bubble code {
   font-family: var(--mono);
   font-size: 0.9em;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(19, 25, 34, 0.045);
   padding: 1px 5px;
   border-radius: 5px;
 }
@@ -239,7 +239,7 @@ body {
   display: flex; gap: 12px; align-items: baseline;
   font-size: 14px; color: var(--ink-dim);
   padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(19, 25, 34, 0.025);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm);
 }
@@ -321,7 +321,7 @@ body {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   padding: 10px 16px;
   border-top: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(19, 25, 34, 0.02);
   font-size: 13px;
 }
 .tc-runid { font-family: var(--mono); color: var(--ink-faint); font-size: 12.5px; }
@@ -331,9 +331,9 @@ body {
 /* ----------------------------------------------------- approval banner */
 
 .approval {
-  border: 1px solid rgba(240, 180, 41, 0.45);
+  border: 1px solid rgba(154, 97, 0, 0.45);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, rgba(240, 180, 41, 0.11), rgba(240, 180, 41, 0.03));
+  background: linear-gradient(180deg, rgba(154, 97, 0, 0.11), rgba(154, 97, 0, 0.03));
   padding: 20px 22px;
   display: grid;
   gap: 12px;
@@ -349,12 +349,12 @@ body {
   background: var(--bg-raised);
 }
 .approval.is-approved {
-  border-color: rgba(63, 191, 136, 0.45);
-  background: linear-gradient(180deg, rgba(63, 191, 136, 0.11), rgba(63, 191, 136, 0.03));
+  border-color: rgba(26, 127, 55, 0.45);
+  background: linear-gradient(180deg, rgba(26, 127, 55, 0.11), rgba(26, 127, 55, 0.03));
 }
 .approval.is-stopped {
-  border-color: rgba(242, 104, 106, 0.45);
-  background: linear-gradient(180deg, rgba(242, 104, 106, 0.11), rgba(242, 104, 106, 0.03));
+  border-color: rgba(192, 48, 58, 0.45);
+  background: linear-gradient(180deg, rgba(192, 48, 58, 0.11), rgba(192, 48, 58, 0.03));
 }
 
 .ap-head { display: flex; align-items: center; gap: 12px; }
@@ -363,7 +363,7 @@ body {
 .ap-dot {
   width: 11px; height: 11px; border-radius: 50%;
   background: var(--warn);
-  box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.55);
+  box-shadow: 0 0 0 0 rgba(154, 97, 0, 0.55);
   animation: pulse 1.9s infinite;
   flex: 0 0 auto;
 }
@@ -372,9 +372,9 @@ body {
 .approval.is-stopped .ap-dot  { background: var(--danger); }
 
 @keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.5); }
-  70%  { box-shadow: 0 0 0 12px rgba(240, 180, 41, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(240, 180, 41, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(154, 97, 0, 0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(154, 97, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(154, 97, 0, 0); }
 }
 
 .ap-title { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; }
@@ -400,7 +400,7 @@ body {
   padding: 10px 18px;
   border-radius: 9px;
   background: var(--warn);
-  color: #22190a;
+  color: #ffffff;
   font-weight: 650;
   font-size: 14.5px;
   text-decoration: none;
@@ -409,7 +409,7 @@ body {
 /* Once there is nothing left to approve the button is a plain link to the run,
    and it stops looking like the primary action. */
 .approval.is-resolved .ap-btn { background: var(--bg-sunken); color: var(--ink-dim); border: 1px solid var(--line); }
-.approval.is-approved .ap-btn { background: var(--ok); color: #04150e; border-color: transparent; }
+.approval.is-approved .ap-btn { background: var(--ok); color: #ffffff; border-color: transparent; }
 .approval.is-stopped .ap-btn  { background: var(--bg-sunken); color: var(--ink-dim); }
 
 .ap-status { font-size: 13.5px; color: var(--ink-dim); font-family: var(--mono); }
@@ -442,12 +442,12 @@ body {
 
 /* An error from the transport or the server, not from a capability. */
 .notice {
-  border: 1px solid rgba(242, 104, 106, 0.4);
-  background: rgba(242, 104, 106, 0.07);
+  border: 1px solid rgba(192, 48, 58, 0.4);
+  background: rgba(192, 48, 58, 0.07);
   border-radius: var(--radius-sm);
   padding: 13px 17px;
   font-size: 14.5px;
-  color: #ffb9ba;
+  color: var(--danger);
 }
 .notice b { color: #fff; }
 /* This renders up to 300 characters of whatever the server said. */
@@ -484,7 +484,7 @@ body {
 /* A chip is a sentence, and a long one must wrap inside the pill rather than
    run off the strip. */
 .chip { max-width: 100%; text-align: left; }
-.chip:hover:not(:disabled) { color: var(--ink); border-color: #33424f; }
+.chip:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
 .chip:disabled { opacity: 0.4; cursor: not-allowed; }
 .chip .risk { margin-left: 7px; font-size: 11px; }
 
@@ -517,7 +517,7 @@ body {
   font-size: 16px;
   line-height: 1.5;
 }
-#input:focus { outline: none; border-color: rgba(77, 163, 255, 0.55); }
+#input:focus { outline: none; border-color: rgba(47, 95, 224, 0.5); }
 #input:disabled { opacity: 0.55; }
 
 .send {
@@ -527,14 +527,14 @@ body {
   border: 0;
   border-radius: 12px;
   background: var(--accent);
-  color: #04121f;
+  color: #ffffff;
   font-family: inherit;
   font-size: 15.5px;
   font-weight: 650;
   cursor: pointer;
 }
 .send:hover:not(:disabled) { filter: brightness(1.08); }
-.send:disabled { background: #23303d; color: var(--ink-faint); cursor: not-allowed; }
+.send:disabled { background: var(--bg-sunken); color: var(--ink-faint); cursor: not-allowed; }
 
 .disclaimer {
   max-width: 900px;
@@ -553,3 +553,21 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ap-dot, .spinner { animation: none; }
 }
+
+/* The catalog, stated once and compactly. Seven full rows in the opening
+   message pushed the actual conversation below the fold; what a reader needs
+   from it is the shape of the surface and which parts are dangerous. The dot
+   carries the risk, the tooltip carries the title. */
+.cap-line { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.cap-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg-raised);
+  font-family: var(--mono); font-size: 13px; color: var(--ink-dim);
+  cursor: default;
+}
+.cap-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+.cap-pill.risk-irreversible .cap-dot { background: var(--danger); }
+.cap-pill.risk-reversible   .cap-dot { background: var(--warn); }
+.cap-pill.risk-readonly     .cap-dot { background: var(--ok); }

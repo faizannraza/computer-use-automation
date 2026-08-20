@@ -109,10 +109,14 @@ function renderPolicy(policy) {
   const strip = clear($('policy-strip'));
   const item = (k, v, guard) => h('div', { class: 'policy-item' + (guard ? ' is-guard' : '') },
     h('span', { class: 'k', text: k }), h('span', { class: 'v', text: v }));
-  strip.append(item('allowed origins', (policy.allowedOrigins || []).join('  ') || 'none'));
-  strip.append(item('denied paths', (policy.deniedPathPrefixes || []).join('  ') || 'none'));
-  strip.append(item('allowed actions', `${(policy.allowedActions || []).length} verbs`));
-  strip.append(item('irreversible actions', policy.irreversibleActionMode || 'unknown', true));
+  // Short labels and a hostname rather than a full origin: the origin is
+  // already spelled out under the title, and this row exists to be CONFIRMED
+  // at a glance, not read.
+  const host = (o) => { try { return new URL(o).host; } catch { return o; } };
+  strip.append(item('origin', (policy.allowedOrigins || []).map(host).join(' ') || 'none'));
+  strip.append(item('denies', (policy.deniedPathPrefixes || []).join(' ') || 'none'));
+  strip.append(item('actions', `${(policy.allowedActions || []).length}`));
+  strip.append(item('irreversible', policy.irreversibleActionMode || 'unknown', true));
 }
 
 // ───────────────────────────── catalog ─────────────────────────────

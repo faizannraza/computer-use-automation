@@ -172,14 +172,18 @@ function renderIntro(profile) {
     esc(profile ? profile.title : 'the target application') +
     '. Anything irreversible stops for a human before it posts.'));
 
+  // The catalog as one wrapped line, not seven rows. A reader needs to know
+  // WHAT is callable and which of it is dangerous; the full title of each is
+  // already a hover away, and the dashboard lists them properly.
   if (capabilities.length) {
-    var list = el('ul');
+    var names = el('div', 'cap-line');
     capabilities.forEach(function (cap) {
-      list.appendChild(el('li', null,
-        '<b>' + esc(cap.name) + '</b><span>' + esc(cap.title || '') + '</span>' +
-        '<span class="risk ' + riskClass(cap.maxRisk) + '">' + esc(cap.maxRisk || '') + '</span>'));
+      var pill = el('span', 'cap-pill ' + riskClass(cap.maxRisk),
+        '<i class="cap-dot" aria-hidden="true"></i>' + esc(cap.name));
+      pill.title = (cap.title || cap.name) + ' — ' + (cap.maxRisk || '');
+      names.appendChild(pill);
     });
-    intro.appendChild(list);
+    intro.appendChild(names);
   }
   add(intro);
 }
