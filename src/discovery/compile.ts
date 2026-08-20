@@ -67,18 +67,15 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   // never corrupt "S1234" or an unrelated amount.
   const paramEntries = Object.entries(inputs.callerParamValues).filter(([, v]) => v.length >= 3);
   const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const paramize = (s: string, where: string): string => {
-    let out = s;
-    for (const [name, value] of paramEntries) {
-      const re = new RegExp(`(^|[^A-Za-z0-9])${escapeRe(value)}(?=$|[^A-Za-z0-9])`, 'g');
-      if (re.test(out)) {
-        re.lastIndex = 0;
-        out = out.replace(re, (_m, pre: string) => `${pre}{${name}}`);
-        report.parameterizations.push(`${where}: "${value}" → {${name}}`);
-      }
-    }
-    return out;
+  const substituteValue = (s: string, name: string, value: string, where: string): string => {
+    const re = new RegExp(`(^|[^A-Za-z0-9])${escapeRe(value)}(?=$|[^A-Za-z0-9])`, 'g');
+    if (!re.test(s)) return s;
+    re.lastIndex = 0;
+    report.parameterizations.push(`${where}: "${value}" → {${name}}`);
+    return s.replace(re, (_m, pre: string) => `${pre}{${name}}`);
   };
+  const paramize = (s: string, where: string): string =>
+    paramEntries.reduce((out, [name, value]) => substituteValue(out, name, value, where), s);
   const canonicalUrl = (url: string, where: string): string => {
     let out = url.startsWith(inputs.baseUrl) ? '{baseUrl}' + url.slice(inputs.baseUrl.length) : url;
     if (out === '{baseUrl}') out = '{baseUrl}/';
@@ -300,13 +297,52 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
 
   // ---- outcomes: grounded in probe evidence, attached to the step whose
   // control triggered them (matched by role+name of the probe's activator) ----
-  const outcomes: OutcomeSpec[] = trace.outcomes.map((o) => ({
-    code: o.code,
-    description: o.description,
-    when: { c: 'textPresent', pattern: o.marker },
-    terminal: true as const,
-    outputs: {},
-  }));
+
+  // Probe stand-ins: the literal a probe typed into a field that takes a
+  // {param} binding in the spine is that param's stand-in (searching 99999 to
+  // probe MEMBER_NOT_FOUND makes 99999 the stand-in for {memberId}). A marker
+  // that echoes the probe entity ("Member 99999 was not found") would pin the
+  // detector to the recorded entity forever — so stand-ins are substituted
+  // with the same token-bounded matching, and the report flags it: templating
+  // a detector is a riskier decision than templating a locator, and a
+  // reviewer must see it before approval.
+  const fieldKey = (el: RecordedElement): string => `${el.role}|${el.label ?? el.name}`;
+  const spineParamFields = new Map<string, string>();
+  for (const a of spine) {
+    if (a.kind !== 'setValue' || a.value === undefined || a.element === undefined) continue;
+    const param =
+      'param' in a.value ? a.value.param : paramEntries.find(([, v]) => v === (a.value as { literal: string }).literal)?.[0];
+    if (param !== undefined) spineParamFields.set(fieldKey(a.element), param);
+  }
+  const probeStandIns = new Map<string, [name: string, value: string][]>();
+  for (const a of trace.actions) {
+    if (!a.probe || a.probeCode === undefined || a.kind !== 'setValue') continue;
+    if (a.value === undefined || !('literal' in a.value) || a.value.literal.length < 3 || a.element === undefined) continue;
+    const param = spineParamFields.get(fieldKey(a.element));
+    if (param === undefined) continue;
+    const list = probeStandIns.get(a.probeCode) ?? [];
+    list.push([param, a.value.literal]);
+    probeStandIns.set(a.probeCode, list);
+  }
+
+  const outcomes: OutcomeSpec[] = trace.outcomes.map((o) => {
+    let pattern = paramize(o.marker, `outcome.${o.code}.marker`);
+    for (const [name, value] of probeStandIns.get(o.code) ?? []) {
+      pattern = substituteValue(pattern, name, value, `outcome.${o.code}.marker`);
+    }
+    if (pattern !== o.marker) {
+      report.notes.push(
+        `outcome ${o.code}: marker was parameterized ("${o.marker}" → "${pattern}") — a templated detector matches more than the recorded text; review before approval`,
+      );
+    }
+    return {
+      code: o.code,
+      description: o.description,
+      when: { c: 'textPresent', pattern },
+      terminal: true as const,
+      outputs: {},
+    };
+  });
   for (const declared of trace.outcomes) {
     // Attach each outcome via ITS OWN probe segment (matched by probeCode) —
     // multiple probes in one run each ground their own detector.

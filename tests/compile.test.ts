@@ -204,6 +204,33 @@ describe('compileTrace', () => {
     expect(artifact.outcomes[0]).toMatchObject({ code: 'MEMBER_NOT_FOUND', when: { c: 'textPresent', pattern: 'No members matched your search.' } });
   });
 
+  it('parameterizes outcome markers that echo the probe entity — flagged for review', () => {
+    // The probe searched 99999 (the stand-in for {memberId}); an app whose
+    // not-found message echoes the entity would pin the detector to 99999
+    // forever. The compiler substitutes the stand-in and flags the decision.
+    const echoTrace = structuredClone(trace);
+    echoTrace.outcomes = [
+      { code: 'MEMBER_NOT_FOUND', description: 'No member matched.', marker: 'Member 99999 was not found on this system.', observedIn: notFoundDigest },
+    ];
+    const { artifact, report } = compileTrace({
+      trace: echoTrace,
+      paramSpecs,
+      callerParamValues: { memberId: '12345' },
+      outputHints: { savingsBalance: { type: 'money', sensitivity: 'pii' } },
+      baseUrl: BASE,
+      model: 'claude-opus-4-8',
+      discoveryRunId: 'testrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(artifact.outcomes[0]!.when).toEqual({ c: 'textPresent', pattern: 'Member {memberId} was not found on this system.' });
+    expect(report.notes.some((n) => n.includes('MEMBER_NOT_FOUND') && n.includes('review before approval'))).toBe(true);
+    // The entity-free marker in the main trace is left untouched (no note).
+    const { artifact: normal, report: normalReport } = compiled();
+    expect(normal.outcomes[0]!.when).toEqual({ c: 'textPresent', pattern: 'No members matched your search.' });
+    expect(normalReport.notes.every((n) => !n.includes('marker was parameterized'))).toBe(true);
+  });
+
   it('parameterizes success criteria and keeps them from the final spine state', () => {
     const { artifact } = compiled();
     expect(artifact.successCriteria.length).toBeGreaterThan(0);
