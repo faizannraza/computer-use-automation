@@ -12,21 +12,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import path from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { RunLog } from '../evidence/runLog.js';
-import { ActionGate, PolicyViolation } from '../policy/actionGate.js';
+import { ActionGate } from '../policy/actionGate.js';
 import type { Policy } from '../policy/policy.js';
 import { Redactor, maskValue } from '../policy/redact.js';
 import type { ParamSpec } from '../schema/capability.js';
-import type { Observation } from '../core/types.js';
 import { PlaywrightWebSurface } from '../surface/web/playwrightSurface.js';
 import { CapabilityArtifactSchema, computeContentHash } from '../schema/capability.js';
 import { compileTrace } from './compile.js';
 import type { OutputHint } from './compile.js';
-import { Recorder, digestOf, recordedElementOf } from './recorder.js';
-import { renderObservationBlocks } from './render.js';
+import { Recorder } from './recorder.js';
+import { DiscoveryToolExecutor } from './toolExecutor.js';
 import { DISCOVERY_TOOLS } from './tools.js';
-
-const CAPABILITY_ID_RE = /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/;
-const OUTCOME_CODE_RE = /^[A-Z][A-Z0-9_]*$/;
 
 export interface DiscoveryOptions {
   goal: string;
@@ -94,6 +90,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   const gate = new ActionGate(opts.policy, surface, {
     onEvent: (e) => log.event('gate', { kind: e.action.kind, decision: e.decision, location: e.location, risk: e.context.risk }),
   });
+  const executor = new DiscoveryToolExecutor({ surface, gate, recorder, log, redactor, paramValues, outputHints: opts.outputHints });
   const client = new Anthropic();
   const usage = { inputTokens: 0, outputTokens: 0, turns: 0 };
 
@@ -127,7 +124,6 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   ];
 
   let finished: 'done' | 'gave_up' | undefined;
-  let giveUpReason = '';
 
   try {
     for (let turn = 1; turn <= maxTurns && !finished; turn++) {
@@ -168,7 +164,7 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
       const results: Anthropic.Messages.ToolResultBlockParam[] = [];
       for (const tu of toolUses) {
         log.event('tool_use', { turn, tool: tu.name, input: summarizeInput(tu.input) });
-        const outcome = await handleTool(tu.name, tu.input as Record<string, unknown>);
+        const outcome = await executor.handle(tu.name, tu.input as Record<string, unknown>);
         results.push({
           type: 'tool_result',
           tool_use_id: tu.id,
@@ -195,8 +191,8 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   await surface.close();
 
   if (finished === 'gave_up') {
-    log.event('run_result', { status: 'gave_up', reason: giveUpReason });
-    return { status: 'gave_up', runId: log.runId, evidenceDir: log.dir, reason: giveUpReason, usage };
+    log.event('run_result', { status: 'gave_up', reason: executor.giveUpReason });
+    return { status: 'gave_up', runId: log.runId, evidenceDir: log.dir, reason: executor.giveUpReason, usage };
   }
   if (finished !== 'done') {
     log.event('run_result', { status: 'exhausted', maxTurns });
@@ -244,225 +240,6 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   return { status: 'compiled', runId: log.runId, evidenceDir: log.dir, artifactPath, usage };
 
   // -------------------------------------------------------------------------
-
-  interface ToolOutcome {
-    blocks: ({ type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/png'; data: string } })[];
-    isError?: boolean;
-    finished?: 'done' | 'gave_up';
-  }
-
-  function textOut(text: string, isError = false): ToolOutcome {
-    return { blocks: [{ type: 'text', text }], ...(isError ? { isError: true } : {}) };
-  }
-
-  async function handleTool(name: string, input: Record<string, unknown>): Promise<ToolOutcome> {
-    try {
-      switch (name) {
-        case 'observe': {
-          const obs = await surface.observe();
-          log.screenshot('observe', obs.screenshot);
-          return { blocks: renderObservationBlocks(obs) };
-        }
-        case 'navigate': {
-          const before = digestOf(surface.lastObservation() ?? (await surface.observe()));
-          await gate.execute({ kind: 'navigate', url: String(input['url']) }, { risk: 'read' });
-          await surface.settle();
-          const obs = await surface.observe();
-          const shot = log.screenshot('navigate', obs.screenshot);
-          recorder.record({
-            kind: 'navigate',
-            intent: String(input['intent']),
-            risk: 'read',
-            url: String(input['url']),
-            before,
-            after: digestOf(obs),
-            ...(shot !== undefined ? { screenshotRef: shot } : {}),
-          });
-          return { blocks: renderObservationBlocks(obs) };
-        }
-        case 'click': {
-          const { obs: beforeObs, el } = requireRef(input);
-          const irreversible = input['irreversible'] === true;
-          await gate.execute(
-            { kind: 'activate', ref: el.ref },
-            { risk: irreversible ? 'irreversible' : 'reversible', frameUrl: frameUrlOf(el) },
-          );
-          await surface.settle();
-          const obs = await surface.observe();
-          const shot = log.screenshot('click', obs.screenshot);
-          recorder.record({
-            kind: 'activate',
-            intent: String(input['intent']),
-            risk: irreversible ? 'irreversible' : 'reversible',
-            element: recordedElementOf(el),
-            before: digestOf(beforeObs),
-            after: digestOf(obs),
-            ...(shot !== undefined ? { screenshotRef: shot } : {}),
-          });
-          return { blocks: renderObservationBlocks(obs) };
-        }
-        case 'type': {
-          const { obs: beforeObs, el } = requireRef(input);
-          const paramName = input['param'] !== undefined ? String(input['param']) : undefined;
-          const literal = input['text'] !== undefined ? String(input['text']) : undefined;
-          if ((paramName === undefined) === (literal === undefined)) {
-            return textOut('Provide exactly one of text or param.', true);
-          }
-          let value: string;
-          if (paramName !== undefined) {
-            const v = paramValues[paramName];
-            if (v === undefined) return textOut(`Unknown param '${paramName}'.`, true);
-            value = v;
-          } else {
-            value = literal!;
-          }
-          await gate.execute(
-            { kind: 'setValue', ref: el.ref, value },
-            { risk: 'reversible', frameUrl: frameUrlOf(el) },
-          );
-          // No re-observe: typing does not navigate, so refs stay valid — and
-          // the model was promised exactly that (see the observe tool's docs).
-          const digest = digestOf(beforeObs);
-          recorder.record({
-            kind: 'setValue',
-            intent: String(input['intent']),
-            risk: 'reversible',
-            element: recordedElementOf(el),
-            value: paramName !== undefined ? { param: paramName } : { literal: literal! },
-            before: digest,
-            after: digest,
-          });
-          return textOut(paramName !== undefined ? `Entered {param:${paramName}} into [${el.ref}].` : `Entered ${JSON.stringify(literal)} into [${el.ref}].`);
-        }
-        case 'choose': {
-          const { obs: beforeObs, el } = requireRef(input);
-          const option = String(input['option']);
-          await gate.execute(
-            { kind: 'choose', ref: el.ref, option },
-            { risk: 'reversible', frameUrl: frameUrlOf(el) },
-          );
-          const digest = digestOf(beforeObs);
-          recorder.record({
-            kind: 'choose',
-            intent: String(input['intent']),
-            risk: 'reversible',
-            element: recordedElementOf(el),
-            option: { literal: option },
-            before: digest,
-            after: digest,
-          });
-          return textOut(`Chose ${JSON.stringify(option)} in [${el.ref}].`);
-        }
-        case 'read': {
-          const { obs: beforeObs, el } = requireRef(input);
-          const outputName = String(input['output_name']);
-          if (!/^[a-z][a-zA-Z0-9]*$/.test(outputName)) return textOut('output_name must be lowerCamelCase.', true);
-          const hintSensitivity = opts.outputHints[outputName]?.sensitivity ?? 'none';
-          const res = await gate.execute(
-            { kind: 'read', ref: el.ref },
-            { risk: 'read', frameUrl: frameUrlOf(el) },
-          );
-          const digest = digestOf(beforeObs);
-          recorder.record({
-            kind: 'read',
-            intent: String(input['intent']),
-            risk: 'read',
-            element: recordedElementOf(el),
-            outputName,
-            ...(res.readValue !== undefined ? { readValue: res.readValue } : {}),
-            before: digest,
-            after: digest,
-          });
-          // Sensitive extractions are registered with the redactor the moment
-          // they exist (so trace/transcript/evidence writes mask them) and are
-          // shown to the MODEL only in masked form — a value the model never
-          // sees is a value it cannot echo into descriptions or intents.
-          if ((hintSensitivity === 'pii' || hintSensitivity === 'secret') && res.readValue !== undefined && res.readValue !== '') {
-            redactor.register(outputName, res.readValue, hintSensitivity);
-            const masked = maskValue(outputName, res.readValue, hintSensitivity);
-            return textOut(
-              `Read a ${hintSensitivity}-classified value (${JSON.stringify(masked)}) as output '${outputName}'. The raw value is withheld from this transcript by policy — do not attempt to restate it from the screen.`,
-            );
-          }
-          return textOut(`Read ${JSON.stringify(res.readValue ?? '')} as output '${outputName}'.`);
-        }
-        case 'answer_dialog': {
-          const before = digestOf(surface.lastObservation() ?? (await surface.observe()));
-          const accept = input['accept'] === true;
-          await gate.execute({ kind: 'answerDialog', accept }, { risk: 'reversible' });
-          await surface.settle();
-          const obs = await surface.observe();
-          recorder.record({
-            kind: 'answerDialog',
-            intent: String(input['intent']),
-            risk: 'reversible',
-            before,
-            after: digestOf(obs),
-          });
-          return { blocks: renderObservationBlocks(obs) };
-        }
-        case 'begin_probe': {
-          const code = String(input['outcome_code']);
-          if (!OUTCOME_CODE_RE.test(code)) return textOut('outcome_code must be SCREAMING_SNAKE.', true);
-          recorder.beginProbe(code);
-          log.event('probe_started', { code });
-          return textOut(`Probe started for ${code}. Actions until declare_outcome are excluded from the replayable flow.`);
-        }
-        case 'declare_outcome': {
-          const code = String(input['code']);
-          const marker = String(input['marker']);
-          if (!OUTCOME_CODE_RE.test(code)) return textOut('code must be SCREAMING_SNAKE.', true);
-          const obs = surface.lastObservation() ?? (await surface.observe());
-          if (!obs.visibleText.toLowerCase().includes(marker.toLowerCase())) {
-            return textOut(`Marker ${JSON.stringify(marker)} is NOT visible on the current screen — declare only states you are observing.`, true);
-          }
-          recorder.declareOutcome({ code, description: String(input['description']), marker, observedIn: digestOf(obs) });
-          log.event('outcome_declared', { code, marker });
-          return textOut(`Outcome ${code} declared (marker verified visible).`);
-        }
-        case 'revise': {
-          const n = Number(input['drop_last']);
-          if (!Number.isInteger(n) || n < 1) return textOut('drop_last must be a positive integer.', true);
-          const dropped = recorder.retract(n);
-          log.event('revised', { requested: n, dropped, reason: String(input['reason']) });
-          return textOut(`Retracted ${dropped} recorded action(s).`);
-        }
-        case 'declare_done': {
-          const id = String(input['capability_id']);
-          if (!CAPABILITY_ID_RE.test(id)) {
-            return textOut("capability_id must be namespaced like 'member.readSavingsBalance'.", true);
-          }
-          recorder.finish({ capabilityId: id, title: String(input['title']), description: String(input['description']) });
-          return { blocks: [{ type: 'text', text: 'Recorded. Compiling the artifact.' }], finished: 'done' };
-        }
-        case 'give_up': {
-          giveUpReason = String(input['reason']);
-          recorder.giveUp(giveUpReason);
-          return { blocks: [{ type: 'text', text: 'Understood.' }], finished: 'gave_up' };
-        }
-        default:
-          return textOut(`Unknown tool '${name}'.`, true);
-      }
-    } catch (err) {
-      if (err instanceof PolicyViolation) {
-        return textOut(`POLICY: ${err.message}`, true);
-      }
-      return textOut(`ERROR: ${err instanceof Error ? err.message : String(err)}`, true);
-    }
-  }
-
-  function frameUrlOf(el: Observation['elements'][number]): string | undefined {
-    return el.framePath[el.framePath.length - 1]?.url;
-  }
-
-  function requireRef(input: Record<string, unknown>): { obs: Observation; el: Observation['elements'][number] } {
-    const obs = surface.lastObservation();
-    if (!obs) throw new Error('no observation yet — call observe first');
-    const ref = Number(input['ref']);
-    const el = obs.elements.find((e) => e.ref === ref);
-    if (!el) throw new Error(`ref ${ref} is not in the latest observation (it may be stale — observe again)`);
-    return { obs, el };
-  }
 
   function persistTranscript(): void {
     // Full transcript as evidence, with image payloads elided (screenshots
