@@ -36,6 +36,9 @@ export interface ReplayOptions {
   verified?: boolean;
   allowDraft?: boolean;
   headed?: boolean;
+  /** Demo aid: throttle driver actions (Playwright slowMo) so a headed
+   * replay is watchable by an audience. Never set on production replays. */
+  slowMoMs?: number;
   evidenceBaseDir?: string;
   /**
    * Human-in-the-loop operator. When present, escalations pause the run and
@@ -205,7 +208,10 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
   }
 
   const subst = { ...bindings, ...params };
-  const surface = await PlaywrightWebSurface.launch({ headed: opts.headed ?? false });
+  const surface = await PlaywrightWebSurface.launch({
+    headed: opts.headed ?? false,
+    ...(opts.slowMoMs !== undefined ? { slowMoMs: opts.slowMoMs } : {}),
+  });
   // The controller owns the control token; the gate checks it on every
   // action, so the automation cannot act at all during a human handoff.
   const controller = opts.operator ? new SessionController(surface, log, opts.operator) : undefined;

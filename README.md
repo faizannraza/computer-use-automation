@@ -69,6 +69,8 @@ npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.j
 # → status business_outcome, code MEMBER_NOT_FOUND (a result, not a crash; exit code 0)
 ```
 
+Add `--headed` to watch the browser drive the flow, and `--slow-mo 600` to pace it for an audience (a demo aid — production replays run headless at full speed).
+
 **Replay through a runtime error** — inject a mid-flow session timeout; the tenant overlay supplies the recovery and the run re-authenticates and completes:
 
 ```bash

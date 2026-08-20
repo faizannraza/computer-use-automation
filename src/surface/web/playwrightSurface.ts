@@ -21,6 +21,9 @@ import { resolveTarget } from './locatorResolver.js';
 
 export interface WebSurfaceOptions {
   headed?: boolean;
+  /** Throttle every driver action by this many ms (Playwright slowMo) —
+   * presentation aid for headed runs; production replays never set it. */
+  slowMoMs?: number;
   viewport?: { width: number; height: number };
 }
 
@@ -43,7 +46,10 @@ export class PlaywrightWebSurface implements Surface {
   private refMap = new Map<number, { frame: Frame; index: number }>();
 
   static async launch(opts: WebSurfaceOptions = {}): Promise<PlaywrightWebSurface> {
-    const browser = await chromium.launch({ headless: !opts.headed });
+    const browser = await chromium.launch({
+      headless: !opts.headed,
+      ...(opts.slowMoMs !== undefined && opts.slowMoMs > 0 ? { slowMo: opts.slowMoMs } : {}),
+    });
     const page = await browser.newPage({ viewport: opts.viewport ?? { width: 1280, height: 800 } });
     return new PlaywrightWebSurface(browser, page);
   }

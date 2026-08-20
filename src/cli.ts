@@ -261,6 +261,9 @@ async function replayCmd(argv: string[]): Promise<void> {
       policy: { type: 'string', default: 'policies/default.policy.json' },
       tenant: { type: 'string' },
       headed: { type: 'boolean', default: false },
+      // Demo aid: throttle driver actions by N ms (Playwright slowMo) so a
+      // --headed replay is watchable by an audience. Not a production flag.
+      'slow-mo': { type: 'string' },
       // Human-in-the-loop: escalations pause the run, print the intervention
       // to this terminal, and hand you the live browser window. Forces --headed.
       hitl: { type: 'boolean', default: false },
@@ -283,6 +286,11 @@ async function replayCmd(argv: string[]): Promise<void> {
   const times = Number(values.times);
   if (!Number.isInteger(times) || times < 1) {
     console.error(`--times expects a positive integer, got '${values.times}'`);
+    process.exit(64);
+  }
+  const slowMoMs = values['slow-mo'] !== undefined ? Number(values['slow-mo']) : undefined;
+  if (slowMoMs !== undefined && (!Number.isInteger(slowMoMs) || slowMoMs < 0)) {
+    console.error(`--slow-mo expects a non-negative integer (milliseconds), got '${values['slow-mo']}'`);
     process.exit(64);
   }
   if (times > 1 && values.hitl) {
@@ -338,6 +346,7 @@ async function replayCmd(argv: string[]): Promise<void> {
     allowDraft: values['allow-draft']!,
     headed: values.headed! || values.hitl!,
     evidenceBaseDir: values['evidence-dir']!,
+    ...(slowMoMs !== undefined && slowMoMs > 0 ? { slowMoMs } : {}),
     ...(values.hitl ? { operator: new TerminalOperator() } : {}),
   };
 
