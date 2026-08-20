@@ -13,13 +13,17 @@
  */
 import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { buildCatalog, findByName } from './catalog/catalog.js';
 import { runDiscovery } from './discovery/agent.js';
 import type { OutputHint } from './discovery/compile.js';
+import { newRunId } from './evidence/runLog.js';
 import { TerminalOperator } from './hitl/terminalOperator.js';
 import { loadPolicy } from './policy/policy.js';
 import { replayCapability } from './replay/engine.js';
+import { buildStabilityReport } from './replay/stability.js';
+import type { ReplayResult } from './schema/result.js';
 import { CapabilityArtifactSchema, ParamSpecSchema, computeContentHash, loadCapability } from './schema/capability.js';
 import type { ParamSpec, Sensitivity } from './schema/capability.js';
 import { applyOverlay, loadOverlay } from './schema/overlay.js';
@@ -256,6 +260,10 @@ async function replayCmd(argv: string[]): Promise<void> {
       hitl: { type: 'boolean', default: false },
       'allow-draft': { type: 'boolean', default: false },
       'evidence-dir': { type: 'string', default: 'evidence' },
+      // Multi-run stability (stretch): replay N times and aggregate a
+      // flakiness report — status flapping, output consistency, and the
+      // per-step strategy-rank distribution (the drift signal, summed).
+      times: { type: 'string', default: '1' },
       // Test-harness convenience: arms a fault on the MOCK APP before the run
       // (name:mode[:param]). This talks to the mock's /__faults endpoint —
       // which the automation policy itself denies the agent from touching.
@@ -264,6 +272,15 @@ async function replayCmd(argv: string[]): Promise<void> {
   });
   if (!values.capability) {
     console.error('replay requires --capability <artifact.json>');
+    process.exit(64);
+  }
+  const times = Number(values.times);
+  if (!Number.isInteger(times) || times < 1) {
+    console.error(`--times expects a positive integer, got '${values.times}'`);
+    process.exit(64);
+  }
+  if (times > 1 && values.hitl) {
+    console.error('--times cannot combine with --hitl: an interactive handoff is not a repeatable measurement');
     process.exit(64);
   }
 
@@ -303,7 +320,7 @@ async function replayCmd(argv: string[]): Promise<void> {
   if (values.hitl && !values.headed) {
     console.error('[hitl] forcing --headed: the human operator needs to see the live session');
   }
-  const result = await replayCapability(resolved, {
+  const runOpts = {
     policy: loadPolicy(values.policy!),
     paramValues,
     verified,
@@ -311,7 +328,29 @@ async function replayCmd(argv: string[]): Promise<void> {
     headed: values.headed! || values.hitl!,
     evidenceBaseDir: values['evidence-dir']!,
     ...(values.hitl ? { operator: new TerminalOperator() } : {}),
-  });
+  };
+
+  if (times > 1) {
+    // Stability mode: N independent replays, one aggregated report. The
+    // report itself carries no output values (statuses, timings, strategy
+    // ranks only), so it needs no redaction pass.
+    const results: ReplayResult[] = [];
+    for (let i = 1; i <= times; i++) {
+      const r = await replayCapability(resolved, runOpts);
+      console.error(`[${i}/${times}] ${r.status}${r.status === 'failed' ? ` (${r.failure.class})` : ''} — run ${r.runId}`);
+      results.push(r);
+    }
+    const report = buildStabilityReport(results);
+    const reportFile = path.join(values['evidence-dir']!, 'replay', `stability-${newRunId()}.json`);
+    writeFileSync(reportFile, JSON.stringify(report, null, 2) + '\n');
+    console.error(`\n[${report.verdict.toUpperCase()}] ${report.capabilityId}@${report.version} over ${report.runs} runs`);
+    for (const reason of report.reasons) console.error(`  - ${reason}`);
+    console.error(`  report: ${reportFile}`);
+    console.log(JSON.stringify(report, null, 2));
+    process.exit(results.some((r) => r.status === 'failed') ? 2 : results.some((r) => r.status === 'escalated') ? 3 : 0);
+  }
+
+  const result = await replayCapability(resolved, runOpts);
 
   // Human summary → stderr; machine-readable result → stdout (the caller
   // channel: outputs here are intentionally NOT redacted — the invoking
