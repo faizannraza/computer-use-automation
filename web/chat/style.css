@@ -79,16 +79,23 @@ body {
   text-overflow: ellipsis;
 }
 
+/* One ellipsis on the WHOLE line clipped it from the right, and what sits on
+   the right is the planner mode — the honesty label saying whether a model is
+   in the loop. Only the base URL gives ground now; the capability count and
+   the mode always survive. */
 .sub {
   margin: 1px 0 0;
   font-size: 12.5px;
   color: var(--ink-faint);
   font-family: var(--mono);
+  display: flex;
+  align-items: baseline;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
 }
 
+.sub > * { flex: 0 0 auto; }
+#app-base { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; min-width: 3ch; }
 .sub .dot { margin: 0 6px; opacity: 0.5; }
 
 .topbar-right { display: flex; align-items: center; gap: 18px; flex: 0 0 auto; }
@@ -179,6 +186,37 @@ body {
   border-bottom-left-radius: 5px;
 }
 
+/* A table the planner returned. Scrolls in its own box rather than widening
+   the bubble: a shares table is four columns wide and a member search is
+   three, but nothing stops a capability returning more. */
+.md-table {
+  overflow-x: auto;
+  margin: 4px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.md-table table {
+  border-collapse: collapse;
+  white-space: normal;        /* the bubble is pre-wrap; a table is not */
+  font-size: 14.5px;
+  min-width: 100%;
+}
+.md-table th, .md-table td {
+  padding: 7px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+}
+.md-table th {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: var(--bg-sunken);
+}
+.md-table tbody tr:last-child td { border-bottom: none; }
+
 .bubble code {
   font-family: var(--mono);
   font-size: 0.9em;
@@ -244,6 +282,8 @@ body {
   font-size: 14.5px;
   color: var(--ink);
   font-weight: 500;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .pill {
@@ -263,7 +303,8 @@ body {
 .pill.s-awaiting_approval { color: var(--warn); }
 .pill.s-failed,
 .pill.s-error,
-.pill.s-rejected         { color: var(--danger); }
+.pill.s-refused          { color: var(--danger); }
+.pill.s-still_running    { color: var(--warn); }
 .pill.s-unknown          { color: var(--ink-faint); }
 
 .tc-body { padding: 12px 16px; display: grid; gap: 12px; }
@@ -277,7 +318,7 @@ body {
 .tc-summary { font-size: 14.5px; color: var(--ink-dim); overflow-wrap: anywhere; }
 
 .tc-foot {
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   padding: 10px 16px;
   border-top: 1px solid var(--line-soft);
   background: rgba(255, 255, 255, 0.015);
@@ -298,9 +339,22 @@ body {
   gap: 12px;
 }
 
+/* Resolved = not waiting any more. Deliberately NEUTRAL: an intervention
+   leaving the open list does not say whether it was approved, rejected or
+   timed out, so the banner goes quiet here and takes its colour below, from
+   what the run itself reported. Painting every resolution green announced an
+   approval on the two paths where nothing was approved. */
 .approval.is-resolved {
+  border-color: var(--line);
+  background: var(--bg-raised);
+}
+.approval.is-approved {
   border-color: rgba(63, 191, 136, 0.45);
   background: linear-gradient(180deg, rgba(63, 191, 136, 0.11), rgba(63, 191, 136, 0.03));
+}
+.approval.is-stopped {
+  border-color: rgba(242, 104, 106, 0.45);
+  background: linear-gradient(180deg, rgba(242, 104, 106, 0.11), rgba(242, 104, 106, 0.03));
 }
 
 .ap-head { display: flex; align-items: center; gap: 12px; }
@@ -313,7 +367,9 @@ body {
   animation: pulse 1.9s infinite;
   flex: 0 0 auto;
 }
-.approval.is-resolved .ap-dot { background: var(--ok); animation: none; box-shadow: none; }
+.approval.is-resolved .ap-dot { background: var(--ink-faint); animation: none; box-shadow: none; }
+.approval.is-approved .ap-dot { background: var(--ok); }
+.approval.is-stopped .ap-dot  { background: var(--danger); }
 
 @keyframes pulse {
   0%   { box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.5); }
@@ -322,15 +378,20 @@ body {
 }
 
 .ap-title { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; }
-.ap-reason { margin: 0; font-size: 15px; color: var(--ink-dim); max-width: 70ch; }
+.ap-reason { margin: 0; font-size: 15px; color: var(--ink-dim); max-width: 70ch; overflow-wrap: anywhere; }
 .ap-reason b { color: var(--ink); font-weight: 600; }
 
+/* `overflow-wrap` on the spans, not just `flex-wrap` on the row: the reason,
+   the ids and the capability name all come off the target application, and one
+   long unbroken value used to push a horizontal scrollbar onto the whole
+   PAGE rather than being clipped inside its own card. */
 .ap-meta {
   font-family: var(--mono);
   font-size: 12.5px;
   color: var(--ink-faint);
   display: flex; gap: 16px; flex-wrap: wrap;
 }
+.ap-meta span { overflow-wrap: anywhere; min-width: 0; }
 
 .ap-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
@@ -345,7 +406,11 @@ body {
   text-decoration: none;
 }
 .ap-btn:hover { filter: brightness(1.08); }
-.approval.is-resolved .ap-btn { background: var(--ok); color: #04150e; }
+/* Once there is nothing left to approve the button is a plain link to the run,
+   and it stops looking like the primary action. */
+.approval.is-resolved .ap-btn { background: var(--bg-sunken); color: var(--ink-dim); border: 1px solid var(--line); }
+.approval.is-approved .ap-btn { background: var(--ok); color: #04150e; border-color: transparent; }
+.approval.is-stopped .ap-btn  { background: var(--bg-sunken); color: var(--ink-dim); }
 
 .ap-status { font-size: 13.5px; color: var(--ink-dim); font-family: var(--mono); }
 
@@ -385,6 +450,8 @@ body {
   color: #ffb9ba;
 }
 .notice b { color: #fff; }
+/* This renders up to 300 characters of whatever the server said. */
+.notice { overflow-wrap: anywhere; }
 
 /* ------------------------------------------------------------- composer */
 
@@ -414,6 +481,9 @@ body {
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
+/* A chip is a sentence, and a long one must wrap inside the pill rather than
+   run off the strip. */
+.chip { max-width: 100%; text-align: left; }
 .chip:hover:not(:disabled) { color: var(--ink); border-color: #33424f; }
 .chip:disabled { opacity: 0.4; cursor: not-allowed; }
 .chip .risk { margin-left: 7px; font-size: 11px; }
@@ -421,6 +491,9 @@ body {
 .risk-irreversible { color: var(--danger); }
 .risk-reversible   { color: var(--ok); }
 .risk-readonly     { color: var(--ink-faint); }
+/* A chip whose expected answer is a declared business outcome. Amber, not red:
+   the run is going to work — the ANSWER is "no such member". */
+.risk-outcome      { color: var(--warn); }
 
 .composer {
   max-width: 900px;

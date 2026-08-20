@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T20:32:26.934Z"
+      "at": "2026-08-20T21:44:27.575Z"
     }
   },
   "params": {
     "branch": {
       "type": "string",
-      "description": "Caller-supplied parameter 'branch'.",
+      "description": "Chosen in the \"Branch\" field on screen. Offered at recording time: MAIN-001, WEST-014, EAST-022.",
       "required": true,
       "example": "MAIN-001",
       "sensitivity": "none",
@@ -144,7 +144,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operator «secret:operatorPassword» into the Password credential field.",
+      "intent": "Enter the operator {operatorPassword} into the Password credential field.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -348,6 +348,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "a01523d9532c40861022326a6b07b1d3f768f78aea09fc9d7b6b9ecf81b8c9eb"
+    "contentHash": "d1bf162121dcebd9b1de8e1331fd3fe6142b3a13460dd062037a9e8a21ba1532"
   }
 }

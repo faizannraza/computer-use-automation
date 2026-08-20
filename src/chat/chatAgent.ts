@@ -21,7 +21,7 @@ import { buildCatalog } from '../catalog/catalog.js';
 import type { CatalogEntry } from '../catalog/catalog.js';
 import { HttpOperator } from '../api/httpOperator.js';
 import { shapeResult } from '../api/server.js';
-import { startInvocation } from '../api/invoke.js';
+import { entryFor, startInvocation } from '../api/invoke.js';
 import type { ApiContext } from '../api/invoke.js';
 import type { ReplayResult } from '../schema/result.js';
 
@@ -64,9 +64,11 @@ const FENCE_CLOSE = '</capability_result>';
  * looking exactly like an instruction from the operator.
  *
  * What this is worth, stated honestly: the planner cannot invent a capability
- * or a param (both are schema-checked), never supplies `options`, and every
- * irreversible capability still parks on a human approval that no amount of
- * planner confusion can skip. So this is defense in depth against a confused
+ * or a param (both are schema-checked), cannot choose the operator role (the
+ * only `options` field this path ever sets is read off the approved artifact's
+ * `requiresRole`, never off the plan), and every irreversible capability still
+ * parks on a human approval that no amount of planner confusion can skip. So
+ * this is defense in depth against a confused
  * plan — a wasted read, a wrong member looked up — not the thing preventing
  * injected text from moving money.
  */
@@ -126,11 +128,37 @@ export async function invokeForChat(
 ): Promise<{ record: ToolCallRecord; forModel: string }> {
   let started;
   try {
-    started = startInvocation(ctx, { name, params });
+    // The role the ARTIFACT declares it needs, supplied so the API's guard has
+    // something to compare against.
+    //
+    // This is not privilege escalation, and the direction of the check is why.
+    // `requiresRole` is a property of the approved recording — a human reviewed
+    // this flow knowing it drives a supervisor-only function — and the guard in
+    // `startInvocation` refuses any mismatch BOTH ways: a supervisor-only
+    // capability run as a teller, and equally a routine teller capability run
+    // on supervisor credentials. It exists to stop a capability running as a
+    // role it did NOT declare. Passing the declared role is that guard working.
+    //
+    // Nothing here is caller-chosen: the value is read off the artifact, never
+    // off the sentence or the planner, so no phrasing can ask for more
+    // authority than the recording was approved with. Sending no `options` at
+    // all did not make the surface safer — it made every `requiresRole`
+    // capability resolve to the profile's default role and 403 before a browser
+    // existed, i.e. unreachable from chat rather than guarded.
+    const { requiresRole } = entryFor(ctx, name);
+    started = startInvocation(ctx, {
+      name,
+      params,
+      ...(requiresRole !== undefined ? { options: { role: requiresRole } } : {}),
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
-      record: { name, input: params, status: 'rejected', summary: message },
+      // 'refused', not 'rejected': the API declined to start the run. A red
+      // pill reading "rejected" next to a transfer is read by a room as "a
+      // human rejected it", which is a different — and much more alarming —
+      // event than "the call never left the building".
+      record: { name, input: params, status: 'refused', summary: message },
       forModel: `The invocation was refused before anything ran: ${message}`,
     };
   }
@@ -157,9 +185,25 @@ export async function invokeForChat(
 
   if (settled.kind === 'pending') {
     const waiting = HttpOperator.list().find((i) => i.runId === started.runId);
-    const summary = waiting
-      ? `Paused for human approval (${waiting.request.kind}): ${waiting.request.reason}`
-      : 'Still running.';
+    // Two different things end that race, and they must not report as one.
+    // The poll resolves either because the run PARKED on a human or because
+    // RUN_WAIT_MS simply ran out on a slow run that is still working. Both
+    // used to come back as 'awaiting_approval', so a merely slow read raised
+    // the full "Paused — waiting for a human" banner over the words "Still
+    // running." — the UI asserting a human gate that no one is standing at.
+    if (!waiting) {
+      return {
+        record: {
+          name,
+          input: params,
+          runId: started.runId,
+          status: 'still_running',
+          summary: `Still running after ${Math.round(RUN_WAIT_MS / 1000)}s — nothing is waiting on a human.`,
+        },
+        forModel: `Run ${started.runId} is still running after ${Math.round(RUN_WAIT_MS / 1000)}s and has NOT paused for a human. Tell the user it is still in progress and can be watched in the dashboard; do not retry it.`,
+      };
+    }
+    const summary = `Paused for human approval (${waiting.request.kind}): ${waiting.request.reason}`;
     return {
       record: { name, input: params, runId: started.runId, status: 'awaiting_approval', summary },
       forModel: `Run ${started.runId} has not finished. ${summary} Tell the user it is waiting for approval in the dashboard; do not retry it.`,
@@ -269,7 +313,11 @@ async function llmChat(ctx: ApiContext, req: ChatRequest, catalog: CatalogEntry[
         .map((b) => b.text)
         .join('\n')
         .trim();
-      return { reply: text || '(no reply)', toolCalls, mode: 'llm' };
+      // Empty rather than a literal '(no reply)': that string was rendered as
+      // an assistant BUBBLE, so the transcript showed the agent saying
+      // "(no reply)". An empty reply is the chat surface's signal to say
+      // something useful about the turn instead.
+      return { reply: text, toolCalls, mode: 'llm' };
     }
     const results: Anthropic.Messages.ToolResultBlockParam[] = [];
     for (const use of uses) {
@@ -290,17 +338,35 @@ async function llmChat(ctx: ApiContext, req: ChatRequest, catalog: CatalogEntry[
   return { reply: 'I stopped after several steps without reaching an answer.', toolCalls, mode: 'llm' };
 }
 
+/** What the no-model planner decided to do with one sentence. */
+export interface ScriptedPlan {
+  entry: CatalogEntry;
+  params: Record<string, string>;
+  /** Required params the sentence did not carry — asked for, not guessed. */
+  missing: string[];
+}
+
 /**
- * The no-model planner. Intentionally literal: it matches an intent and pulls
- * the obvious arguments out of the sentence. It exists so the surface is
- * demonstrable — and auditable — without a model in the loop at all.
+ * The no-model planner's DECISION, separated from running it.
+ *
+ * Intentionally literal: it matches an intent and pulls the obvious arguments
+ * out of the sentence. It exists so the surface is demonstrable — and
+ * auditable — without a model in the loop at all, and it is exported so which
+ * capability a sentence resolves to, and with which arguments, is assertable
+ * without driving a browser against a live bank.
  */
-async function scriptedChat(ctx: ApiContext, req: ChatRequest, catalog: CatalogEntry[]): Promise<ChatReply> {
-  const last = [...req.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+export function planScripted(message: string, catalog: CatalogEntry[]): ScriptedPlan | undefined {
+  const last = message;
   const text = last.toLowerCase();
   const memberId = /\b(\d{5,8})\b/.exec(last)?.[1];
   const amount = /\$?\s*(\d+(?:\.\d{2})?)/.exec(last.replace(/\b\d{6}\b/g, ''))?.[1];
   const shares = [...last.matchAll(/\b(\d{5,8}-[A-Z0-9][\w-]*)\b/gi)].map((m) => m[1]!);
+  // MERIDIAN searches by NUMBER or by NAME, and only the number form was ever
+  // reachable here: with no digits in the sentence nothing matched and the
+  // planner fell through to its "I need an explicit request" reply, so
+  // "find members with the last name Lovelace" — a plain search that the
+  // capability handles and returns a table for — looked unsupported.
+  const surname = /\b(?:last name|surname|named|name)\s+(?:is\s+|of\s+)?([A-Za-z][A-Za-z'-]+)/i.exec(last)?.[1];
 
   const has = (...words: string[]): boolean => words.every((w) => text.includes(w));
   const pick = (...candidates: string[]): CatalogEntry | undefined =>
@@ -315,28 +381,72 @@ async function scriptedChat(ctx: ApiContext, req: ChatRequest, catalog: CatalogE
   if (memberId && (has('balance') || has('shares')) && balances) {
     chosen = { entry: balances, params: { memberId } };
   } else if (memberId && has('transfer') && transfer && shares.length >= 2 && amount) {
-    chosen = { entry: transfer, params: { memberId, fromShare: shares[0]!, toShare: shares[1]!, amount } };
+    chosen = {
+      entry: transfer,
+      params: {
+        memberId,
+        fromShare: shares[0]!,
+        toShare: shares[1]!,
+        // MERIDIAN's transfer form types the amount into a field that only
+        // accepts cents, so "$5" has to reach it as "5.00" or the app rejects
+        // a transfer the user phrased perfectly reasonably.
+        amount: amount.includes('.') ? amount : `${amount}.00`,
+        // `memo` is REQUIRED by the artifact and no sentence carries one, so
+        // omitting it made every scripted transfer die on INVALID_PARAMS
+        // before it could reach the approval gate it exists to demonstrate.
+        // A fixed, truthful provenance string is the honest value: it says on
+        // the member's statement where the entry came from.
+        memo: 'Requested via the capability chat',
+      },
+    };
   } else if (memberId && has('hold') && hold) {
     chosen = { entry: hold, params: { memberId, ...(shares[0] ? { share: shares[0] } : {}) } };
+  } else if (surname && inquire) {
+    chosen = { entry: inquire, params: { query: surname, searchBy: 'name' } };
   } else if (memberId && inquire) {
     chosen = { entry: inquire, params: { query: memberId, searchBy: 'number' } };
   }
 
-  if (!chosen) {
+  if (!chosen) return undefined;
+
+  const declared = new Set(Object.keys(chosen.entry.inputSchema.properties));
+  const params = Object.fromEntries(Object.entries(chosen.params).filter(([k]) => declared.has(k)));
+  const missing = chosen.entry.inputSchema.required.filter((p) => params[p] === undefined || params[p] === '');
+  return { entry: chosen.entry, params, missing };
+}
+
+async function scriptedChat(ctx: ApiContext, req: ChatRequest, catalog: CatalogEntry[]): Promise<ChatReply> {
+  const last = [...req.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+  const plan = planScripted(last, catalog);
+
+  if (!plan) {
     return {
-      reply: `I can invoke: ${catalog.map((c) => c.name).join(', ')}. In scripted mode I need an explicit request — for example "what are the balances for member 100234".`,
+      reply: `I can invoke: ${catalog.map((c) => c.name).join(', ')}. In scripted mode I need an explicit request — for example "what are the balances for member 103001".`,
       toolCalls: [],
       mode: 'scripted',
     };
   }
 
-  const declared = new Set(Object.keys(chosen.entry.inputSchema.properties));
-  const params = Object.fromEntries(Object.entries(chosen.params).filter(([k]) => declared.has(k)));
-  const { record } = await invokeForChat(ctx, chosen.entry.name, params);
+  // Ask, instead of spending a run discovering it. The engine refuses an
+  // incomplete invocation with INVALID_PARAMS, which is correct but reads on
+  // screen as the automation breaking — and it names the param in a failure
+  // trace rather than in an answer. This planner is deliberately literal, so a
+  // value it cannot read out of the sentence is a question for the user.
+  if (plan.missing.length > 0) {
+    return {
+      reply: `${plan.entry.name} also needs ${plan.missing.join(', ')}, and I could not read ${
+        plan.missing.length === 1 ? 'it' : 'them'
+      } from your message. Say the value(s) explicitly and I will invoke it.`,
+      toolCalls: [],
+      mode: 'scripted',
+    };
+  }
+
+  const { record } = await invokeForChat(ctx, plan.entry.name, plan.params);
   return {
     // `describe()` already leads with the status, so repeating it here read as
     // "success: success — …".
-    reply: `Invoked ${chosen.entry.name} → ${record.summary ?? record.status}`.trim(),
+    reply: `Invoked ${plan.entry.name} → ${record.summary ?? record.status}`.trim(),
     toolCalls: [record],
     mode: 'scripted',
   };

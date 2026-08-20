@@ -26,7 +26,7 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T21:00:12.357Z"
+      "at": "2026-08-20T21:48:20.103Z"
     }
   },
   "params": {
@@ -167,7 +167,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operator «secret:operatorPassword».",
+      "intent": "Enter the operator {operatorPassword}.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -745,7 +745,7 @@
     },
     {
       "id": "s14",
-      "intent": "Post the funds transfer (pre-authorised for recording).",
+      "intent": "Post the funds transfer.",
       "action": {
         "kind": "activate",
         "target": {
@@ -846,6 +846,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "215fdde25e1767e525cff09d08b0ece71733f056f61986900357d4693b3bab3d"
+    "contentHash": "067e99a9d709ff0f44aa2a49b00ec9516b05e4d8f434d3ab02b0e36cca3d61bc"
   }
 }

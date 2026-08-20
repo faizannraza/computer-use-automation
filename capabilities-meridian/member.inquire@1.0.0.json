@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:53:05.534Z"
+      "at": "2026-08-20T21:44:13.717Z"
     }
   },
   "params": {
     "query": {
       "type": "string",
-      "description": "Caller-supplied parameter 'query'.",
+      "description": "Typed into the \"Value\" field on screen.",
       "required": true,
       "example": "Lovelace",
       "sensitivity": "none",
@@ -40,7 +40,7 @@
     },
     "searchBy": {
       "type": "string",
-      "description": "Caller-supplied parameter 'searchBy'.",
+      "description": "Chosen in the \"Search by\" field on screen. Offered at recording time: number, name.",
       "required": true,
       "example": "name",
       "sensitivity": "none",
@@ -152,7 +152,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "intent": "Enter the operator {operatorPassword} for sign on.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -475,6 +475,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "58f996d2904e55edbac9b0d96e0ed7c62e31149e40d01b2b02660e7b58935eb7"
+    "contentHash": "47101b4ec2c4509b606d22a17e96989fe85707ed93daf3b05cf0a9d77157404d"
   }
 }

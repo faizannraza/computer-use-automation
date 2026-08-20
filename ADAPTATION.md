@@ -7,9 +7,17 @@ at **MERIDIAN CORE** took, and what it exposed.
 
 ## What adaptation took
 
-**Nothing in the core's boundaries moved.** The `Surface` seam, the `ActionGate`, the artifact
-schema, the locator ladder, the engine's classification order, the HITL controller and the redaction
-boundary are untouched. MERIDIAN is a different shape of legacy — one page instead of a frameset, a
+**The core's load-bearing boundaries did not move.** Eight files are byte-identical to the commit
+before this project began — including `ActionGate`, the single choke point every action passes
+through on both paths, and the *entire* HITL controller. A new target, a new API, a dashboard, a
+chatbot and seven capabilities needed not one character of either.
+
+Two boundaries did change, and additively: the artifact schema gained a new action kind, a new
+output type and three fields — every one `.optional()`, never `.default()` — and the `Surface` seam
+gained three optional methods. The proof that this is extension rather than redefinition is that the
+artifacts recorded against the *previous* application still hash-verify today, and a test asserts it.
+The replay engine grew by about half again; its classification order — the part that is a design
+claim — is the same five lines it always was. MERIDIAN is a different shape of legacy — one page instead of a frameset, a
 numbered menu, a per-transaction token — and the existing vocabulary already described it: labels
 resolve through the preceding-cell fallback the first target needed, the shares table's header row is
 mined by the same bold-row heuristic, buttons name themselves from `value`, and frame hints are empty.
@@ -49,6 +57,15 @@ first target's fault endpoint was denied, and a profile.
   model to pick different text, and the schema refuses to load any artifact whose detector matches
   on redacted text, because a detector that can never fire is worse than none — it advertises
   handling that does not exist.
+- **A shorter param value silently ate a longer one.** `memberId` is `101555`; `fromShare` is
+  `101555-S0001`. The compiler substituted params in object order, so the shorter value claimed the
+  span first and the transfer receipt's checkpoint compiled to `{memberId}-S0001:` instead of
+  `{fromShare}:` — freezing the recording session's own share into the contract. The capability then
+  succeeded *only* when replayed with the exact shares it was recorded with; any other pair **moved
+  the money and reported `POSTCONDITION_TIMEOUT`**. Side effect executed, failure returned — the
+  worst result this system can produce. Substitution now runs longest-value-first, and a lint flags
+  the fingerprint (a `{param}` running straight into further identifier characters) at approval time,
+  because reordering cannot fix the case where a recorded id carries a suffix no param declares.
 - **One condition, two screens.** An overdraw does not render MERIDIAN's `TRANSACTION REJECTED`
   banner; it redisplays the form with *"The transaction could not be validated: Insufficient…"*.
   Matching only the banner — which is what the injected 400 shows — meant every *real* overdraw fell
@@ -99,8 +116,12 @@ condition-based waiting, explicit classification — with the target's taxonomy 
 - **Escalation**: a teller attempting Place Account Hold gets the app's own supervisor-override
   screen, which only a person can clear.
 
-All six of the brief's `inject` kinds and the natural errors it names have a committed evidence run
-apiece; `evidence/meridian/README.md` indexes them one row per state.
+All six of the brief's `inject` kinds have a committed evidence run apiece, and three of the five
+natural errors it names — bad login, overdraw, and a hold attempted by a non-supervisor.
+`evidence/meridian/README.md` indexes every run one row per state, and says plainly which two states
+have no run and why: producing an invalid-e-mail run means approving an irreversible submit against a
+shared app on the chance it is rejected, and a natural idle timeout means waiting out the real
+session TTL, which no test or demo can do.
 
 Two of the brief's states are deliberately *not* separate codes. An overdraw renders the same screen
 as any other rejected field, so it reports `TRANSACTION_REJECTED` and the caller reads the reason;
@@ -145,6 +166,11 @@ param or an output. The profile now classifies fields by label, by label pattern
 header; every observation in both discovery and replay is swept before anything is written; and the
 matched elements are masked in the screenshot of that same observation. Share ids and statuses are
 not regulated and stay readable, which is what keeps the evidence debuggable.
+
+Recording all seven capabilities cost **about $6** in total — roughly $0.90 each, 113 model turns,
+1.1M input tokens at `claude-opus-4-8`. That number matters more than it looks: discovery is the only
+place a model runs, it runs once per capability, and everything after it is deterministic. The
+marginal cost of the ten-thousandth transfer is one browser session.
 
 ## What I cut, and what I would build next
 

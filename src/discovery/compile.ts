@@ -38,6 +38,47 @@ export interface OutputHint {
  * human-written description always wins — the compiler improves on silence,
  * it does not overrule an author.
  */
+/**
+ * Model-authored prose, made readable again after redaction.
+ *
+ * Intents, titles and descriptions are written by the model and pass through
+ * the redactor on their way into the trace — so a secret whose VALUE happens to
+ * be an ordinary English word rewrites the prose that merely mentions the word.
+ * MERIDIAN's credential field is labelled "Password:", the demo operator's
+ * password IS the word `password`, and the model dutifully wrote "Enter
+ * operator password." — which reached the artifact as
+ * "Enter operator «secret:operatorPassword»." That is not a leak; it is a false
+ * positive, and it is the FIRST line a reviewer reads on every step list.
+ *
+ * The mask is rewritten to the artifact's own placeholder syntax, `{param}`,
+ * which is what the token actually means: "the value of this declared param
+ * stood here". Nothing is recovered and nothing is guessed — a mask cannot be
+ * un-redacted — the reference is simply spelled in the notation the rest of the
+ * artifact already uses. Applied to prose only; conditions and locators keep
+ * their masks, and the schema refuses to load an artifact whose DETECTOR
+ * matches on redacted text, because there the mask is a genuine defect.
+ */
+export function readableProse(text: string): string {
+  return (
+    text
+      .replace(/«secret:([a-zA-Z][a-zA-Z0-9_]*)»/g, '{$1}')
+      // Recording-session provenance, stripped. The model is told during
+      // discovery that a human pre-authorised the posting steps, and it
+      // helpfully repeats that in the step's intent — so the artifact ends up
+      // describing the SESSION THAT CAPTURED IT rather than the step. That is
+      // wrong on its own terms, and actively misleading where the intent is
+      // displayed: on the approval card, above the button, an operator being
+      // asked to sign off reads "(pre-authorised for recording)". Whether a
+      // recording was pre-authorised is a fact about that run, and it is
+      // already recorded where it belongs — the intervention_resolved event in
+      // the run log, with the authoriser's name. Narrow on purpose: only a
+      // parenthetical, only one that names pre-authorisation or recording.
+      .replace(/\s*\((?=[^)]*(?:pre-authoris|pre-authoriz|for recording))[^)]*\)/gi, '')
+      .replace(/\s+([.,;:])/g, '$1')
+      .trim()
+  );
+}
+
 export function genericCallerParamDescription(name: string): string {
   return `Caller-supplied parameter '${name}'.`;
 }
@@ -319,7 +360,7 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     const post = postConditionsFor(id, action);
     const base = {
       id,
-      intent: action.intent,
+      intent: readableProse(action.intent),
       pre,
       post,
       wait: { timeoutMs: 8000, pollMs: 250 },
@@ -612,7 +653,7 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     }
     return {
       code: o.code,
-      description: o.description,
+      description: readableProse(o.description),
       when: { c: 'textPresent', pattern },
       terminal: true as const,
       outputs: {},
@@ -756,8 +797,8 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     capability: {
       id: trace.done.capabilityId,
       version: inputs.version,
-      title: trace.done.title,
-      description: trace.done.description,
+      title: readableProse(trace.done.title),
+      description: readableProse(trace.done.description),
       app: inputs.app,
       surface: 'web' as const,
       entrypoint: { kind: 'url' as const, value: entrypointUrl },

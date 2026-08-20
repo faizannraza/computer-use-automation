@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T20:48:21.293Z"
+      "at": "2026-08-20T21:45:05.266Z"
     }
   },
   "params": {
     "memberId": {
       "type": "integer",
-      "description": "Caller-supplied parameter 'memberId'.",
+      "description": "Typed into the \"Value\" field on screen.",
       "required": true,
       "pattern": "^[0-9]+$",
       "example": "103001",
@@ -41,21 +41,21 @@
     },
     "email": {
       "type": "string",
-      "description": "Caller-supplied parameter 'email'.",
+      "description": "Typed into the \"E-mail\" field on screen.",
       "required": true,
       "sensitivity": "pii",
       "source": "caller"
     },
     "phone": {
       "type": "string",
-      "description": "Caller-supplied parameter 'phone'.",
+      "description": "Typed into the \"Phone\" field on screen.",
       "required": true,
       "sensitivity": "pii",
       "source": "caller"
     },
     "address": {
       "type": "string",
-      "description": "Caller-supplied parameter 'address'.",
+      "description": "Typed into the \"Mailing Address\" field on screen.",
       "required": true,
       "sensitivity": "pii",
       "source": "caller"
@@ -154,7 +154,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter operator «secret:operatorPassword» for sign on.",
+      "intent": "Enter operator {operatorPassword} for sign on.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -726,6 +726,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "d5b56367fb9cadf6a2ead5e3ff64996e05a26a0c89c6707ed37fe1978054677a"
+    "contentHash": "fd64c1c67117b083eac8d5f5bdd2432771475b79425d3d41c75a663f2b0694cb"
   }
 }

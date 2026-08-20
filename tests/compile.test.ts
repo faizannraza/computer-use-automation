@@ -9,7 +9,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { computeContentHash } from '../src/schema/capability.js';
 import { ParamSpecSchema } from '../src/schema/capability.js';
-import { compileTrace, genericCallerParamDescription } from '../src/discovery/compile.js';
+import { compileTrace, genericCallerParamDescription, readableProse } from '../src/discovery/compile.js';
 import type { DiscoveryTrace, RecordedAction, StateDigest } from '../src/discovery/recorder.js';
 import { AppProfileSchema } from '../src/profile/appProfile.js';
 import { evaluateCondition } from '../src/replay/detectors.js';
@@ -747,5 +747,51 @@ describe('the per-transaction token assertion', () => {
       // put an unsatisfiable precondition on step 1 of all seven capabilities.
       expect(await evaluateCondition(tokenCondition(), observationFrom(dumps[0]!))).toBe(false);
     });
+  });
+});
+
+/**
+ * A secret whose value is an ordinary English word rewrites the prose that
+ * merely mentions the word. That is a false positive, not a leak — and it is
+ * the first line a reviewer reads on every step list.
+ */
+describe('model prose survives an over-eager redactor', () => {
+  it('rewrites a secret mask to the placeholder syntax the artifact already uses', () => {
+    expect(readableProse('Enter operator «secret:operatorPassword».')).toBe('Enter operator {operatorPassword}.');
+  });
+
+  it('leaves prose without a mask exactly as the model wrote it', () => {
+    expect(readableProse('Open the member record.')).toBe('Open the member record.');
+  });
+
+  it('does not touch a pii stub — only a named secret reference is recoverable as a name', () => {
+    // `***da` says nothing about WHICH param it was, so there is no honest
+    // rewrite; it stays as the redactor left it.
+    expect(readableProse('Read the name ***da from the row.')).toBe('Read the name ***da from the row.');
+  });
+
+  it('rewrites every occurrence, not just the first', () => {
+    expect(readableProse('«secret:a» then «secret:b» then «secret:a»')).toBe('{a} then {b} then {a}');
+  });
+});
+
+describe('recording-session provenance does not belong in a step intent', () => {
+  it.each([
+    ['Post the funds transfer (pre-authorised for recording).', 'Post the funds transfer.'],
+    ['Commit and open the new share (pre-authorised irreversible action).', 'Commit and open the new share.'],
+    [
+      'Apply the account hold — commits the restricted, irreversible action (human pre-authorised).',
+      'Apply the account hold — commits the restricted, irreversible action.',
+    ],
+  ])('strips %s', (raw, want) => {
+    expect(readableProse(raw)).toBe(want);
+  });
+
+  it('leaves a parenthetical that is about the STEP alone', () => {
+    // The rule is deliberately narrow: only a parenthetical naming
+    // pre-authorisation or recording goes. Everything else is the model
+    // describing the step, which is exactly what an intent is for.
+    const kept = 'Open the member record (the Select link on the results row).';
+    expect(readableProse(kept)).toBe(kept);
   });
 });

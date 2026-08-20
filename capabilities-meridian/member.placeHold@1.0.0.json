@@ -26,7 +26,7 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T21:00:14.649Z"
+      "at": "2026-08-20T21:48:18.561Z"
     }
   },
   "params": {
@@ -159,7 +159,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "intent": "Enter the operator {operatorPassword} for sign on.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -691,7 +691,7 @@
     },
     {
       "id": "s13",
-      "intent": "Apply the account hold — commits the restricted, irreversible action (human pre-authorised).",
+      "intent": "Apply the account hold — commits the restricted, irreversible action.",
       "action": {
         "kind": "activate",
         "target": {
@@ -798,6 +798,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "2e6d232bea2e6b16eab683c9bbd4c48120c952b9ce56d3401ed2015b487eb909"
+    "contentHash": "eafb1645b8ee317a468fbe6da2978bed7b57ad0a9b22b5f62c2e8f31d4868f8c"
   }
 }

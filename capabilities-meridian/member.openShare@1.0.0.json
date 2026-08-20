@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:53:07.041Z"
+      "at": "2026-08-20T21:48:16.960Z"
     }
   },
   "params": {
     "memberId": {
       "type": "integer",
-      "description": "Caller-supplied parameter 'memberId'.",
+      "description": "Typed into the \"Value\" field on screen.",
       "required": true,
       "pattern": "^[0-9]+$",
       "example": "100987",
@@ -41,7 +41,7 @@
     },
     "shareType": {
       "type": "string",
-      "description": "Caller-supplied parameter 'shareType'.",
+      "description": "Chosen in the \"Share Type\" field on screen. Offered at recording time: S0001, S0070, MMKT, CERT.",
       "required": true,
       "example": "MMKT",
       "sensitivity": "none",
@@ -49,7 +49,7 @@
     },
     "initialDeposit": {
       "type": "money",
-      "description": "Caller-supplied parameter 'initialDeposit'.",
+      "description": "Typed into the \"Initial Deposit\" field on screen.",
       "required": true,
       "pattern": "^\\$?[0-9][0-9,]*\\.[0-9]{2}$",
       "example": "25.00",
@@ -151,7 +151,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter the operator «secret:operatorPassword» for sign on.",
+      "intent": "Enter the operator {operatorPassword} for sign on.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -636,7 +636,7 @@
     },
     {
       "id": "s12",
-      "intent": "Commit and open the new share (pre-authorised irreversible action).",
+      "intent": "Commit and open the new share.",
       "action": {
         "kind": "activate",
         "target": {
@@ -650,7 +650,7 @@
             },
             {
               "s": "textAnchor",
-              "text": "CONFIRM NEW SHARE Member:{memberId} - ***an Share Type:{shareType} - Money Market Initial Deposit:${initialDeposit} Cancel",
+              "text": "CONFIRM NEW SHARE Member:{memberId} - ***an Share Type:{shareType} - Money Market Initial Deposit:***00 Cancel",
               "relation": "rowOf",
               "targetRole": "button"
             }
@@ -660,7 +660,7 @@
             "minScore": 0.6
           },
           "snapshot": {
-            "textContext": "CONFIRM NEW SHARE Member:{memberId} - ***an Share Type:{shareType} - Money Market Initial Deposit:${initialDeposit} Cancel",
+            "textContext": "CONFIRM NEW SHARE Member:{memberId} - ***an Share Type:{shareType} - Money Market Initial Deposit:***00 Cancel",
             "bboxPct": {
               "x": 21.5,
               "y": 24.9,
@@ -743,6 +743,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "0417bab6ba8d3c95c8b312e783f23f258e403756bb80605fef460506d0b1d2a4"
+    "contentHash": "97d1109a40eb4e485d250d3ac47d7051b8a4519c6da785e2e5454e8338a5a207"
   }
 }

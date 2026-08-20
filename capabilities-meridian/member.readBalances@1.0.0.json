@@ -26,13 +26,13 @@
     "approval": {
       "state": "approved",
       "by": "Muhammad Faizan Raza",
-      "at": "2026-08-20T19:53:10.050Z"
+      "at": "2026-08-20T21:44:20.634Z"
     }
   },
   "params": {
     "memberId": {
       "type": "integer",
-      "description": "Caller-supplied parameter 'memberId'.",
+      "description": "Typed into the \"Value\" field on screen.",
       "required": true,
       "pattern": "^[0-9]+$",
       "example": "100234",
@@ -144,7 +144,7 @@
     },
     {
       "id": "s2",
-      "intent": "Enter operator «secret:operatorPassword».",
+      "intent": "Enter operator {operatorPassword}.",
       "action": {
         "kind": "setValue",
         "target": {
@@ -476,6 +476,6 @@
     }
   ],
   "integrity": {
-    "contentHash": "af48c4ee4b2a580281437de93347f4b90efa9f844c8102585b7002adaf17da02"
+    "contentHash": "af2d7928db4d4d794ed8176a8b941e867dc3945156a1df215c900e64b9e190bf"
   }
 }

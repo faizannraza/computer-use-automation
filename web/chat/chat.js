@@ -15,6 +15,7 @@
 var messages = [];         // [{role, content}] — sent in full every turn
 var capabilities = [];     // from /api/capabilities
 var forcedMode = null;     // 'llm' | 'scripted' | null (let the server decide)
+var serverMode = null;     // the mode the server actually ran, last time it said
 var busy = false;
 var pollTimer = null;
 var approvals = {};        // banner key -> { el, status, title, runId, resolved, seen, since }
@@ -35,13 +36,68 @@ function esc(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-/* Not a markdown renderer — just enough to stop the model's **bold** and
-   `code` reading as literal punctuation on a projector. Runs strictly AFTER
-   escaping, so no author-controlled markup can survive. */
-function lightFormat(text) {
+/* Inline marks only. Runs strictly AFTER escaping, so no author-controlled
+   markup can survive — the reply is model text quoting a banking screen. */
+function inlineFormat(text) {
   return esc(text)
     .replace(/`([^`\n]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+}
+
+var TABLE_ROW = /^\s*\|.*\|\s*$/;
+var TABLE_RULE = /^\s*\|[\s:|-]*-[\s:|-]*\|\s*$/;
+
+/**
+ * Still not a markdown renderer — inline marks, plus the one BLOCK the planner
+ * reliably produces: a pipe table.
+ *
+ * Several capabilities return a `table` output (shares, search matches), and
+ * asked for one the model answers with `| Share ID | Type | Balance |` and a
+ * `|---|---|` rule. `.bubble` is `white-space: pre-wrap` in a proportional
+ * face, so those rows landed on the projector as unaligned literal pipes —
+ * on the one chip whose entire point is "this comes back as a table".
+ *
+ * Cells go through `inlineFormat`, i.e. through `esc`, before any tag is
+ * built, so screen text that contains markup is still inert.
+ */
+function lightFormat(text) {
+  var lines = String(text == null ? '' : text).split('\n');
+  var out = [];
+  var buf = [];
+  function flush() {
+    var block = buf.join('\n').replace(/^\n+|\n+$/g, '');
+    buf = [];
+    if (block) out.push(inlineFormat(block));
+  }
+  for (var i = 0; i < lines.length; i++) {
+    if (TABLE_ROW.test(lines[i]) && i + 1 < lines.length && TABLE_RULE.test(lines[i + 1])) {
+      flush();
+      var head = tableCells(lines[i]);
+      var body = [];
+      for (i += 2; i < lines.length && TABLE_ROW.test(lines[i]); i++) body.push(tableCells(lines[i]));
+      i--;                                     // the loop's own i++ takes the next line
+      out.push(renderTable(head, body));
+    } else {
+      buf.push(lines[i]);
+    }
+  }
+  flush();
+  return out.join('\n');
+}
+
+function tableCells(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (c) { return c.trim(); });
+}
+
+function renderTable(head, body) {
+  var cell = function (tag, text) { return '<' + tag + '>' + inlineFormat(text) + '</' + tag + '>'; };
+  var row = function (tag, cells) {
+    return '<tr>' + cells.map(function (c) { return cell(tag, c); }).join('') + '</tr>';
+  };
+  return '<div class="md-table"><table>' +
+         '<thead>' + row('th', head) + '</thead>' +
+         '<tbody>' + body.map(function (r) { return row('td', r); }).join('') + '</tbody>' +
+         '</table></div>';
 }
 
 function el(tag, className, html) {
@@ -136,40 +192,61 @@ function riskClass(risk) {
 // ------------------------------------------------- suggested prompts
 
 /**
- * Chips are derived from the live catalog, never hard-coded blind: each
- * template is kept only if a capability whose name matches actually exists,
- * and the example values come from the capability's own inputSchema.
+ * Four prompts in the order they tell the story: a clean read, a search that
+ * comes back as a table, a declared business outcome, and the one that parks on
+ * a human.
+ *
+ * The IDENTIFIERS are pinned to live records rather than derived from each
+ * capability's `inputSchema` examples. An artifact's examples are whatever was
+ * on screen when it was RECORDED, and they go stale: the generated chips
+ * offered `member 12345` (a MockCore id that does not exist on this host) and
+ * `101555-S0001 → 101555-CERT` (two shares now on HOLD, which the app refuses).
+ * A suggestion that cannot succeed is worse than no suggestion, and these are
+ * the first words the room reads.
+ *
+ * Still gated on the catalog, which is the part that was worth keeping: a chip
+ * appears only if its capability is actually loaded, so a deployment missing
+ * one shows three chips rather than a button that 404s. The risk tag is read
+ * off the capability too, never asserted here.
+ *
+ * These values are checked against the live host before a demo; re-check with
+ * `member.readBalances` on 103001, because the shares are shared state and a
+ * HOLD can appear between one run and the next.
  */
+var CHIP_SPECS = [
+  { cap: 'member.readBalances', text: 'What are the balances for member 103001?' },
+  { cap: 'member.inquire', text: 'Find members with the last name Lovelace' },
+  {
+    cap: 'member.inquire',
+    text: 'Look up member 999999',
+    // Labelled, because an unlabelled "not found" on a projector reads as the
+    // demo breaking. It is a declared outcome the capability handles.
+    note: 'expected: not found',
+    title: 'MEMBER_NOT_FOUND is a business outcome the capability declares and handles — a result, not an error.'
+  },
+  { cap: 'member.transferFunds', text: 'Transfer $1.00 from 103001-S0070-7 to 103001-MMKT-8' }
+];
+
 function renderChips() {
-  var templates = [
-    { match: /balance/i,                text: function (c) { return 'What is the savings balance for member ' + ex(c, 'memberId', '12345') + '?'; } },
-    { match: /transfer/i,               text: function (c) { return 'Transfer $' + ex(c, 'amount', '50.00') + ' from ' + ex(c, 'fromShare', 'S0001') + ' to ' + ex(c, 'toShare', 'S0070'); } },
-    { match: /inquire|search|lookup/i,  text: function (c) { return 'Look up member ' + ex(c, 'memberId', '12345'); } },
-    { match: /hold/i,                   text: function (c) { return 'Place a hold on member ' + ex(c, 'memberId', '12345'); } },
-    { match: /subaccount|openaccount/i, text: function (c) { return 'Open a ' + ex(c, 'acctType', 'HOLIDAY CLUB') + ' sub-account for member ' + ex(c, 'memberId', '12345') + ' called "' + ex(c, 'nickname', 'Vacation Fund') + '" with $' + ex(c, 'initialDeposit', '50.00'); } }
-  ];
-
   var chips = [];
-  templates.forEach(function (t) {
-    var cap = capabilities.find(function (c) { return t.match.test(c.name); });
-    if (cap) chips.push({ text: t.text(cap), risk: cap.maxRisk });
+  CHIP_SPECS.forEach(function (spec) {
+    var cap = capabilities.find(function (c) { return c.name === spec.cap; });
+    if (cap) chips.push({ text: spec.text, risk: cap.maxRisk, note: spec.note, title: spec.title });
   });
-
-  // The negative path is worth showing: a declared business outcome is an
-  // answer, not a crash. Use an id that is well-formed but cannot exist.
-  var readOnly = capabilities.find(function (c) { return c.maxRisk !== 'irreversible'; });
-  if (readOnly) chips.push({ text: 'Look up member 999999', risk: readOnly.maxRisk });
-  if (!chips.length) chips = [{ text: 'What can you do?', risk: null }];
+  if (!chips.length) chips = [{ text: 'What can you do?' }];
 
   $chips.innerHTML = '';
-  chips.slice(0, 4).forEach(function (chip) {
+  chips.forEach(function (chip) {
     var btn = el('button', 'chip');
     btn.type = 'button';
     btn.textContent = chip.text;
     if (chip.risk === 'irreversible') {
       btn.appendChild(el('span', 'risk risk-irreversible', 'needs approval'));
       btn.title = 'This capability pauses for a human before it posts.';
+    } else if (chip.note) {
+      btn.appendChild(el('span', 'risk risk-outcome', esc(chip.note)));
     }
+    if (chip.title) btn.title = chip.title;
     btn.addEventListener('click', function () {
       if (busy) return;
       $input.value = chip.text;
@@ -178,17 +255,6 @@ function renderChips() {
     });
     $chips.appendChild(btn);
   });
-}
-
-/** Pull an example value for a field out of the capability's inputSchema. */
-function ex(cap, field, fallback) {
-  var props = (cap.inputSchema && cap.inputSchema.properties) || {};
-  var spec = props[field];
-  if (spec) {
-    if (Array.isArray(spec.examples) && spec.examples.length) return String(spec.examples[0]);
-    if (Array.isArray(spec.enum) && spec.enum.length) return String(spec.enum[0]);
-  }
-  return fallback;
 }
 
 // ------------------------------------------------------------ the turn
@@ -244,10 +310,9 @@ async function runTurn() {
 }
 
 function renderTurn(data) {
-  if (data.mode) {
-    showMode(data.mode);
-    syncModeButtons(data.mode);
-  }
+  if (data.mode) serverMode = data.mode;
+  showMode();
+  syncModeButtons();
 
   (data.toolCalls || []).forEach(renderToolCall);
 
@@ -264,8 +329,8 @@ function renderTurn(data) {
 
 // ------------------------------------------------- tool call rendering
 
-var ATTENTION = { awaiting_approval: 1, escalated: 1 };
-var BAD = { failed: 1, error: 1, rejected: 1 };
+var ATTENTION = { awaiting_approval: 1, escalated: 1, still_running: 1 };
+var BAD = { failed: 1, error: 1, refused: 1 };
 
 function renderToolCall(call) {
   var status = call.status || 'unknown';
@@ -345,23 +410,144 @@ function ensureApprovalBanner(iv) {
 
   var actions = el('div', 'ap-actions');
   var status = el('span', 'ap-status', 'still waiting…');
-  actions.appendChild(dashLink('ap-btn', 'Approve in the dashboard &rarr;', iv.runId));
+  var button = dashLink('ap-btn', 'Approve in the dashboard &rarr;', iv.runId);
+  actions.appendChild(button);
   actions.appendChild(status);
   box.appendChild(actions);
   add(box);
 
-  approvals[id] = { el: box, status: status, title: title, runId: iv.runId || null,
+  approvals[id] = { el: box, status: status, title: title, button: button, runId: iv.runId || null,
                     resolved: false, seen: false, since: Date.now() };
   return approvals[id];
 }
 
+/* A run that has just been resolved needs a moment to write its result, so the
+   banner says it is reading rather than guessing during this window. */
+var SETTLE_GRACE_MS = 6000;
+/* Bounded: a run this page can no longer learn anything about must not leave
+   it polling for the rest of the session. Longer than the 180s intervention
+   timeout, because an APPROVED run's remaining steps start after it. */
+var WATCH_MS = 300000;
+
+/**
+ * The intervention left the open list. Report what actually happened — by
+ * asking the run, which is the only thing that knows.
+ *
+ * Leaving that list means one of three things: a human approved it, a human
+ * rejected it, or nobody answered and the 180s timeout aborted it on their
+ * behalf. All three are indistinguishable from `/api/interventions`, which
+ * only ever says "not open any more". Hardcoding "Approved — the run is
+ * continuing" therefore announced an authorised transfer to the room in the
+ * two cases where the transfer had in fact been refused and nothing posted —
+ * the single most damaging sentence this UI could get wrong, and not one the
+ * audience can catch, because they read the banner rather than the run.
+ */
 function markResolved(id) {
   var entry = approvals[id];
   if (!entry || entry.resolved) return;
-  entry.resolved = true;
+  entry.resolved = true;                // set first: the 2s poll re-enters here
+  entry.resolvedAt = Date.now();
   entry.el.classList.add('is-resolved');
-  entry.title.textContent = 'Approved — the run is continuing';
-  entry.status.textContent = 'resolved in the dashboard';
+  entry.title.textContent = 'No longer waiting for a human';
+  entry.status.textContent = 'reading the run…';
+  // The one action this banner offered was "Approve", and the moment the
+  // intervention closed there was nothing left to approve.
+  entry.button.innerHTML = 'View the run &rarr;';
+  watchRun(entry);
+}
+
+/**
+ * Follow a resolved run to a terminal state, restating the banner as it moves.
+ *
+ * An approval is the START of the rest of the run, not the end of it: "a human
+ * approved this" and "this posted" are different claims, and the second one is
+ * the one the room actually wants. So the banner keeps reporting until the run
+ * reaches a status.
+ */
+async function watchRun(entry) {
+  if (!entry.runId) {
+    entry.status.textContent = 'this run is not identified here — the dashboard has the outcome';
+    return;
+  }
+  var until = Date.now() + WATCH_MS;
+  for (;;) {
+    var outcome = await runOutcome(entry);
+    entry.title.textContent = outcome.title;
+    entry.status.textContent = outcome.detail;
+    // Assigned rather than added, so a run that reports "continuing" and then
+    // fails does not end up wearing both colours.
+    entry.el.className = 'approval is-resolved' + (outcome.tone ? ' ' + outcome.tone : '');
+    if (outcome.settled || Date.now() > until) return;
+    await wait(2000);
+  }
+}
+
+/**
+ * What the run says about itself, in the words the banner will use.
+ *
+ * `result` is the run's own written outcome and is authoritative; `summary`
+ * covers the window before it exists. Both are consulted because they settle
+ * at different moments — the result file is written the instant the engine
+ * halts, the summary only once the browser has closed behind it.
+ */
+async function runOutcome(entry) {
+  var detail;
+  try {
+    detail = await getJson('/api/runs/' + encodeURIComponent(entry.runId));
+  } catch (err) {
+    return { settled: true, tone: '', title: 'No longer waiting for a human',
+             detail: 'could not read the run (' + (err && err.message ? err.message : err) + ')' };
+  }
+  var result = detail.result || null;
+  var status = (result && result.status) || (detail.summary && detail.summary.status) || 'unknown';
+
+  // Aborted, or timed out — either way the run STOPPED at the gate and the
+  // irreversible step never ran. The note is what separates the two: a human
+  // who said no, versus a human who never came.
+  if (status === 'escalated') {
+    var timedOut = (result && result.interventions || []).some(function (i) {
+      return typeof i.note === 'string' && /no operator resolved this within/i.test(i.note);
+    });
+    return {
+      settled: true,
+      tone: 'is-stopped',
+      title: timedOut ? 'Timed out — the run stopped, nothing posted' : 'Rejected — the run stopped, nothing posted',
+      detail: timedOut ? 'no one resolved it in time; the run aborted rather than hold a live banking session open'
+                       : 'aborted by a human at the approval gate'
+    };
+  }
+  if (status === 'success') {
+    return { settled: true, tone: 'is-approved', title: 'Approved — the run completed',
+             detail: 'the approved step ran and the run finished' };
+  }
+  if (status === 'business_outcome') {
+    return { settled: true, tone: 'is-approved', title: 'Approved — the run finished with a business outcome',
+             detail: (result && result.code ? result.code : 'business outcome') + ' — a declared answer, not a failure' };
+  }
+  if (status === 'failed') {
+    var f = (result && result.failure) || {};
+    return { settled: true, tone: 'is-stopped', title: 'Approved, then the run failed',
+             detail: (f.class || 'failed') + (f.stepId ? ' at ' + f.stepId : '') };
+  }
+  if (status === 'error') {
+    return { settled: true, tone: 'is-stopped', title: 'The run ended in an error',
+             detail: 'see the run in the dashboard' };
+  }
+
+  // Still running. Immediately after a resolution that is ambiguous — an abort
+  // has not finished writing its result yet — so say nothing about approval
+  // until the grace window has passed.
+  var waited = Date.now() - entry.resolvedAt;
+  if (waited < SETTLE_GRACE_MS) {
+    return { settled: false, tone: '', title: 'No longer waiting for a human',
+             detail: 'reading the run…' };
+  }
+  return { settled: false, tone: 'is-approved', title: 'Approved — the run is continuing',
+           detail: 'running for ' + Math.round(waited / 1000) + 's since the approval' };
+}
+
+function wait(ms) {
+  return new Promise(function (resolve) { setTimeout(resolve, ms); });
 }
 
 function startPolling() {
@@ -379,8 +565,16 @@ function stopPolling() {
    been resolved by a human, so we say so instead of a stale "waiting". */
 async function pollInterventions() {
   var open;
-  try { open = await getJson('/api/interventions'); } catch { return; }
-  if (!Array.isArray(open)) return;
+  // A failed or malformed read must still fall through to the stop check
+  // below. Returning early skipped it, so one bad fetch while nothing was
+  // parked left a 2s interval firing for the rest of the session — a failing
+  // request every two seconds behind a demo, and the "still waiting — Ns"
+  // clock on every banner frozen at whatever it last read.
+  try { open = await getJson('/api/interventions'); } catch { open = null; }
+  if (!Array.isArray(open)) {
+    if (!busy && !hasOpenApproval()) stopPolling();
+    return;
+  }
 
   var liveRuns = {}, liveIds = {};
   open.forEach(function (iv) {
@@ -437,14 +631,23 @@ function setBusy(value) {
 }
 
 /* Terse for the header strip — the toggle buttons carry the full, honest
-   labelling ("deterministic planner / no model"). */
-function showMode(mode) {
-  $modeState.textContent = 'mode: ' + mode + (forcedMode ? ' (forced)' : ' (auto)');
+   labelling ("deterministic planner / no model"). Reads the state rather than
+   taking it, so un-pinning falls back to the last mode the SERVER chose
+   instead of printing "auto (auto)". */
+function showMode() {
+  var mode = forcedMode || serverMode;
+  $modeState.textContent = forcedMode ? 'mode: ' + mode + ' (forced)'
+    : mode ? 'mode: ' + mode + ' (auto)'
+    : 'mode: auto';
 }
 
-function syncModeButtons(active) {
+/* Only a FORCED mode lights a button. The lit segment means "I pinned this",
+   which is a claim the presenter is making; the server's own auto choice is
+   reported in the header strip instead. Lighting a button for it read as a
+   pinned mode that the next turn could silently change. */
+function syncModeButtons() {
   Array.prototype.forEach.call(document.querySelectorAll('.mode-btn'), function (btn) {
-    btn.setAttribute('aria-pressed', String(btn.dataset.mode === active));
+    btn.setAttribute('aria-pressed', String(forcedMode !== null && btn.dataset.mode === forcedMode));
   });
 }
 
@@ -467,9 +670,13 @@ $input.addEventListener('keydown', function (e) {
 Array.prototype.forEach.call(document.querySelectorAll('.mode-btn'), function (btn) {
   btn.setAttribute('aria-pressed', 'false');
   btn.addEventListener('click', function () {
-    forcedMode = btn.dataset.mode;
-    syncModeButtons(forcedMode);
-    showMode(forcedMode);
+    // Clicking the pinned mode UN-pins it. Without this the pair was one-way:
+    // once a presenter pinned a planner there was no control anywhere on the
+    // page that returned to auto, and clicking the lit button did nothing at
+    // all — a dead control in the header of a live demo.
+    forcedMode = forcedMode === btn.dataset.mode ? null : btn.dataset.mode;
+    syncModeButtons();
+    showMode();
   });
 });
 

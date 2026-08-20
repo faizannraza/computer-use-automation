@@ -70,7 +70,7 @@ artifacts were produced by real discovery runs (evidence under `evidence/`), so 
 re-recorded.
 
 ```bash
-npm test                    # 274 tests: schema, resolver, gate, engine, compiler, profiles, API, HITL — all local
+npm test                    # 329 tests: schema, resolver, gate, engine, compiler, profiles, API, HITL — all local
 ```
 
 ## Demo path
@@ -319,9 +319,9 @@ capabilities/       shipped MockCore artifacts (readSavingsBalance LLM-discovere
 capabilities-meridian/  the seven MERIDIAN CORE capabilities, all LLM-discovered then approved
 profiles/           the app profiles themselves: meridian-core, mockcore-teller
 tenants/            tenant overlays (demo-fcu recoveries; summit-fcu re-skin re-ranking)
-policies/           allowlist/risk policies: default, summit-fcu, meridian, meridian-harness
+policies/           allowlist/risk policies: default, summit-fcu, meridian
 evidence/           MockCore runs + meridian/ (see each directory's README.md for the index)
-tests/              274 tests (~25 s) incl. live end-to-end scenarios against the mock app;
+tests/              329 tests (~26 s) incl. live end-to-end scenarios against the mock app;
                     fixtures/ holds a hand-authored gold artifact used only as
                     test fixture and compiler diff baseline
 ADAPTATION.md       what pointing the core at MERIDIAN CORE took, and what it exposed
