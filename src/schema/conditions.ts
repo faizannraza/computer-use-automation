@@ -11,12 +11,12 @@
  * "Member {memberId}").
  */
 import { z } from 'zod';
-import type { TargetRef } from './locators.js';
-import { TargetRefSchema } from './locators.js';
+import type { FrameHint, TargetRef } from './locators.js';
+import { FrameHintSchema, TargetRefSchema } from './locators.js';
 
 export type Condition =
-  | { c: 'textPresent'; pattern: string; regex?: boolean }
-  | { c: 'textAbsent'; pattern: string; regex?: boolean }
+  | { c: 'textPresent'; pattern: string; regex?: boolean; frame?: FrameHint }
+  | { c: 'textAbsent'; pattern: string; regex?: boolean; frame?: FrameHint }
   | { c: 'elementPresent'; target: TargetRef }
   | { c: 'urlMatches'; pattern: string }
   | { c: 'dialogOpen'; textPattern?: string }
@@ -24,11 +24,25 @@ export type Condition =
   | { c: 'any'; of: Condition[] };
 
 const leaf = {
+  // `frame` scopes the text check to one frame (matched against the TAIL of
+  // each frame's path, like locator frame hints): "this text, in the work
+  // frame" — so nav chrome can never satisfy a checkpoint about the work
+  // area. Omitted = whole surface (backward compatible).
   textPresent: z
-    .object({ c: z.literal('textPresent'), pattern: z.string().min(1), regex: z.boolean().optional() })
+    .object({
+      c: z.literal('textPresent'),
+      pattern: z.string().min(1),
+      regex: z.boolean().optional(),
+      frame: FrameHintSchema.optional(),
+    })
     .strict(),
   textAbsent: z
-    .object({ c: z.literal('textAbsent'), pattern: z.string().min(1), regex: z.boolean().optional() })
+    .object({
+      c: z.literal('textAbsent'),
+      pattern: z.string().min(1),
+      regex: z.boolean().optional(),
+      frame: FrameHintSchema.optional(),
+    })
     .strict(),
   elementPresent: z.object({ c: z.literal('elementPresent'), target: TargetRefSchema }).strict(),
   urlMatches: z.object({ c: z.literal('urlMatches'), pattern: z.string().min(1) }).strict(),

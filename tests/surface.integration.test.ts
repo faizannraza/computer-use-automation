@@ -73,6 +73,10 @@ describe('member lookup flow through Surface + ActionGate only', () => {
     // Frameset shell: navigate to Member Search via the menu frame.
     let obs = await surface.observe();
     expect(obs.elements.some((e) => e.framePath.some((f) => f.name === 'menu'))).toBe(true);
+    // Per-frame text is captured alongside the flat text — the substrate for
+    // frame-scoped conditions.
+    expect(obs.frameTexts!.some((f) => f.framePath.some((p) => p.name === 'menu') && /member search/i.test(f.text))).toBe(true);
+    expect(obs.frameTexts!.some((f) => f.framePath.some((p) => p.name === 'work'))).toBe(true);
     const navLink = await resolveOk({
       framePath: [{ name: 'menu' }],
       strategies: [{ s: 'roleName', role: 'link', name: 'Member Search' }],

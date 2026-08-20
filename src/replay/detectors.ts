@@ -3,7 +3,8 @@
  * and success criteria. */
 import type { Observation } from '../core/types.js';
 import type { Condition } from '../schema/conditions.js';
-import { resolveTarget } from '../surface/web/locatorResolver.js';
+import type { FrameHint } from '../schema/locators.js';
+import { frameMatches, resolveTarget } from '../surface/web/locatorResolver.js';
 import { globToRegExp } from '../core/template.js';
 
 function textMatches(haystack: string, pattern: string, regex: boolean | undefined): boolean {
@@ -11,12 +12,35 @@ function textMatches(haystack: string, pattern: string, regex: boolean | undefin
   return haystack.toLowerCase().includes(pattern.toLowerCase());
 }
 
+/**
+ * The text a frame-scoped condition evaluates against. Unscoped conditions
+ * see the whole surface's text. A scoped condition on an observation that
+ * cannot provide per-frame text (a held dialog, a synthetic observation)
+ * returns undefined — the check has no evidence, and MUST NOT silently widen
+ * to the whole page: that widening is exactly the false-positive the scope
+ * exists to prevent.
+ */
+function scopedText(obs: Observation, frame: FrameHint | undefined): string | undefined {
+  if (frame === undefined) return obs.visibleText;
+  if (obs.frameTexts === undefined) return undefined;
+  return obs.frameTexts
+    .filter((f) => frameMatches([frame], f.framePath))
+    .map((f) => f.text)
+    .join('\n');
+}
+
 export async function evaluateCondition(cond: Condition, obs: Observation): Promise<boolean> {
   switch (cond.c) {
-    case 'textPresent':
-      return textMatches(obs.visibleText, cond.pattern, cond.regex);
-    case 'textAbsent':
-      return !textMatches(obs.visibleText, cond.pattern, cond.regex);
+    case 'textPresent': {
+      const hay = scopedText(obs, cond.frame);
+      return hay !== undefined && textMatches(hay, cond.pattern, cond.regex);
+    }
+    case 'textAbsent': {
+      // Scoped-but-unevaluable is false here too: "the text is absent" must
+      // never be satisfied by an inability to look.
+      const hay = scopedText(obs, cond.frame);
+      return hay !== undefined && !textMatches(hay, cond.pattern, cond.regex);
+    }
     case 'urlMatches':
       return globToRegExp(cond.pattern).test(obs.location);
     case 'dialogOpen':
@@ -46,9 +70,9 @@ export async function evaluateAll(conds: Condition[], obs: Observation): Promise
 export function renderCondition(cond: Condition): string {
   switch (cond.c) {
     case 'textPresent':
-      return `textPresent ${JSON.stringify(cond.pattern)}`;
+      return `textPresent ${JSON.stringify(cond.pattern)}${renderFrame(cond.frame)}`;
     case 'textAbsent':
-      return `textAbsent ${JSON.stringify(cond.pattern)}`;
+      return `textAbsent ${JSON.stringify(cond.pattern)}${renderFrame(cond.frame)}`;
     case 'urlMatches':
       return `urlMatches ${JSON.stringify(cond.pattern)}`;
     case 'dialogOpen':
@@ -66,6 +90,11 @@ export function renderCondition(cond: Condition): string {
 
 export function renderConditions(conds: Condition[]): string {
   return conds.map(renderCondition).join(' AND ');
+}
+
+function renderFrame(frame: FrameHint | undefined): string {
+  if (frame === undefined) return '';
+  return ` [frame ${frame.name ?? frame.urlPattern ?? '?'}]`;
 }
 
 function describeLocator(loc: { s: string } & Record<string, unknown>): string {

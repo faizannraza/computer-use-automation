@@ -20,6 +20,10 @@ const obs: Observation = {
     },
   ],
   visibleText: 'Member Information Standing GOOD $4,821.97',
+  frameTexts: [
+    { framePath: [{ name: 'menu', url: 'http://localhost:4173/nav' }], text: 'Main Menu Home Member Search Session' },
+    { framePath: [{ name: 'work', url: 'http://localhost:4173/members/12345' }], text: 'Member Information Standing GOOD $4,821.97' },
+  ],
   at: new Date().toISOString(),
 };
 
@@ -47,6 +51,31 @@ describe('evaluateCondition', () => {
     expect(await evaluateCondition(cond({ c: 'dialogOpen' }), withDialog)).toBe(true);
     expect(await evaluateCondition(cond({ c: 'dialogOpen', textPattern: 'continue' }), withDialog)).toBe(true);
     expect(await evaluateCondition(cond({ c: 'dialogOpen', textPattern: 'delete' }), withDialog)).toBe(false);
+  });
+
+  it('frame-scoped textPresent sees only the named frame — chrome text cannot satisfy it', async () => {
+    // "Session" lives in the nav chrome. Unscoped, it matches anywhere;
+    // scoped to the work frame, it correctly does not.
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Session' }), { ...obs, visibleText: obs.visibleText + ' Session' })).toBe(true);
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Session', frame: { name: 'work' } }), obs)).toBe(false);
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Session', frame: { name: 'menu' } }), obs)).toBe(true);
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing', frame: { name: 'work' } }), obs)).toBe(true);
+  });
+
+  it('frame-scoped textAbsent is scoped the same way', async () => {
+    expect(await evaluateCondition(cond({ c: 'textAbsent', pattern: 'Session', frame: { name: 'work' } }), obs)).toBe(true);
+    expect(await evaluateCondition(cond({ c: 'textAbsent', pattern: 'Standing', frame: { name: 'work' } }), obs)).toBe(false);
+  });
+
+  it('a scoped condition never silently widens when per-frame text is unavailable', async () => {
+    const noFrames: Observation = { ...obs };
+    delete noFrames.frameTexts;
+    // The text IS on the page, but the scope cannot be evaluated — both
+    // present and absent refuse to claim anything they cannot see.
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing', frame: { name: 'work' } }), noFrames)).toBe(false);
+    expect(await evaluateCondition(cond({ c: 'textAbsent', pattern: 'nope', frame: { name: 'work' } }), noFrames)).toBe(false);
+    // Unscoped conditions are unaffected.
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing' }), noFrames)).toBe(true);
   });
 
   it('elementPresent resolves through the locator ladder', async () => {
@@ -91,6 +120,9 @@ describe('templates', () => {
 describe('rendering', () => {
   it('renders conditions and observations for failure reports', () => {
     expect(renderCondition(cond({ c: 'textPresent', pattern: 'Standing' }))).toBe('textPresent "Standing"');
+    expect(renderCondition(cond({ c: 'textPresent', pattern: 'Standing', frame: { name: 'work' } }))).toBe(
+      'textPresent "Standing" [frame work]',
+    );
     const summary = summarizeObservation(obs);
     expect(summary).toContain('at http://localhost:4173/members/12345');
     expect(summary).toContain('Member Details');

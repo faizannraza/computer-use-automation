@@ -13,7 +13,7 @@
  * inject an async `structuralHits` lookup; when none is provided (pure/unit
  * contexts, non-web surfaces) the strategy is skipped.
  */
-import type { Observation, ObservedElement } from '../../core/types.js';
+import type { FramePathEntry, Observation, ObservedElement } from '../../core/types.js';
 import type { FrameHint, Locator, TargetRef } from '../../schema/locators.js';
 import type { CandidateInfo, Resolution, ResolutionFailure } from '../surface.js';
 import { globToRegExp } from '../../core/template.js';
@@ -31,11 +31,13 @@ interface Candidate {
 
 const norm = (s: string): string => s.replace(/\s+/g, ' ').trim().toLowerCase();
 
-/** Frame hints match against the TAIL of the element's actual frame path (innermost frames). */
-export function frameMatches(hints: FrameHint[], el: ObservedElement): boolean {
+/** Frame hints match against the TAIL of an actual frame path (innermost
+ * frames) — shared by locator resolution (element frame paths) and
+ * frame-scoped text conditions (per-frame text). */
+export function frameMatches(hints: FrameHint[], framePath: FramePathEntry[]): boolean {
   if (hints.length === 0) return true;
-  if (hints.length > el.framePath.length) return false;
-  const tail = el.framePath.slice(el.framePath.length - hints.length);
+  if (hints.length > framePath.length) return false;
+  const tail = framePath.slice(framePath.length - hints.length);
   return hints.every((hint, i) => {
     const entry = tail[i]!;
     if (hint.name !== undefined && hint.name !== entry.name) return false;
@@ -59,7 +61,7 @@ function geometryModifier(target: TargetRef, el: ObservedElement): number {
 
 /** Match one semantic strategy against the observation. Pure. */
 export function matchStrategy(loc: Locator, target: TargetRef, obs: Observation): Candidate[] {
-  const pool = obs.elements.filter((el) => frameMatches(target.framePath, el));
+  const pool = obs.elements.filter((el) => frameMatches(target.framePath, el.framePath));
   const cands: Candidate[] = [];
   for (const el of pool) {
     let score = 0;
@@ -126,7 +128,7 @@ export async function resolveTarget(
       const refs = await structuralHits(loc.css, target.framePath);
       cands = refs
         .map((ref) => obs.elements.find((el) => el.ref === ref))
-        .filter((el): el is ObservedElement => el !== undefined && frameMatches(target.framePath, el))
+        .filter((el): el is ObservedElement => el !== undefined && frameMatches(target.framePath, el.framePath))
         .map((el) => ({ el, score: STRUCTURAL_SCORE }));
     } else {
       cands = matchStrategy(loc, target, obs);

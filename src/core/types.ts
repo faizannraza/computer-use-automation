@@ -65,6 +65,12 @@ export interface Observation {
   elements: ObservedElement[];
   /** Visible text content (per frame, concatenated) for textPresent/textAbsent conditions. */
   visibleText: string;
+  /**
+   * Per-frame visible text, for frame-scoped text conditions: a checkpoint
+   * can assert text within one named frame so persistent chrome (nav menus,
+   * banners) can never satisfy a condition about the work area.
+   */
+  frameTexts?: { framePath: FramePathEntry[]; text: string }[];
   /** Native dialog currently held open, if any. */
   dialog?: ObservedDialog;
   /** PNG screenshot of the full surface, for the LLM and for evidence. */

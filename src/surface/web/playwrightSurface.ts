@@ -69,6 +69,7 @@ export class PlaywrightWebSurface implements Surface {
         title: '',
         elements: [],
         visibleText: '',
+        frameTexts: [],
         dialog: {
           kind: this.heldDialog.type() as 'alert' | 'confirm' | 'prompt' | 'beforeunload',
           text: this.heldDialog.message(),
@@ -84,6 +85,7 @@ export class PlaywrightWebSurface implements Surface {
 
     const elements: ObservedElement[] = [];
     const texts: string[] = [];
+    const frameTexts: { framePath: FramePathEntry[]; text: string }[] = [];
     let title = '';
     this.refMap.clear();
     let ref = 0;
@@ -124,6 +126,7 @@ export class PlaywrightWebSurface implements Surface {
       if (collected.visibleText) {
         const marker = frame === this.page.mainFrame() ? '' : `[frame ${frame.name() || frame.url()}] `;
         texts.push(marker + collected.visibleText);
+        frameTexts.push({ framePath, text: collected.visibleText });
       }
     }
 
@@ -133,6 +136,7 @@ export class PlaywrightWebSurface implements Surface {
       title,
       elements,
       visibleText: texts.join('\n'),
+      frameTexts,
       at,
     };
     const shot = await this.tryScreenshot();
