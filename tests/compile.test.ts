@@ -153,6 +153,80 @@ describe('compileTrace', () => {
     expect(open.post.map((p) => (p.c === 'textPresent' ? p.pattern : ''))).toEqual(['Member Information', 'Accounts']);
   });
 
+  it('marker freshness is per frame: chrome text reappearing in the work frame still yields a scoped checkpoint', () => {
+    // "Member Search" lives permanently in the nav chrome; after the click it
+    // ALSO appears in the work frame. Text-only freshness would discard it
+    // and fall back to urlMatches (always true in a frameset — an empty
+    // checkpoint). Per-frame freshness keeps it, scoped to 'work'.
+    const chromeEchoTrace: DiscoveryTrace = {
+      goal: 'per-frame freshness',
+      actions: [
+        act({ kind: 'navigate', intent: 'Open the app', risk: 'read', url: `${BASE}/login`, before: { location: 'about:blank', title: '', markers: [] }, after: loginDigest }),
+        act({
+          kind: 'activate', intent: 'Open Member Search', risk: 'read',
+          element: { role: 'link', name: 'Member Search', framePath: [{ name: 'menu', url: `${BASE}/nav` }] },
+          before: { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Member Search', frame: 'menu' }] },
+          after: { location: `${BASE}/`, title: 'MockCore', markers: [{ text: 'Member Search', frame: 'menu' }, { text: 'Member Search', frame: 'work' }] },
+        }),
+      ],
+      outcomes: [],
+      done: { capabilityId: 'freshness.case', title: 't', description: 'd' },
+    };
+    const { artifact } = compileTrace({
+      trace: chromeEchoTrace,
+      paramSpecs: {},
+      callerParamValues: {},
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'freshrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(artifact.steps[0]!.post).toEqual([{ c: 'textPresent', pattern: 'Member Search', frame: { name: 'work' } }]);
+  });
+
+  it('never substitutes a stand-in into the middle of a decimal', () => {
+    const decimalTrace = structuredClone(trace);
+    decimalTrace.outcomes = [
+      { code: 'MEMBER_NOT_FOUND', description: 'n', marker: 'Reference 99999.00 rejected for member 99999.', observedIn: notFoundDigest },
+    ];
+    const { artifact } = compileTrace({
+      trace: decimalTrace,
+      paramSpecs,
+      callerParamValues: { memberId: '12345' },
+      outputHints: { savingsBalance: { type: 'money', sensitivity: 'pii' } },
+      baseUrl: BASE,
+      model: 'claude-opus-4-8',
+      discoveryRunId: 'testrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    // "99999.00" is an amount, not the member id — untouched. The standalone
+    // "99999." (sentence period, no digit after) IS the entity — substituted.
+    expect(artifact.outcomes[0]!.when).toEqual({
+      c: 'textPresent',
+      pattern: 'Reference 99999.00 rejected for member {memberId}.',
+    });
+  });
+
+  it('notes operator-DECLINED irreversible actions so a reviewer knows the flow may be partial', () => {
+    const declinedTrace = structuredClone(trace);
+    declinedTrace.declinedInterventions = [{ id: 'int-01', intent: 'Confirm opening the sub-account' }];
+    const { report } = compileTrace({
+      trace: declinedTrace,
+      paramSpecs,
+      callerParamValues: { memberId: '12345' },
+      outputHints: { savingsBalance: { type: 'money', sensitivity: 'pii' } },
+      baseUrl: BASE,
+      model: 'claude-opus-4-8',
+      discoveryRunId: 'testrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(report.notes.some((n) => n.includes('DECLINED') && n.includes('int-01') && n.includes('partial'))).toBe(true);
+  });
+
   it('lints checkpoints that had to assert markers outside the action frame', () => {
     // A work-frame click whose only new marker appeared in the nav chrome:
     // the checkpoint still compiles, but the report flags it for review.

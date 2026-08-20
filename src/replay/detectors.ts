@@ -14,19 +14,20 @@ function textMatches(haystack: string, pattern: string, regex: boolean | undefin
 
 /**
  * The text a frame-scoped condition evaluates against. Unscoped conditions
- * see the whole surface's text. A scoped condition on an observation that
- * cannot provide per-frame text (a held dialog, a synthetic observation)
- * returns undefined — the check has no evidence, and MUST NOT silently widen
- * to the whole page: that widening is exactly the false-positive the scope
+ * see the whole surface's text. A scoped condition returns undefined — the
+ * check has no evidence — when the observation carries no per-frame text at
+ * all (a held dialog, a synthetic observation) AND when no observed frame
+ * matches the hint (mid-transition, blank frame, wrong page). Undefined must
+ * never satisfy either polarity: textPresent-by-blindness and
+ * textAbsent-by-blindness are both exactly the false positives the scope
  * exists to prevent.
  */
 function scopedText(obs: Observation, frame: FrameHint | undefined): string | undefined {
   if (frame === undefined) return obs.visibleText;
   if (obs.frameTexts === undefined) return undefined;
-  return obs.frameTexts
-    .filter((f) => frameMatches([frame], f.framePath))
-    .map((f) => f.text)
-    .join('\n');
+  const matched = obs.frameTexts.filter((f) => frameMatches([frame], f.framePath));
+  if (matched.length === 0) return undefined; // the frame was not observed — that is not evidence of absence
+  return matched.map((f) => f.text).join('\n');
 }
 
 export async function evaluateCondition(cond: Condition, obs: Observation): Promise<boolean> {
@@ -124,6 +125,11 @@ export function summarizeObservation(obs: Observation): string {
     .slice(0, 6)
     .map((e) => e.name);
   if (headings.length > 0) parts.push(`headings: ${headings.join(' | ')}`);
+  // Which frames were observed — the fact a frame-scoped condition turns on.
+  if (obs.frameTexts !== undefined && obs.frameTexts.length > 0) {
+    const names = obs.frameTexts.map((f) => f.framePath[f.framePath.length - 1]?.name ?? '(main)');
+    parts.push(`frames observed: ${names.join(', ')}`);
+  }
   const snippet = obs.visibleText.replace(/\s+/g, ' ').slice(0, 200);
   if (snippet) parts.push(`text: "${snippet}…"`);
   return parts.join('; ');

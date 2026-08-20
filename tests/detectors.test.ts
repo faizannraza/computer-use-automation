@@ -78,6 +78,22 @@ describe('evaluateCondition', () => {
     expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing' }), noFrames)).toBe(true);
   });
 
+  it('an unobserved frame is not evidence of absence: no matching frame → false for BOTH polarities', async () => {
+    // A held dialog reports frameTexts: [] (the page is unobservable), and a
+    // mid-transition frame may simply be missing — a scoped textAbsent must
+    // not be satisfied by an inability to look.
+    const dialogHeld: Observation = { ...obs, frameTexts: [], dialog: { kind: 'confirm', text: 'Post this transaction?' } };
+    expect(await evaluateCondition(cond({ c: 'textAbsent', pattern: 'Error', frame: { name: 'work' } }), dialogHeld)).toBe(false);
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing', frame: { name: 'work' } }), dialogHeld)).toBe(false);
+    // Frame name that matches nothing in a normal observation: same rule.
+    expect(await evaluateCondition(cond({ c: 'textAbsent', pattern: 'anything', frame: { name: 'ghost' } }), obs)).toBe(false);
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing', frame: { name: 'ghost' } }), obs)).toBe(false);
+  });
+
+  it('rejects an empty frame hint — it would match every frame and look scoped while being unscoped', () => {
+    expect(() => cond({ c: 'textPresent', pattern: 'x', frame: {} })).toThrow(/name and\/or urlPattern/);
+  });
+
   it('elementPresent resolves through the locator ladder', async () => {
     const present = cond({
       c: 'elementPresent',

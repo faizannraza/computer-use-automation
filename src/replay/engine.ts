@@ -166,14 +166,20 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
     });
   }
   // Every capability navigates to its entrypoint, whether or not a step says
-  // 'navigate' — so the implicit entrypoint navigation is checked here too,
-  // not first discovered by the gate after a browser has already launched.
-  const actionsNeeded = [...new Set<(typeof artifact.policy.actionsUsed)[number]>([...artifact.policy.actionsUsed, 'navigate'])];
+  // 'navigate' — and recovery handlers act too ('dismiss' activates a
+  // control, 'answerDialog' answers one). All of it is checked here, not
+  // first discovered by the gate after a browser has already launched.
+  const recoveryKinds = artifact.recoveries
+    .map((r) => (r.handler.kind === 'dismiss' ? ('activate' as const) : r.handler.kind === 'answerDialog' ? ('answerDialog' as const) : undefined))
+    .filter((k): k is 'activate' | 'answerDialog' => k !== undefined);
+  const actionsNeeded = [
+    ...new Set<(typeof artifact.policy.actionsUsed)[number]>([...artifact.policy.actionsUsed, 'navigate', ...recoveryKinds]),
+  ];
   const missingActions = actionsNeeded.filter((a) => !opts.policy.allowedActions.includes(a));
   if (missingActions.length > 0) {
     return earlyFail({
       class: 'POLICY_BLOCKED',
-      expected: `policy to allow action kinds: ${actionsNeeded.join(', ')} (navigate is implicit — the entrypoint)`,
+      expected: `policy to allow action kinds: ${actionsNeeded.join(', ')} (navigate is implicit — the entrypoint; recovery handlers count too)`,
       observed: `policy forbids: ${missingActions.join(', ')}`,
     });
   }
@@ -287,6 +293,7 @@ async function run(
     const shot = log.screenshot('intervention', obs?.screenshot);
     const resolution = await controller.escalate({
       ...req,
+      origin: 'replay',
       capabilityId: base.capabilityId,
       version: base.version,
       runId: base.runId,

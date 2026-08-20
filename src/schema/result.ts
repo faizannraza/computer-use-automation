@@ -60,6 +60,12 @@ export interface InterventionRequest {
   id: string;
   at: string;
   kind: InterventionKind;
+  /**
+   * Which path raised it. Replay interventions describe a hash-verified,
+   * human-approved artifact; discovery interventions describe an unreviewed
+   * recording in progress — an operator console must be able to tell.
+   */
+  origin?: 'discovery' | 'replay';
   capabilityId: string;
   version: string;
   runId: string;

@@ -46,6 +46,10 @@ export interface RecordedAction {
   /** Intervention id when a human approved this (irreversible) action during
    * discovery — provenance the compiler surfaces in its report. */
   approvedIntervention?: string;
+  /** How many actions the human took on the live session during that
+   * approval handoff. Anything above zero means the recorded before→after
+   * transition was not made by the automation alone — the compiler flags it. */
+  humanActionsDuringApproval?: number;
   /** True while an exceptional-state probe is active — excluded from the step spine. */
   probe: boolean;
   /** Which probe (outcome code) this action belongs to, when probe is true. */
@@ -67,6 +71,10 @@ export interface DiscoveryTrace {
   goal: string;
   actions: RecordedAction[];
   outcomes: DeclaredOutcome[];
+  /** Irreversible actions the human operator DECLINED during recording —
+   * never executed, never in the spine, but a reviewer of the compiled
+   * artifact must know the flow may be partial. */
+  declinedInterventions?: { id: string; intent: string }[];
   done?: { capabilityId: string; title: string; description: string };
   gaveUp?: { reason: string };
 }
@@ -110,7 +118,7 @@ export class Recorder {
   private seq = 0;
 
   constructor(goal: string) {
-    this.trace = { goal, actions: [], outcomes: [] };
+    this.trace = { goal, actions: [], outcomes: [], declinedInterventions: [] };
   }
 
   beginProbe(outcomeCode: string): void {
@@ -134,6 +142,10 @@ export class Recorder {
     const dropped = Math.min(n, this.trace.actions.length);
     this.trace.actions.splice(this.trace.actions.length - dropped, dropped);
     return dropped;
+  }
+
+  recordDeclined(id: string, intent: string): void {
+    this.trace.declinedInterventions!.push({ id, intent });
   }
 
   declareOutcome(outcome: DeclaredOutcome): void {

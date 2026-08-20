@@ -67,8 +67,11 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   // never corrupt "S1234" or an unrelated amount.
   const paramEntries = Object.entries(inputs.callerParamValues).filter(([, v]) => v.length >= 3);
   const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Boundaries are non-alphanumerics — but never the inside of a decimal:
+  // "100" must not substitute into "100.00" or "3,100" (the lookarounds
+  // reject a digit across a '.' or ',' on either side).
   const substituteValue = (s: string, name: string, value: string, where: string): string => {
-    const re = new RegExp(`(^|[^A-Za-z0-9])${escapeRe(value)}(?=$|[^A-Za-z0-9])`, 'g');
+    const re = new RegExp(`(^|[^A-Za-z0-9])(?<![0-9][.,])${escapeRe(value)}(?=$|[^A-Za-z0-9])(?![.,][0-9])`, 'g');
     if (!re.test(s)) return s;
     re.lastIndex = 0;
     report.parameterizations.push(`${where}: "${value}" → {${name}}`);
@@ -110,7 +113,17 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       report.notes.push(
         `${id}: irreversible action was human-approved during discovery (intervention ${action.approvedIntervention}) — replay will escalate it the same way under the default policy`,
       );
+      if ((action.humanActionsDuringApproval ?? 0) > 0) {
+        report.notes.push(
+          `${id}: the operator also performed ${action.humanActionsDuringApproval} action(s) on the live session during that approval — the recorded before→after transition was not made by the automation alone; review the run's human_action events before approving this artifact`,
+        );
+      }
     }
+  }
+  for (const declined of trace.declinedInterventions ?? []) {
+    report.notes.push(
+      `intervention ${declined.id}: an irreversible action ("${declined.intent}") was DECLINED by the operator and is absent from the spine — the recorded flow may be partial; review before approval`,
+    );
   }
 
   /** Innermost named frame the action's element lived in (undefined = main frame / navigate). */
@@ -206,10 +219,18 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
    */
   function postConditionsFor(id: string, action: RecordedAction): Condition[] {
     if (action.kind !== 'activate' && action.kind !== 'navigate') return [];
+    // Freshness is per (frame, text) for frame-tagged markers: the same text
+    // pre-existing in the nav chrome must not disqualify a marker that newly
+    // appeared in the work frame — the emitted condition is scoped to that
+    // frame, so asserting it is precise. Untagged markers keep the stricter
+    // text-anywhere rule, because their condition would be unscoped.
     const beforeTexts = new Set(action.before.markers.map((m) => m.text));
+    const beforeFramed = new Set(action.before.markers.map((m) => `${m.frame ?? ''} ${m.text}`));
     const actionFrame = actionFrameOf(action);
     const chosen = rankMarkers(
-      action.after.markers.filter((m) => !beforeTexts.has(m.text)),
+      action.after.markers.filter((m) =>
+        m.frame !== undefined ? !beforeFramed.has(`${m.frame} ${m.text}`) : !beforeTexts.has(m.text),
+      ),
       actionFrame,
     ).slice(0, 2);
     if (chosen.length === 0) {
@@ -311,7 +332,8 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
   // with the same token-bounded matching, and the report flags it: templating
   // a detector is a riskier decision than templating a locator, and a
   // reviewer must see it before approval.
-  const fieldKey = (el: RecordedElement): string => `${el.role}|${el.label ?? el.name}`;
+  const fieldKey = (el: RecordedElement): string =>
+    `${el.role}|${el.label ?? el.name}|${el.framePath[el.framePath.length - 1]?.name ?? ''}`;
   const spineParamFields = new Map<string, string>();
   for (const a of spine) {
     if (a.kind !== 'setValue' || a.value === undefined || a.element === undefined) continue;

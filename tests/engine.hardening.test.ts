@@ -141,6 +141,33 @@ describe('pre-flight covers the implicit entrypoint navigation', () => {
     expect(result.failure.observed).toContain('navigate');
     expect(result.stepsRun).toEqual([]); // pre-flight: nothing ran
   });
+
+  it('recovery handlers count too: a dismiss recovery needs activate even when no step uses it', async () => {
+    // An artifact whose steps only type (setValue) but whose KNOWN_INTERSTITIAL
+    // recovery would activate a Continue link: a policy forbidding activate
+    // must be caught in pre-flight, not by the gate mid-recovery.
+    const a = variant((x) => {
+      x.steps = x.steps.filter((s) => ['s1', 's2'].includes(s.id)); // setValue only
+      x.policy.actionsUsed = ['setValue'];
+      x.policy.maxRisk = 'reversible';
+      x.successCriteria = [];
+      x.outputs = {};
+      x.recoveries = x.recoveries.filter((r) => r.handler.kind === 'dismiss');
+    });
+    const noActivate = PolicySchema.parse({
+      ...policy,
+      allowedActions: ['navigate', 'setValue', 'choose', 'read', 'answerDialog'],
+    });
+    const result = await replayCapability(
+      { artifact: a, bindings: { baseUrl: base } },
+      { ...opts(), policy: noActivate },
+    );
+    expect(result.status).toBe('failed');
+    if (result.status !== 'failed') return;
+    expect(result.failure.class).toBe('POLICY_BLOCKED');
+    expect(result.failure.observed).toContain('activate');
+    expect(result.stepsRun).toEqual([]);
+  });
 });
 
 describe('irreversible dispatch semantics', () => {

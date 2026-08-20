@@ -12,7 +12,7 @@ import type { ReplayResult } from '../schema/result.js';
 
 export interface StepStability {
   stepId: string;
-  intent: string;
+  /** How many of the N runs reached this step. */
   runs: number;
   /** strategyIndex → how many runs resolved there. One key = stable. */
   strategyIndexCounts: Record<string, number>;
@@ -25,7 +25,7 @@ export interface StabilityReport {
   version: string;
   runs: number;
   runIds: string[];
-  /** status → count, with business outcomes broken out by code. */
+  /** status → count, with business outcomes broken out by code and failures by class. */
   statuses: Record<string, number>;
   /** True when every successful run produced identical outputs. */
   outputsConsistent: boolean;
@@ -39,24 +39,37 @@ export function buildStabilityReport(results: ReplayResult[]): StabilityReport {
   const first = results[0]!;
   const reasons: string[] = [];
 
+  // Failures keyed by class: TARGET_NOT_FOUND flapping with
+  // POSTCONDITION_TIMEOUT is instability even though both are 'failed'.
   const statuses: Record<string, number> = {};
   for (const r of results) {
-    const key = r.status === 'business_outcome' ? `business_outcome:${r.code}` : r.status;
+    const key =
+      r.status === 'business_outcome' ? `business_outcome:${r.code}` : r.status === 'failed' ? `failed:${r.failure.class}` : r.status;
     statuses[key] = (statuses[key] ?? 0) + 1;
   }
   if (Object.keys(statuses).length > 1) {
     reasons.push(`status flapped across runs: ${Object.entries(statuses).map(([k, v]) => `${k}×${v}`).join(', ')}`);
   }
 
+  // 'stable' is a certificate about a capability that WORKS. Runs that all
+  // failed identically are reproducible, but there is nothing to certify.
+  const completed = results.filter((r) => r.status === 'success' || r.status === 'business_outcome').length;
+  if (completed === 0) {
+    reasons.push(`no run completed (${Object.keys(statuses).join(', ')}) — reproducible failure is not stability`);
+  }
+
   const successOutputs = results.filter((r) => r.status === 'success').map((r) => JSON.stringify(r.outputs));
   const outputsConsistent = new Set(successOutputs).size <= 1;
   if (!outputsConsistent) reasons.push('successful runs returned different outputs');
 
-  // Per-step aggregation across runs (steps identified by id).
-  const byStep = new Map<string, { intent: string; strategyIdx: number[]; ms: number[] }>();
+  // Per-step aggregation across runs (steps identified by id). Intents are
+  // deliberately NOT copied into the report: they are post-substitution
+  // strings, and this report is the one evidence file written outside the
+  // redacted RunLog path — step ids carry no values.
+  const byStep = new Map<string, { strategyIdx: number[]; ms: number[] }>();
   for (const r of results) {
     for (const t of r.stepsRun) {
-      const entry = byStep.get(t.stepId) ?? { intent: t.intent, strategyIdx: [], ms: [] };
+      const entry = byStep.get(t.stepId) ?? { strategyIdx: [], ms: [] };
       if (t.strategyIndex !== undefined) entry.strategyIdx.push(t.strategyIndex);
       entry.ms.push(t.ms);
       byStep.set(t.stepId, entry);
@@ -70,13 +83,18 @@ export function buildStabilityReport(results: ReplayResult[]): StabilityReport {
     }
     return {
       stepId,
-      intent: e.intent,
       runs: e.ms.length,
       strategyIndexCounts,
       msP50: percentile(e.ms, 50),
       msP95: percentile(e.ms, 95),
     };
   });
+  // Same statuses but different step coverage = the runs diverged mid-flow
+  // (e.g. the same failure class at different steps).
+  const coverage = new Set(steps.map((s) => s.runs));
+  if (coverage.size > 1 && Object.keys(statuses).length === 1) {
+    reasons.push('runs diverged mid-flow: identical statuses but different steps were reached');
+  }
 
   return {
     capabilityId: first.capabilityId,

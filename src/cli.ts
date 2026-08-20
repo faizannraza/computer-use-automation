@@ -200,6 +200,12 @@ async function discoverCmd(argv: string[]): Promise<void> {
 
   console.error(`[discover] goal: ${values.goal}`);
   console.error(`[discover] model turns cap: ${values['max-turns']} — this performs a REAL LLM run`);
+  if (values.hitl && !process.stdin.isTTY) {
+    // A non-interactive --hitl discovery would auto-abort every escalation
+    // on EOF while burning real model turns — fail before spending anything.
+    console.error('discover --hitl requires an interactive terminal (stdin is not a TTY)');
+    process.exit(64);
+  }
   if (values.hitl && !values.headed) {
     console.error('[hitl] forcing --headed: the human operator needs to see the live session');
   }
@@ -315,6 +321,11 @@ async function replayCmd(argv: string[]): Promise<void> {
       process.exit(70);
     }
     console.error(`[harness] armed fault ${fault} (${mode})`);
+    if (times > 1 && mode === 'once') {
+      console.error(
+        `[harness] note: '${fault}:once' is consumed by the first of ${times} runs — later runs see a clean app, so a status flap here measures the harness, not the capability`,
+      );
+    }
   }
 
   if (values.hitl && !values.headed) {

@@ -86,8 +86,12 @@ describe('discovery-time escalation of irreversible clicks', () => {
     const operator: Operator = {
       async handle(req, session) {
         expect(req.kind).toBe('approve_risky');
+        expect(req.origin).toBe('discovery'); // an operator console can tell recording from replay
         expect(req.capabilityId).toBe('(discovery)');
         expect(req.reason).toContain('RISK_NEEDS_ESCALATION');
+        // The human approves against harness-derived identity, not model prose.
+        expect(req.reason).toContain('target (harness-verified): button "Sign In"');
+        expect(req.stepIntent).toContain('[model-authored]');
         expect(req.options).toEqual(['approve', 'abort']);
         expect(session.page).toBeDefined(); // the SAME live session
         // While the human holds the token, the recording cannot act at all.
@@ -111,7 +115,7 @@ describe('discovery-time escalation of irreversible clicks', () => {
     expect(click).toMatchObject({ kind: 'activate', risk: 'irreversible', approvedIntervention: 'int-01' });
   }, 60_000);
 
-  it('abort: the click never happens, is never recorded, and the model is told not to retry', async () => {
+  it('abort: never executed, never recorded, flagged for the compiler — and the refusal is STICKY', async () => {
     const operator: Operator = {
       async handle() {
         return { action: 'abort' as const, note: 'scripted refusal' };
@@ -123,9 +127,20 @@ describe('discovery-time escalation of irreversible clicks', () => {
     const outcome = await setups.executor.handle('click', { ref, intent: 'Commit the risky action', irreversible: true });
     expect(outcome.isError).toBe(true);
     expect(JSON.stringify(outcome.blocks)).toContain('DECLINED');
-    // Nothing was recorded: a refused action must not enter the trace.
+    // Nothing was recorded: a refused action must not enter the trace — but
+    // the refusal itself IS on record for the artifact reviewer.
     expect(setups.recorder.get().actions).toHaveLength(before);
+    expect(setups.recorder.get().declinedInterventions).toEqual([{ id: 'int-01', intent: 'Commit the risky action' }]);
     expect(setups.controller!.records[0]).toMatchObject({ kind: 'approve_risky', resolution: 'abort' });
+
+    // The refusal sticks to the CONTROL, not to the risk label: re-issuing
+    // the same click as "reversible" must not slip past the human's decision.
+    const freshRef = surface.lastObservation()!.elements.find((e) => e.role === 'button' && e.name === 'Sign In')!.ref;
+    const retry = await setups.executor.handle('click', { ref: freshRef, intent: 'Just a normal click, honest' });
+    expect(retry.isError).toBe(true);
+    expect(JSON.stringify(retry.blocks)).toContain('must not be activated');
+    expect(setups.recorder.get().actions).toHaveLength(before); // still nothing recorded
+    expect(setups.controller!.records).toHaveLength(1); // and no second handoff was needed
   }, 60_000);
 
   it('no operator attached: the refusal reaches the model as a policy error (pre-HITL behavior)', async () => {

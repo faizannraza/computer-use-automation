@@ -59,6 +59,13 @@ export interface ToolExecutorDeps {
 
 export class DiscoveryToolExecutor {
   private giveUpReasonValue = '';
+  /**
+   * Identities of controls a human operator DECLINED this run. The risk
+   * label on a click comes from the model, so the refusal must not depend on
+   * it: once declined, a control may never be activated again this run,
+   * whatever flag a later call carries.
+   */
+  private readonly refusedTargets = new Set<string>();
 
   constructor(private readonly deps: ToolExecutorDeps) {}
 
@@ -96,8 +103,18 @@ export class DiscoveryToolExecutor {
         case 'click': {
           const { obs: beforeObs, el } = this.requireRef(input);
           const irreversible = input['irreversible'] === true;
+          // Sticky refusal: the risk label is model-supplied, so a declined
+          // control cannot be re-issued as "reversible" to slip past the gate.
+          if (this.refusedTargets.has(identityKey(el))) {
+            return textOut(
+              'This control was DECLINED by the human operator earlier in this run and must not be activated, with any flag. Accomplish the goal another way, or give_up.',
+              true,
+            );
+          }
           const ctx = { risk: irreversible ? ('irreversible' as const) : ('reversible' as const), frameUrl: frameUrlOf(el) };
           let approvedIntervention: string | undefined;
+          let humanActionsDuringApproval: number | undefined;
+          let beforeDigest = digestOf(beforeObs);
           try {
             await gate.execute({ kind: 'activate', ref: el.ref }, ctx);
           } catch (err) {
@@ -107,32 +124,49 @@ export class DiscoveryToolExecutor {
             }
             // Discovery-time escalation: the SAME approve_risky handoff replay
             // uses — control token flips, the human decides on the live
-            // session, and the intervention is written to evidence. On
-            // approve, the same action executes exactly once with approval
-            // attached; the recorded action carries the intervention id so
-            // the compiled artifact's provenance shows a human approved it.
-            const shot = log.screenshot('intervention', beforeObs.screenshot);
+            // session, and the intervention is written to evidence.
+            //
+            // The operator approves against a FRESH observation (type/choose
+            // deliberately don't re-observe, so the last one may predate the
+            // values just entered) and against a harness-derived target
+            // identity — the model's intent line is context, not the thing
+            // being approved. The element is re-located in the fresh
+            // observation by identity; if the screen changed, nothing runs.
+            const freshObs = await surface.observe();
+            const matches = freshObs.elements.filter((e) => identityKey(e) === identityKey(el));
+            if (matches.length !== 1) {
+              return textOut('The screen changed before the risky action could be reviewed — observe and decide again.', true);
+            }
+            const target = matches[0]!;
+            const shot = log.screenshot('intervention', freshObs.screenshot);
+            const frameName = target.framePath[target.framePath.length - 1]?.name;
             const resolution = await controller.escalate({
               kind: 'approve_risky',
+              origin: 'discovery',
               capabilityId: '(discovery)',
               version: '—',
               runId: this.deps.runId,
-              stepIntent: String(input['intent']),
-              reason: err.message,
+              stepIntent: `[model-authored] ${sanitizeForOperator(String(input['intent']))}`,
+              reason: `${err.message}; target (harness-verified): ${target.role} ${JSON.stringify(target.name)}${frameName !== undefined ? ` in frame '${frameName}'` : ''}`,
               suggestedResolution:
-                'Review the pending irreversible action in the live window. approve = the recording performs it; abort = refuse it (the model must steer another way).',
+                'Review the pending irreversible action in the live window — do NOT perform it yourself. approve = the recording performs it exactly once; abort = refuse it (the model must steer another way).',
               options: ['approve', 'abort'],
-              observationSummary: summarizeObservation(beforeObs),
+              observationSummary: summarizeObservation(freshObs),
               ...(shot !== undefined ? { screenshotRef: shot } : {}),
             });
+            const record = controller.records[controller.records.length - 1]!;
             if (resolution.action !== 'approve') {
+              this.refusedTargets.add(identityKey(el));
+              recorder.recordDeclined(record.id, sanitizeForOperator(String(input['intent'])));
               return textOut(
-                'The human operator DECLINED this irreversible action. Do not retry it. Accomplish the goal another way, or give_up explaining what was refused.',
+                'The human operator DECLINED this irreversible action. Do not retry it — with any flag. Accomplish the goal another way, or give_up explaining what was refused.',
                 true,
               );
             }
-            approvedIntervention = controller.records[controller.records.length - 1]!.id;
-            await gate.execute({ kind: 'activate', ref: el.ref }, { ...ctx, approved: true });
+            approvedIntervention = record.id;
+            if (record.humanActions > 0) humanActionsDuringApproval = record.humanActions;
+            beforeDigest = digestOf(freshObs); // what the human actually approved
+            await gate.execute({ kind: 'activate', ref: target.ref }, { ...ctx, approved: true });
           }
           await surface.settle();
           const obs = await surface.observe();
@@ -142,10 +176,11 @@ export class DiscoveryToolExecutor {
             intent: String(input['intent']),
             risk: irreversible ? 'irreversible' : 'reversible',
             element: recordedElementOf(el),
-            before: digestOf(beforeObs),
+            before: beforeDigest,
             after: digestOf(obs),
             ...(shot !== undefined ? { screenshotRef: shot } : {}),
             ...(approvedIntervention !== undefined ? { approvedIntervention } : {}),
+            ...(humanActionsDuringApproval !== undefined ? { humanActionsDuringApproval } : {}),
           });
           return { blocks: renderObservationBlocks(obs) };
         }
@@ -319,4 +354,20 @@ function textOut(text: string, isError = false): ToolOutcome {
 
 function frameUrlOf(el: Observation['elements'][number]): string | undefined {
   return el.framePath[el.framePath.length - 1]?.url;
+}
+
+/** Element identity independent of the observation's ref numbering: role,
+ * accessible name, label, and the named frame path. Used to re-locate a
+ * control across observations and to pin refused controls. */
+function identityKey(el: Observation['elements'][number]): string {
+  const frames = el.framePath.map((f) => f.name ?? '?').join('/');
+  return `${el.role}|${el.name}|${el.label ?? ''}|${frames}`;
+}
+
+/** Operator-facing text from the model is sanitized: control characters
+ * (including ANSI escapes) stripped and length capped, so a hostile page
+ * steering the model cannot clear or forge the intervention banner. */
+function sanitizeForOperator(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').slice(0, 200);
 }

@@ -50,7 +50,10 @@ export interface MockAppOptions {
 }
 
 export function createApp(opts: MockAppOptions = {}): express.Express {
-  const skinName: SkinName = opts.skin ?? (process.env.MOCK_CU_SKIN === 'summit' ? 'summit' : 'default');
+  // The skin is an explicit option only — the MOCK_CU_SKIN env var is read
+  // once in the script entrypoint below, never ambiently, so a stray export
+  // in a shell can't silently re-skin the apps the test suite builds.
+  const skinName: SkinName = opts.skin ?? 'default';
   const app = express();
   app.locals['skin'] = SKINS[skinName];
   app.set('view engine', 'ejs');
@@ -181,9 +184,10 @@ function interstitialGate(req: Request, res: Response, next: NextFunction): void
 // Start directly when run as a script (not when imported by tests).
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.MOCK_CU_PORT ?? 4173);
-  const skin = process.env.MOCK_CU_SKIN === 'summit' ? ' (skin: summit — tenant-re-skinned controls)' : '';
-  createApp().listen(port, () => {
-    console.log(`MockCore Teller running at http://localhost:${port}${skin}`);
+  const skin: SkinName = process.env.MOCK_CU_SKIN === 'summit' ? 'summit' : 'default';
+  createApp({ skin }).listen(port, () => {
+    const note = skin === 'summit' ? ' (skin: summit — tenant-re-skinned controls)' : '';
+    console.log(`MockCore Teller running at http://localhost:${port}${note}`);
     console.log(`Sign in with ${CREDS.user} / ${CREDS.pass}`);
   });
 }

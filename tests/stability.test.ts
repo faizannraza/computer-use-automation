@@ -63,9 +63,38 @@ describe('buildStabilityReport', () => {
       success('r3', { savingsBalance: '$2.00' }, [trace('s1', 0, 100)]),
     ]);
     expect(report.verdict).toBe('flaky');
-    expect(report.statuses).toEqual({ success: 2, failed: 1 });
+    expect(report.statuses).toEqual({ success: 2, 'failed:POSTCONDITION_TIMEOUT': 1 });
     expect(report.reasons.some((r) => r.includes('status flapped'))).toBe(true);
     expect(report.reasons.some((r) => r.includes('different outputs'))).toBe(true);
+  });
+
+  it('N identical failures are reproducible, not stable — and failure classes are part of the key', () => {
+    const fail = (runId: string, cls: 'TARGET_NOT_FOUND' | 'POSTCONDITION_TIMEOUT', steps: StepTrace[]): ReplayResult =>
+      ({
+        ...success(runId, {}, steps),
+        status: 'failed',
+        failure: { class: cls, expected: 'x', observed: 'y' },
+      }) as ReplayResult;
+    // All runs fail the same way: one status key, but nothing completed.
+    const allFailed = buildStabilityReport([
+      fail('r1', 'TARGET_NOT_FOUND', [trace('s1', 0, 100)]),
+      fail('r2', 'TARGET_NOT_FOUND', [trace('s1', 0, 100)]),
+    ]);
+    expect(allFailed.verdict).toBe('flaky');
+    expect(allFailed.statuses).toEqual({ 'failed:TARGET_NOT_FOUND': 2 });
+    expect(allFailed.reasons.some((r) => r.includes('no run completed'))).toBe(true);
+    // Different failure classes flap even though both are 'failed'.
+    const mixedClasses = buildStabilityReport([
+      fail('r1', 'TARGET_NOT_FOUND', [trace('s1', 0, 100)]),
+      fail('r2', 'POSTCONDITION_TIMEOUT', [trace('s1', 0, 100)]),
+    ]);
+    expect(mixedClasses.reasons.some((r) => r.includes('status flapped'))).toBe(true);
+    // Same class dying at different steps: coverage divergence is named.
+    const divergent = buildStabilityReport([
+      fail('r1', 'TARGET_NOT_FOUND', [trace('s1', 0, 100)]),
+      fail('r2', 'TARGET_NOT_FOUND', [trace('s1', 0, 100), trace('s2', 0, 100)]),
+    ]);
+    expect(divergent.reasons.some((r) => r.includes('diverged mid-flow'))).toBe(true);
   });
 
   it('business outcomes are broken out by code, and one consistent code is stable', () => {

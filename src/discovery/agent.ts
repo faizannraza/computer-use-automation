@@ -96,7 +96,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
 
   const log = new RunLog('discovery', { baseDir: opts.evidenceBaseDir ?? 'evidence', redactor });
   const recorder = new Recorder(opts.goal);
-  const surface = await PlaywrightWebSurface.launch({ headed: opts.headed ?? false });
+  // An operator implies a headed session: the invariant lives here at the
+  // seam, not only in the CLI — a programmatic caller cannot hand a human a
+  // "live window" that does not exist.
+  const surface = await PlaywrightWebSurface.launch({ headed: (opts.headed ?? false) || opts.operator !== undefined });
   // Discovery gets the same control-token wiring as replay: while a human
   // holds the session, the gate locks the recording out too.
   const controller = opts.operator ? new SessionController(surface, log, opts.operator) : undefined;

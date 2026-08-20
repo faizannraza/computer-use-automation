@@ -18,7 +18,12 @@ export const FrameHintSchema = z
     name: z.string().optional(),
     urlPattern: z.string().optional(),
   })
-  .strict();
+  .strict()
+  // An empty hint would match EVERY frame — a condition that looks scoped in
+  // review but is effectively unscoped. Require at least one discriminator.
+  .refine((h) => h.name !== undefined || h.urlPattern !== undefined, {
+    message: 'a frame hint must specify name and/or urlPattern — an empty hint matches every frame',
+  });
 
 export const LocatorSchema = z.discriminatedUnion('s', [
   // Accessibility role + accessible name: the primary, most portable strategy.
