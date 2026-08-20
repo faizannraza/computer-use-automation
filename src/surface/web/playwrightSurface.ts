@@ -18,6 +18,7 @@ import type { TargetRef } from '../../schema/locators.js';
 import type { Resolution, ResolutionFailure, Surface } from '../surface.js';
 import { collectFrame } from './elementMap.js';
 import { resolveTarget } from './locatorResolver.js';
+import { extractTable } from './tableExtract.js';
 
 export interface WebSurfaceOptions {
   headed?: boolean;
@@ -44,6 +45,60 @@ export class PlaywrightWebSurface implements Surface {
   private seq = 0;
   private lastObs: Observation | undefined;
   private refMap = new Map<number, { frame: Frame; index: number }>();
+  private pendingInjection: { param: string; kind: string } | undefined;
+  private injectionRouted = false;
+  /** Element refs to black out for the capture currently being taken. */
+  private maskRefs: number[] = [];
+  /** Decides those refs from the observation being captured — see setScreenshotMask. */
+  private maskClassifier: ((observation: Observation) => number[]) | undefined;
+
+  /**
+   * Arm a ONE-SHOT fault injection on the next document request, by appending
+   * the target app's documented fault parameter to it.
+   *
+   * Rewriting the request (rather than only the entrypoint URL) is what makes
+   * mid-flow faults reachable: the interesting conditions — a session expiring
+   * between review and post, a 500 on the post itself — happen on requests the
+   * automation triggers by clicking, which have no URL for a caller to edit.
+   * This is a harness affordance; nothing in a recorded artifact can reach it.
+   */
+  async armFaultInjection(param: string, kind: string): Promise<void> {
+    this.pendingInjection = { param, kind };
+    if (this.injectionRouted) return;
+    this.injectionRouted = true;
+    await this.page.route('**/*', async (route) => {
+      const armed = this.pendingInjection;
+      if (!armed || route.request().resourceType() !== 'document') return route.continue();
+      this.pendingInjection = undefined;
+      const url = new URL(route.request().url());
+      url.searchParams.set(armed.param, armed.kind);
+      try {
+        const response = await route.fetch({ url: url.toString(), maxRedirects: 0 });
+        // A redirect is not the faulted screen — the app bounced us somewhere
+        // else before it could render one. Re-arm so the fault lands on the
+        // page the operator actually reaches.
+        if (response.status() >= 300 && response.status() < 400) this.pendingInjection = armed;
+        await route.fulfill({ response });
+      } catch {
+        await route.continue();
+      }
+    });
+  }
+
+  async resetSession(): Promise<void> {
+    await this.page.context().clearCookies();
+  }
+
+  /**
+   * Install the classifier that decides which elements are masked in evidence
+   * screenshots. It runs inside observe(), against the observation whose image
+   * is about to be captured and against the refMap generation that image's refs
+   * belong to — masking and capture therefore share one generation, and the
+   * FIRST capture showing regulated data is already masked.
+   */
+  setScreenshotMask(classify: (observation: Observation) => number[]): void {
+    this.maskClassifier = classify;
+  }
 
   static async launch(opts: WebSurfaceOptions = {}): Promise<PlaywrightWebSurface> {
     const browser = await chromium.launch({
@@ -82,10 +137,15 @@ export class PlaywrightWebSurface implements Surface {
         },
         at,
       };
+      // The element map is stale the moment a dialog is held, so nothing in
+      // this capture can be addressed by ref: drop both the map and any mask
+      // BEFORE capturing, rather than blacking out nodes by numbers that
+      // belonged to the previous generation.
+      this.refMap.clear();
+      this.maskRefs = [];
       const shot = await this.tryScreenshot();
       if (shot) obs.screenshot = shot;
       this.lastObs = obs;
-      this.refMap.clear();
       return obs;
     }
 
@@ -123,8 +183,16 @@ export class PlaywrightWebSurface implements Surface {
           ...(raw.label !== undefined ? { label: raw.label } : {}),
           ...(raw.bbox !== undefined ? { bboxPct: raw.bbox } : {}),
           ...(raw.nearText !== undefined ? { nearText: raw.nearText } : {}),
+          // Everything the walker emits must be copied through HERE or it does
+          // not exist above the seam — silently, with no error anywhere. The
+          // consumers of these two (row identity for table extraction, whole
+          // cell strings for classification and truncation) simply see
+          // `undefined` and fall back to weaker heuristics.
           ...(raw.colHeader !== undefined ? { colHeader: raw.colHeader } : {}),
+          ...(raw.rowId !== undefined ? { rowId: raw.rowId } : {}),
+          ...(raw.cellTexts !== undefined ? { cellTexts: raw.cellTexts } : {}),
           ...(raw.options !== undefined ? { options: raw.options } : {}),
+          ...(raw.optionValues !== undefined ? { optionValues: raw.optionValues } : {}),
         });
         this.refMap.set(ref, { frame, index });
         ref += 1;
@@ -149,6 +217,9 @@ export class PlaywrightWebSurface implements Surface {
       frameTexts,
       at,
     };
+    // Classify THIS observation, against the refMap just rebuilt for it, and
+    // only then capture: the image and the mask describe the same instant.
+    this.maskRefs = this.maskClassifier?.(obs) ?? [];
     const shot = await this.tryScreenshot();
     if (shot) obs.screenshot = shot;
     this.lastObs = obs;
@@ -214,6 +285,14 @@ export class PlaywrightWebSurface implements Surface {
         const el = this.observedElement(action.ref);
         return { readValue: el.value ?? el.name };
       }
+      case 'readTable': {
+        // Region read over the latest observation — no DOM round-trip, so it
+        // reflects exactly the state the engine classified against.
+        const obs = this.lastObs;
+        if (!obs) throw new Error('readTable requires a prior observe()');
+        const rows = extractTable(obs, action.columns, action.frame);
+        return { readValue: JSON.stringify(rows) };
+      }
       case 'activate': {
         const handle = await this.elementHandle(action.ref);
         // The classic legacy pattern — onclick="return confirm(...)" — opens
@@ -245,7 +324,10 @@ export class PlaywrightWebSurface implements Surface {
       }
       case 'choose': {
         const handle = await this.elementHandle(action.ref);
-        await handle.selectOption({ label: action.option }, { timeout: 5000 });
+        await handle.selectOption(
+          action.by === 'value' ? { value: action.option } : { label: action.option },
+          { timeout: 5000 },
+        );
         return {};
       }
     }
@@ -293,9 +375,50 @@ export class PlaywrightWebSurface implements Surface {
 
   private async tryScreenshot(): Promise<Buffer | undefined> {
     try {
-      return await this.page.screenshot({ timeout: 2000 });
+      if (this.maskRefs.length > 0) await this.setMaskAttribute(true);
+      const png = await this.page.screenshot({ timeout: 3000 });
+      if (this.maskRefs.length > 0) await this.setMaskAttribute(false);
+      return png;
     } catch {
       return undefined; // e.g. render blocked by a held dialog
+    }
+  }
+
+  /**
+   * Black out classified elements for the duration of a capture. Driven off
+   * the walker's stashed nodes, so masking targets exactly the elements the
+   * observation classified — no second, selector-based notion of "where the
+   * sensitive data is" that could drift from the first.
+   */
+  private async setMaskAttribute(on: boolean): Promise<void> {
+    const byFrame = new Map<Frame, number[]>();
+    for (const ref of this.maskRefs) {
+      const loc = this.refMap.get(ref);
+      if (!loc) continue;
+      byFrame.set(loc.frame, [...(byFrame.get(loc.frame) ?? []), loc.index]);
+    }
+    for (const [frame, indices] of byFrame) {
+      await frame
+        .evaluate(
+          ({ indices: idx, on: enable }) => {
+            const store = (window as unknown as { __cuEls?: Element[] }).__cuEls ?? [];
+            const STYLE_ID = '__cuMaskStyle';
+            if (enable && !document.getElementById(STYLE_ID)) {
+              const style = document.createElement('style');
+              style.id = STYLE_ID;
+              style.textContent = '[data-cu-mask]{background:#1a1a1a !important;color:transparent !important;}';
+              (document.head ?? document.documentElement).appendChild(style);
+            }
+            for (const i of idx) {
+              const el = store[i];
+              if (!el) continue;
+              if (enable) el.setAttribute('data-cu-mask', '1');
+              else el.removeAttribute('data-cu-mask');
+            }
+          },
+          { indices, on },
+        )
+        .catch(() => undefined); // a frame mid-navigation must not fail a capture
     }
   }
 }

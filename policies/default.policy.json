@@ -1,8 +1,21 @@
 {
-  "allowedOrigins": ["http://localhost:4173", "http://127.0.0.1:4173"],
+  "allowedOrigins": [
+    "http://localhost:4173",
+    "http://127.0.0.1:4173"
+  ],
   "allowedPathPrefixes": [],
-  "deniedPathPrefixes": ["/__"],
-  "allowedActions": ["navigate", "activate", "setValue", "choose", "read", "answerDialog"],
+  "deniedPathPrefixes": [
+    "/__"
+  ],
+  "allowedActions": [
+    "navigate",
+    "activate",
+    "setValue",
+    "choose",
+    "read",
+    "readTable",
+    "answerDialog"
+  ],
   "irreversibleActionMode": "escalate",
   "maxStepsPerRun": 40,
   "maxRecoveryAttemptsPerRun": 5

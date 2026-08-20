@@ -1,0 +1,143 @@
+{
+  "appId": "meridian-core",
+  "vendor": "Cornerstone Financial Systems",
+  "title": "MERIDIAN CORE \u2014 Member Services Platform v4.2.1",
+  "baseUrl": "https://web-sample.interface-hiring.com",
+  "policy": "policies/meridian.policy.json",
+  "credentials": {
+    "operatorIdEnv": "MERIDIAN_OPERATOR_ID",
+    "operatorPasswordEnv": "MERIDIAN_OPERATOR_PASSWORD",
+    "defaultRole": "teller",
+    "roles": {
+      "teller": {
+        "idEnv": "MERIDIAN_TELLER_ID",
+        "passwordEnv": "MERIDIAN_TELLER_PASSWORD",
+        "description": "Standard teller. May inquire, transfer, open shares and update member information; Place Account Hold is refused with a supervisor-override screen."
+      },
+      "supervisor": {
+        "idEnv": "MERIDIAN_SUPERVISOR_ID",
+        "passwordEnv": "MERIDIAN_SUPERVISOR_PASSWORD",
+        "description": "Supervisor. Additionally authorised for restricted functions such as Place Account Hold."
+      }
+    }
+  },
+  "transactionToken": {
+    "fieldName": "_token",
+    "note": "Every form carries a hidden per-transaction token that must accompany the submission. Driving the real UI submits it inherently \u2014 the browser posts the form the operator sees \u2014 so the token is never read, stored, or reconstructed; capabilities only ASSERT that one is present before a posting step, so a form served without it fails loudly instead of posting something the core will reject."
+  },
+  "faultInjection": {
+    "kind": "queryParam",
+    "param": "inject",
+    "kinds": [
+      "validation",
+      "notfound",
+      "permission",
+      "timeout",
+      "maintenance",
+      "server"
+    ],
+    "note": "The app forces a runtime condition per-request via ?inject=<kind>. The harness arms it as a one-shot request rewrite so it can land on a chosen step \u2014 including a form POST, which is the only way to exercise a fault on a review\u2192post transition."
+  },
+  "dataClassification": {
+    "pii": {
+      "labels": [
+        "Name:",
+        "E-mail:",
+        "Phone:",
+        "Address:",
+        "Mailing Address:"
+      ],
+      "columns": [
+        "Name"
+      ]
+    },
+    "financial": {
+      "columns": [
+        "Balance"
+      ],
+      "labelPatterns": [
+        "^[0-9]{4,}-[A-Z0-9]+(-[A-Z0-9]+)*:$"
+      ]
+    }
+  },
+  "recoveries": [
+    {
+      "code": "SESSION_EXPIRED",
+      "description": "The operator session ended mid-flow (idle timeout, or an injected 440). Recover by restarting from the entrypoint, which re-authenticates and mints a fresh transaction token rather than re-posting a consumed one.",
+      "when": {
+        "c": "any",
+        "of": [
+          {
+            "c": "textPresent",
+            "pattern": "YOUR SESSION HAS TIMED OUT"
+          },
+          {
+            "c": "textPresent",
+            "pattern": "SESSION ENDED"
+          }
+        ]
+      },
+      "handler": {
+        "kind": "restartRun"
+      },
+      "maxAttempts": 2
+    },
+    {
+      "code": "MAINTENANCE_INTERSTITIAL",
+      "description": "A scheduled-maintenance interstitial was served instead of the requested screen. It is transient: retry the flow from the entrypoint.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "SCHEDULED MAINTENANCE IN PROGRESS"
+      },
+      "handler": {
+        "kind": "restartRun"
+      },
+      "maxAttempts": 2
+    },
+    {
+      "code": "SUPERVISOR_OVERRIDE_REQUIRED",
+      "description": "The signed-on operator is not authorised for this restricted function. Only a person can clear it: a supervisor must authorise the action on the live session.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "SUPERVISOR OVERRIDE REQUIRED"
+      },
+      "handler": {
+        "kind": "escalate",
+        "suggestion": "This restricted function requires supervisor authority. On the live session, sign on as a supervisor and complete the action, then resume \u2014 the step's own postcondition will verify the result. If no supervisor is available, abort."
+      },
+      "maxAttempts": 1
+    }
+  ],
+  "anomalies": [
+    {
+      "code": "APPLICATION_ERROR",
+      "description": "MERIDIAN returned a hard application error (HTTP 500). Nothing on this screen can be trusted, so fail fast with the observed state rather than waiting out the step's clock.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "APPLICATION ERROR"
+      }
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "RECORD_NOT_FOUND",
+      "description": "MERIDIAN could not locate the requested member record on this host. A legitimate answer for the caller to handle, not a failure of the automation.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "RECORD NOT FOUND"
+      },
+      "terminal": true,
+      "outputs": {}
+    },
+    {
+      "code": "TRANSACTION_REJECTED",
+      "description": "MERIDIAN rejected the transaction as entered \u2014 a validation failure on the submitted field values (for example an overdraw, or a malformed e-mail or phone number). The caller should correct the inputs and retry.",
+      "when": {
+        "c": "textPresent",
+        "pattern": "TRANSACTION REJECTED"
+      },
+      "terminal": true,
+      "outputs": {}
+    }
+  ]
+}

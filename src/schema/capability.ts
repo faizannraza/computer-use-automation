@@ -16,12 +16,27 @@
  *    from the environment at invocation time.
  *  - Versioned (semver: patch = locator/wait tuning, minor = new optional
  *    param/outcome/recovery, major = contract change) and integrity-hashed.
+ *
+ * ---------------------------------------------------------------------------
+ * THE HASH RULE — read before adding any field to this schema.
+ *
+ * `loadCapability` parses first, then hashes the PARSED object. Zod's
+ * `.default()` MATERIALIZES the key onto that object, so a new defaulted
+ * field silently changes `canonicalize()` output for every artifact ever
+ * written — their stored `contentHash` stops verifying and the engine
+ * refuses to replay them (POLICY_BLOCKED, "hash mismatch").
+ *
+ * Therefore: new fields on existing objects must be `.optional()`, NEVER
+ * `.default()`. Widening a `z.enum([...])` is safe. Adding a whole new
+ * optional section is safe. `tests/schema.test.ts` guards this by asserting
+ * the shipped artifacts still hash-verify.
+ * ---------------------------------------------------------------------------
  */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { ConditionSchema } from './conditions.js';
-import { TargetRefSchema } from './locators.js';
+import { FrameHintSchema, TargetRefSchema } from './locators.js';
 
 // ---------- contract: params & outputs ----------
 
@@ -68,7 +83,10 @@ export const ParamSpecSchema = z
 
 export const OutputSpecSchema = z
   .object({
-    type: z.enum(['string', 'integer', 'money']),
+    // 'table': rows of named columns, carried as a JSON string internally so
+    // one redaction boundary still covers it, and parsed back into structure
+    // at the API edge where callers consume it.
+    type: z.enum(['string', 'integer', 'money', 'table']),
     description: z.string(),
     sensitivity: SensitivitySchema.default('none'),
     source: z
@@ -91,6 +109,15 @@ export const OutcomeSpecSchema = z
     terminal: z.literal(true).default(true),
     /** Literal outputs this outcome yields to the caller, if any. */
     outputs: z.record(z.string(), z.string()).default({}),
+    /**
+     * Check this outcome on EVERY step rather than only where a step declares
+     * it via onDetect. Step scoping exists so page-global text cannot
+     * false-positive on the wrong screen; but some states — "record not
+     * found", "transaction rejected" — are properties of the application and
+     * can legitimately replace any screen. Optional, so existing artifacts
+     * keep their content hashes.
+     */
+    appWide: z.boolean().optional(),
   })
   .strict();
 
@@ -138,8 +165,28 @@ export const StepActionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('navigate'), url: z.string() }).strict(), // url is a template
   z.object({ kind: z.literal('activate'), target: TargetRefSchema }).strict(),
   z.object({ kind: z.literal('setValue'), target: TargetRefSchema, value: BindingSchema }).strict(),
-  z.object({ kind: z.literal('choose'), target: TargetRefSchema, option: BindingSchema }).strict(),
+  z
+    .object({
+      kind: z.literal('choose'),
+      target: TargetRefSchema,
+      option: BindingSchema,
+      /** Match the option by its visible label (default) or by its underlying
+       * value — the latter survives labels that embed live data. */
+      by: z.enum(['label', 'value']).optional(),
+    })
+    .strict(),
   z.object({ kind: z.literal('read'), target: TargetRefSchema, into: z.string() }).strict(),
+  // Region read: rows × named columns, addressed by column header rather than
+  // by a single control (see SemanticAction.readTable). The output it feeds
+  // is declared `type: 'table'`.
+  z
+    .object({
+      kind: z.literal('readTable'),
+      columns: z.array(z.string().min(1)).min(1),
+      frame: FrameHintSchema.optional(),
+      into: z.string(),
+    })
+    .strict(),
   z.object({ kind: z.literal('assert') }).strict(), // pure checkpoint: pre/post only
 ]);
 
@@ -231,9 +278,21 @@ export const ProvenanceSchema = z
 export const PolicyRequirementsSchema = z
   .object({
     /** Action kinds this capability performs — checked against the runtime policy up front. */
-    actionsUsed: z.array(z.enum(['navigate', 'activate', 'setValue', 'choose', 'read', 'answerDialog'])),
+    actionsUsed: z.array(z.enum(['navigate', 'activate', 'setValue', 'choose', 'read', 'readTable', 'answerDialog'])),
     /** The riskiest step in the flow — lets a caller/policy judge the capability at a glance. */
     maxRisk: z.enum(['read', 'reversible', 'irreversible']),
+    /**
+     * Operator role this capability needs, when the app restricts the function
+     * (e.g. a supervisor-only account hold). Recorded from the role the
+     * discovery run actually signed on as — never inferred.
+     *
+     * Three layers, in order of authority: the target app's own refusal is the
+     * real enforcement and is handled as an escalation; the API refuses a
+     * mismatch up front, in BOTH directions, so a routine teller action cannot
+     * quietly run with supervisor credentials; and the catalog advertises it so
+     * a calling agent knows before it tries.
+     */
+    requiresRole: z.string().optional(),
   })
   .strict();
 
@@ -269,18 +328,32 @@ export const CapabilityArtifactSchema = z
           ctx.addIssue({ code: 'custom', message: `step ${step.id} onDetect references unknown outcome '${code}'` });
         }
       }
-      if (step.action.kind === 'read' && !(step.action.into in a.outputs)) {
-        ctx.addIssue({ code: 'custom', message: `step ${step.id} reads into undeclared output '${step.action.into}'` });
+      const extracting = extractingAction(step.action);
+      if (extracting && !(extracting.into in a.outputs)) {
+        ctx.addIssue({ code: 'custom', message: `step ${step.id} reads into undeclared output '${extracting.into}'` });
       }
     }
     for (const [name, out] of Object.entries(a.outputs)) {
       const src = a.steps.find((s) => s.id === out.source.stepId);
-      if (!src || src.action.kind !== 'read') {
+      const srcExtracting = src ? extractingAction(src.action) : undefined;
+      if (!src || !srcExtracting) {
         ctx.addIssue({ code: 'custom', message: `output '${name}' must source from a read step (got '${out.source.stepId}')` });
-      } else if (src.action.into !== name) {
+      } else if (src.action.kind === 'readTable' && out.type !== 'table') {
+        // A table read yields rows. An artifact that declares its shape as a
+        // scalar is schema-legal but silently wrong twice over: the API's
+        // parse-at-the-edge is keyed on `type === 'table'`, so the caller gets
+        // a JSON blob instead of structure, and the engine's per-cell redactor
+        // registration is keyed on it too, so the individual cells never
+        // become needles. The compiler forces the right value; this makes an
+        // artifact that says otherwise fail to load at all.
         ctx.addIssue({
           code: 'custom',
-          message: `output '${name}' sources step '${src.id}', but that step reads into '${src.action.into}' — the output would never be produced`,
+          message: `output '${name}' is produced by the readTable step '${src.id}' and must be declared type 'table', not '${out.type}'`,
+        });
+      } else if (srcExtracting.into !== name) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `output '${name}' sources step '${src.id}', but that step reads into '${srcExtracting.into}' — the output would never be produced`,
         });
       }
     }
@@ -330,6 +403,20 @@ export const CapabilityArtifactSchema = z
     }
   });
 
+/**
+ * Any step action that extracts into a declared output. Membership is
+ * structural — an action with an `into` field produces an output — so a new
+ * extracting action kind is picked up by the schema cross-checks AND the
+ * engine's extraction branch automatically, rather than needing each site to
+ * remember it. (Before this existed, three separate `kind === 'read'` checks
+ * had to be kept in sync; missing one produced a *green run with no data*.)
+ */
+export type ExtractingAction = Extract<z.infer<typeof StepActionSchema>, { into: string }>;
+
+export function extractingAction(action: z.infer<typeof StepActionSchema>): ExtractingAction | undefined {
+  return 'into' in action ? action : undefined;
+}
+
 export type Sensitivity = z.infer<typeof SensitivitySchema>;
 export type ParamSpec = z.infer<typeof ParamSpecSchema>;
 export type OutputSpec = z.infer<typeof OutputSpecSchema>;
@@ -342,14 +429,30 @@ export type CapabilityArtifact = z.infer<typeof CapabilityArtifactSchema>;
 
 // ---------- integrity & loading ----------
 
-/** Canonical JSON: recursively key-sorted, `integrity` excluded. */
-function canonicalize(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalize).join(',')}]`;
+/**
+ * Canonical JSON: recursively key-sorted, with the root `integrity` block
+ * excluded (it holds the hash being computed).
+ *
+ * Two subtleties, both of which were tamper-evidence holes before they were
+ * closed, and both of which have tripwires in `tests/schema.test.ts`:
+ *
+ * - The `integrity` exclusion is ROOT-ONLY. `params` and `outputs` are open
+ *   records, so `integrity` is a legal key inside them; excluding it at every
+ *   depth meant a param literally named `integrity` was invisible to the hash
+ *   — its `sensitivity` could be flipped from `secret` to `none` and the
+ *   artifact would still verify clean.
+ * - Keys whose value is `undefined` are dropped, matching `JSON.stringify`.
+ *   Without this, an object hashed BEFORE being written to disk (which is what
+ *   the compiler does) hashes `"k":undefined` for a key that `JSON.stringify`
+ *   then omits, so the artifact fails its own integrity check on first load.
+ */
+function canonicalize(value: unknown, depth = 0): string {
+  if (Array.isArray(value)) return `[${value.map((v) => canonicalize(v, depth + 1)).join(',')}]`;
   if (value !== null && typeof value === 'object') {
     const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([k]) => k !== 'integrity')
+      .filter(([k, v]) => v !== undefined && !(depth === 0 && k === 'integrity'))
       .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(([k, v]) => `${JSON.stringify(k)}:${canonicalize(v)}`);
+      .map(([k, v]) => `${JSON.stringify(k)}:${canonicalize(v, depth + 1)}`);
     return `{${entries.join(',')}}`;
   }
   return JSON.stringify(value);

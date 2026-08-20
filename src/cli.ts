@@ -5,6 +5,7 @@
  *   cu discover --goal "..." --param k=v ...        LLM-driven discovery → compiled draft artifact
  *   cu replay --capability <file> --param k=v ...   deterministic replay (no LLM)
  *   cu approve <file> --by "name"                   mark a reviewed artifact approved (re-hashes)
+ *   cu recompile <file> --trace <dir>               re-derive an artifact from its recorded trace
  *   cu validate <file>                              schema + integrity check
  *   cu hash <file>                                  (re)compute integrity.contentHash
  *
@@ -17,10 +18,14 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { buildCatalog, findByName } from './catalog/catalog.js';
 import { runDiscovery } from './discovery/agent.js';
+import { compileTrace } from './discovery/compile.js';
 import type { OutputHint } from './discovery/compile.js';
+import type { DiscoveryTrace } from './discovery/recorder.js';
 import { newRunId } from './evidence/runLog.js';
+import { RecordingOperator } from './hitl/recordingOperator.js';
 import { TerminalOperator } from './hitl/terminalOperator.js';
 import { loadPolicy } from './policy/policy.js';
+import { applyProfile, envOverridesForRole, loadProfile, policyPathFor, resolvedRoleName } from './profile/appProfile.js';
 import { replayCapability } from './replay/engine.js';
 import { buildStabilityReport } from './replay/stability.js';
 import type { ReplayResult } from './schema/result.js';
@@ -28,6 +33,9 @@ import { CapabilityArtifactSchema, ParamSpecSchema, computeContentHash, loadCapa
 import type { ParamSpec, Sensitivity } from './schema/capability.js';
 import { applyOverlay, loadOverlay } from './schema/overlay.js';
 import type { ResolvedCapability } from './schema/overlay.js';
+
+/** What the redactor leaves behind: `***`, `***<2 chars>`, or `«secret:name»`. */
+const MASKED = /\*\*\*|«secret:/;
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -53,6 +61,9 @@ switch (command) {
   case 'approve':
     approveCmd(rest);
     break;
+  case 'recompile':
+    recompileCmd(rest);
+    break;
   case 'validate':
     validateCmd(rest);
     break;
@@ -60,7 +71,7 @@ switch (command) {
     hashCmd(rest);
     break;
   default:
-    console.error('usage: cu <discover|replay|catalog|approve|validate|hash> ...');
+    console.error('usage: cu <discover|replay|catalog|approve|recompile|validate|hash> ...');
     process.exit(64);
 }
 }
@@ -124,13 +135,21 @@ async function discoverCmd(argv: string[]): Promise<void> {
       'env-param': { type: 'string', multiple: true },
       // --output savingsBalance:money:pii  (type/sensitivity hints for declared outputs)
       output: { type: 'string', multiple: true },
-      'base-url': { type: 'string', default: 'http://localhost:4173' },
-      policy: { type: 'string', default: 'policies/default.policy.json' },
+      'base-url': { type: 'string' },
+      policy: { type: 'string' },
+      // Target application profile: supplies base URL, policy and the
+      // operator roles a discovery run signs on with.
+      app: { type: 'string' },
+      role: { type: 'string' },
       headed: { type: 'boolean', default: false },
       // Human-in-the-loop for DISCOVERY: irreversible clicks pause the
       // recording and hand you the live browser for approval — this is what
       // lets a risky flow be discovered instead of hand-authored. Forces --headed.
       hitl: { type: 'boolean', default: false },
+      // Pre-authorise the posting steps of a RECORDING session (see
+      // RecordingOperator). Requires a name, which is stamped onto every
+      // approval in the evidence and the compile report.
+      'authorise-recording-as': { type: 'string' },
       'max-turns': { type: 'string', default: '30' },
       'evidence-dir': { type: 'string', default: 'evidence' },
       'save-dir': { type: 'string', default: 'capabilities' },
@@ -157,12 +176,23 @@ async function discoverCmd(argv: string[]): Promise<void> {
     }
     const [, name, value, sensitivity] = m;
     paramValues[name!] = value!;
+    // Shape inferred from the recorded value, and only where the shape is
+    // unambiguous. This is the only input validation a compiled capability
+    // gets, so leaving an AMOUNT untyped means "typed args in" buys nothing on
+    // the one field of a money transfer where it matters most. Inference is
+    // deliberately narrow — a value that is not clearly one of these stays a
+    // free string rather than acquiring a pattern that later rejects a
+    // legitimate input.
+    const shape = /^\d+$/.test(value!)
+      ? { type: 'integer' as const, pattern: '^[0-9]+$' }
+      : /^\$?\d[\d,]*\.\d{2}$/.test(value!)
+        ? { type: 'money' as const, pattern: '^\\$?[0-9][0-9,]*\\.[0-9]{2}$' }
+        : { type: 'string' as const };
     paramSpecs[name!] = ParamSpecSchema.parse({
-      type: 'string',
+      ...shape,
       description: `Caller-supplied parameter '${name}'.`,
       sensitivity: (sensitivity as Sensitivity | undefined) ?? 'none',
       source: 'caller',
-      ...(/^\d+$/.test(value!) ? { pattern: '^[0-9]+$' } : {}),
       ...((sensitivity ?? 'none') === 'none' || sensitivity === 'internal' ? { example: value } : {}),
     });
   }
@@ -198,6 +228,12 @@ async function discoverCmd(argv: string[]): Promise<void> {
     outputHints[name] = hint;
   }
 
+  const discoveryProfile = values.app ? loadProfile(values.app) : undefined;
+  const discoveryBaseUrl = values['base-url'] ?? discoveryProfile?.baseUrl ?? 'http://localhost:4173';
+  const discoveryPolicy =
+    values.policy ??
+    (values.app && discoveryProfile ? policyPathFor(values.app, discoveryProfile) : 'policies/default.policy.json');
+
   console.error(`[discover] goal: ${values.goal}`);
   console.error(`[discover] model turns cap: ${values['max-turns']} — this performs a REAL LLM run`);
   if (values.hitl && !process.stdin.isTTY) {
@@ -214,15 +250,31 @@ async function discoverCmd(argv: string[]): Promise<void> {
     paramSpecs,
     paramValues,
     outputHints,
-    policy: loadPolicy(values.policy!),
-    baseUrl: values['base-url']!,
+    policy: loadPolicy(discoveryPolicy),
+    baseUrl: discoveryBaseUrl,
     headed: values.headed! || values.hitl!,
+    ...(discoveryProfile !== undefined
+      ? {
+          app: { appId: discoveryProfile.appId, vendor: discoveryProfile.vendor },
+          envOverrides: envOverridesForRole(discoveryProfile, values.role),
+          profile: discoveryProfile,
+          // Only a non-default role is worth recording as a REQUIREMENT: the
+          // default is what any caller gets anyway.
+          ...(values.role !== undefined && values.role !== discoveryProfile.credentials?.defaultRole
+            ? { requiresRole: values.role }
+            : {}),
+        }
+      : {}),
     maxTurns: Number(values['max-turns']),
     evidenceBaseDir: values['evidence-dir']!,
     saveDir: values['save-dir']!,
     artifactVersion: values['artifact-version']!,
     ...(values.model ? { model: values.model } : {}),
-    ...(values.hitl ? { operator: new TerminalOperator() } : {}),
+    ...(values.hitl
+      ? { operator: new TerminalOperator() }
+      : values['authorise-recording-as']
+        ? { operator: new RecordingOperator(values['authorise-recording-as']) }
+        : {}),
   });
   console.error(`\n[${result.status.toUpperCase()}] discovery run ${result.runId}`);
   console.error(`  evidence: ${result.evidenceDir}`);
@@ -257,8 +309,17 @@ async function replayCmd(argv: string[]): Promise<void> {
     options: {
       capability: { type: 'string' },
       param: { type: 'string', multiple: true },
-      'base-url': { type: 'string', default: 'http://localhost:4173' },
-      policy: { type: 'string', default: 'policies/default.policy.json' },
+      // Defaults are resolved below, because an --app profile supplies both.
+      'base-url': { type: 'string' },
+      policy: { type: 'string' },
+      // The target application's profile: base URL, policy, operator roles,
+      // app-level runtime handling, and data classification.
+      app: { type: 'string' },
+      // Which operator role to sign on as (profile-defined, e.g. supervisor).
+      role: { type: 'string' },
+      // Harness: force one of the app's documented faults, optionally on a
+      // specific step — `--inject maintenance@s7`.
+      inject: { type: 'string' },
       tenant: { type: 'string' },
       headed: { type: 'boolean', default: false },
       // Demo aid: throttle driver actions by N ms (Playwright slowMo) so a
@@ -298,13 +359,42 @@ async function replayCmd(argv: string[]): Promise<void> {
     process.exit(64);
   }
 
-  const { artifact, verified } = loadCapability(values.capability);
+  const profile = values.app ? loadProfile(values.app) : undefined;
+  const baseUrl = values['base-url'] ?? profile?.baseUrl ?? 'http://localhost:4173';
+  const policyFile =
+    values.policy ?? (values.app && profile ? policyPathFor(values.app, profile) : 'policies/default.policy.json');
+
+  const loaded = loadCapability(values.capability);
+  const verified = loaded.verified;
+  // The profile merges app-level runtime handling BEFORE the tenant overlay:
+  // "what this product does" first, then "what this institution's instance
+  // does". Both are additive and both announce what they contributed.
+  let artifact = loaded.artifact;
+  if (profile) {
+    const merged = applyProfile(artifact, profile);
+    artifact = merged.artifact;
+    if (merged.addedRecoveries.length > 0 || merged.addedAnomalies.length > 0) {
+      console.error(
+        `[profile] ${profile.appId}: +recoveries ${merged.addedRecoveries.join(',') || '—'} +anomalies ${merged.addedAnomalies.join(',') || '—'}`,
+      );
+    }
+  }
   let resolved: ResolvedCapability;
   if (values.tenant) {
     resolved = applyOverlay(artifact, loadOverlay(values.tenant));
-    resolved.bindings['baseUrl'] ??= values['base-url']!;
+    resolved.bindings['baseUrl'] ??= baseUrl;
   } else {
-    resolved = { artifact, bindings: { baseUrl: values['base-url']! } };
+    resolved = { artifact, bindings: { baseUrl } };
+  }
+
+  let injectPlan: { kind: string; atStepId?: string } | undefined;
+  if (values.inject) {
+    const [kind, atStepId] = values.inject.split('@');
+    if (!kind) {
+      console.error(`--inject expects <kind>[@stepId], got '${values.inject}'`);
+      process.exit(64);
+    }
+    injectPlan = { kind, ...(atStepId ? { atStepId } : {}) };
   }
 
   const paramValues: Record<string, string> = {};
@@ -340,13 +430,23 @@ async function replayCmd(argv: string[]): Promise<void> {
     console.error('[hitl] forcing --headed: the human operator needs to see the live session');
   }
   const runOpts = {
-    policy: loadPolicy(values.policy!),
+    policy: loadPolicy(policyFile),
     paramValues,
     verified,
     allowDraft: values['allow-draft']!,
     headed: values.headed! || values.hitl!,
     evidenceBaseDir: values['evidence-dir']!,
     ...(slowMoMs !== undefined && slowMoMs > 0 ? { slowMoMs } : {}),
+    ...(profile !== undefined ? { profile } : {}),
+    ...(injectPlan !== undefined ? { inject: injectPlan } : {}),
+    ...(profile !== undefined ? { envOverrides: envOverridesForRole(profile, values.role) } : {}),
+    // The RESOLVED role, not the flag: a run that took the profile's default
+    // must not log as null, or "which runs used supervisor authority" has no
+    // answer for exactly the runs an auditor cares about.
+    ...(() => {
+      const role = profile !== undefined ? resolvedRoleName(profile, values.role) : undefined;
+      return role !== undefined ? { role } : {};
+    })(),
     ...(values.hitl ? { operator: new TerminalOperator() } : {}),
   };
 
@@ -385,6 +485,160 @@ async function replayCmd(argv: string[]): Promise<void> {
   if (result.status === 'business_outcome') console.error(`  outcome: ${result.code} — ${result.message}`);
   console.log(JSON.stringify(result, null, 2));
   process.exit(result.status === 'success' || result.status === 'business_outcome' ? 0 : result.status === 'failed' ? 2 : 3);
+}
+
+/**
+ * Re-derive a shipped artifact from the discovery trace that produced it.
+ *
+ * A compiler improvement is worthless if the artifacts already in the repo
+ * still carry the old compiler's mistakes, and hand-patching them would throw
+ * away the one property that makes an artifact trustworthy — that deterministic
+ * code, not a person, wrote it from a recorded run.
+ *
+ * Every input `compileTrace` needs is recoverable from the artifact itself:
+ * the param specs are its own contract, each caller param's recorded value is
+ * its `example`, and the output hints are its declared sensitivities. So this
+ * is a genuine re-derivation, and running it against an UNCHANGED compiler
+ * reproduces the artifact byte-for-byte — which is what makes the diff it
+ * prints meaningful.
+ *
+ * The recompiled artifact comes back as a DRAFT. A machine may re-derive a
+ * capability; only a person may approve one.
+ */
+function recompileCmd(argv: string[]): void {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      trace: { type: 'string' },
+      'base-url': { type: 'string' },
+      app: { type: 'string' },
+      param: { type: 'string', multiple: true },
+      write: { type: 'boolean' },
+    },
+  });
+  const file = positionals[0];
+  if (!file || !values.trace) {
+    console.error(
+      'usage: cu recompile <artifact.json> --trace <discovery-run-dir> [--app <profile>|--base-url <url>] [--param k=v] [--write]',
+    );
+    process.exit(64);
+  }
+  const supplied: Record<string, string> = {};
+  for (const spec of values.param ?? []) {
+    const eq = spec.indexOf('=');
+    if (eq < 1) {
+      console.error(`--param expects name=value, got '${spec}'`);
+      process.exit(64);
+    }
+    supplied[spec.slice(0, eq)] = spec.slice(eq + 1);
+  }
+  const before = CapabilityArtifactSchema.parse(JSON.parse(readFileSync(file, 'utf8')));
+  const baseUrl = values['base-url'] ?? (values.app ? loadProfile(values.app).baseUrl : undefined);
+  if (!baseUrl) {
+    console.error('recompile needs the base URL the run was recorded against: pass --app <profile> or --base-url <url>');
+    process.exit(64);
+  }
+  const trace = JSON.parse(readFileSync(path.join(values.trace, 'trace.json'), 'utf8')) as DiscoveryTrace;
+
+  const callerParamValues: Record<string, string> = {};
+  for (const [name, spec] of Object.entries(before.params)) {
+    if (spec.source !== 'caller') continue;
+    // An explicitly supplied value wins: it is the escape hatch for a param
+    // the artifact cannot recover on its own (see the masked-example guard).
+    if (supplied[name] !== undefined) {
+      callerParamValues[name] = supplied[name];
+      continue;
+    }
+    if (spec.example === undefined) {
+      console.error(`param '${name}' is caller-sourced but records no example, so its recorded value cannot be recovered`);
+      process.exit(65);
+    }
+    // A masked example is not a recoverable value, and feeding one back in is
+    // actively wrong rather than merely lossy: `***om` is a two-character
+    // suffix that a DIFFERENT on-screen value masks to just as readily, so the
+    // compiler would bind the param to text that is not the param. Recompiling
+    // a capability whose recorded values were classified regulated data needs
+    // a fresh recording, not a reconstruction.
+    if (MASKED.test(spec.example)) {
+      console.error(
+        `param '${name}' records only a redacted example ('${spec.example}') — pass the recorded value explicitly with --param ${name}=<value>, or re-record the capability`,
+      );
+      process.exit(65);
+    }
+    callerParamValues[name] = spec.example;
+  }
+  const outputHints: Record<string, OutputHint> = {};
+  for (const [name, spec] of Object.entries(before.outputs)) {
+    // 'table' is structural, never a hint — see the output block in compile.ts.
+    outputHints[name] = {
+      ...(spec.type === 'table' ? {} : { type: spec.type }),
+      sensitivity: spec.sensitivity,
+    };
+  }
+
+  const { artifact, report } = compileTrace({
+    trace,
+    paramSpecs: before.params,
+    callerParamValues,
+    outputHints,
+    baseUrl,
+    model: before.provenance.recordedBy.model ?? 'unknown',
+    discoveryRunId: before.provenance.recordedBy.discoveryRunId ?? path.basename(values.trace),
+    app: before.capability.app,
+    version: before.capability.version,
+    // The trace directory is `<evidenceBaseDir>/discovery/<runId>`, so the
+    // base the artifact should point back at is two levels up from it.
+    evidenceBaseDir: path.dirname(path.dirname(path.resolve(values.trace))).replace(`${process.cwd()}${path.sep}`, ''),
+  });
+  // The recording happened once. Recompiling re-reads it; it does not re-do it.
+  // `evidenceRef` is deliberately NOT carried over — recompiling is exactly
+  // when a stale provenance pointer gets corrected.
+  artifact.provenance.recordedAt = before.provenance.recordedAt;
+  artifact.integrity.contentHash = computeContentHash(artifact);
+
+  // The approval block is inside the hash — that is what makes approving a
+  // re-hash — so a draft recompiled from an approved artifact always differs
+  // by both, and neither is a compiler difference.
+  const diffs = diffJson(before, artifact, '').filter(
+    (d) => !d.startsWith('provenance.approval') && !d.startsWith('integrity.contentHash'),
+  );
+  if (diffs.length === 0) {
+    console.log(
+      `${before.capability.id}: recompiles identically (modulo the approval block and its hash) — the shipped artifact is exactly what this compiler produces from this trace.`,
+    );
+  } else {
+    console.log(`${before.capability.id}: ${diffs.length} difference(s) from the shipped artifact`);
+    for (const d of diffs) console.log(`  ${d}`);
+  }
+  for (const note of report.notes) console.log(`  note: ${note}`);
+
+  if (!values.write) {
+    console.log('(dry run — pass --write to replace the artifact, which resets it to draft for re-approval)');
+    return;
+  }
+  writeFileSync(file, JSON.stringify(artifact, null, 2) + '\n');
+  console.log(`wrote ${file} as a DRAFT — review the diff above, then \`cu approve\` it.`);
+}
+
+/** Leaf-wise structural diff, so a recompile reports exactly what moved. */
+function diffJson(a: unknown, b: unknown, at: string): string[] {
+  if (JSON.stringify(a) === JSON.stringify(b)) return [];
+  const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const n = Math.max(a.length, b.length);
+    return Array.from({ length: n }, (_, i) => diffJson(a[i], b[i], `${at}[${i}]`)).flat();
+  }
+  if (isObj(a) && isObj(b)) {
+    return [...new Set([...Object.keys(a), ...Object.keys(b)])].flatMap((k) =>
+      diffJson(a[k], b[k], at ? `${at}.${k}` : k),
+    );
+  }
+  const show = (v: unknown): string => {
+    const s = JSON.stringify(v) ?? 'undefined';
+    return s.length > 80 ? `${s.slice(0, 77)}...` : s;
+  };
+  return [`${at}: ${show(a)} → ${show(b)}`];
 }
 
 function validateCmd(argv: string[]): void {

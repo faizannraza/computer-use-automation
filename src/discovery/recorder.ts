@@ -10,6 +10,10 @@ export interface RecordedElement {
   label?: string;
   nearText?: string;
   colHeader?: string;
+  /** Choices offered by a select, index-aligned with optionValues. */
+  options?: string[];
+  /** Values offered by a select, so the compiler can prefer a stable one. */
+  optionValues?: string[];
   framePath: { name?: string; url: string }[];
   bboxPct?: { x: number; y: number; w: number; h: number };
 }
@@ -34,14 +38,20 @@ export type RecordedValue = { literal: string } | { param: string };
 
 export interface RecordedAction {
   seq: number;
-  kind: 'navigate' | 'activate' | 'setValue' | 'choose' | 'read' | 'answerDialog';
+  kind: 'navigate' | 'activate' | 'setValue' | 'choose' | 'read' | 'readTable' | 'answerDialog';
   intent: string;
   risk: RiskClass;
   url?: string;
   element?: RecordedElement;
   value?: RecordedValue;
   option?: RecordedValue;
+  /** How the option was matched at record time (see SemanticAction.choose). */
+  optionBy?: 'label' | 'value';
   outputName?: string;
+  /** readTable only: the requested column headers. A table read is addressed
+   * by column rather than by a control, so there is no `element` for the
+   * compiler to build a target from — the columns ARE the addressing. */
+  columns?: string[];
   readValue?: string;
   /** Intervention id when a human approved this (irreversible) action during
    * discovery — provenance the compiler surfaces in its report. */
@@ -108,6 +118,8 @@ export function recordedElementOf(el: ObservedElement): RecordedElement {
     ...(el.label !== undefined ? { label: el.label } : {}),
     ...(el.nearText !== undefined ? { nearText: el.nearText } : {}),
     ...(el.colHeader !== undefined ? { colHeader: el.colHeader } : {}),
+    ...(el.options !== undefined ? { options: el.options } : {}),
+    ...(el.optionValues !== undefined ? { optionValues: el.optionValues } : {}),
     ...(el.bboxPct !== undefined ? { bboxPct: el.bboxPct } : {}),
   };
 }

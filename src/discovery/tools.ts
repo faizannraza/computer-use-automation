@@ -115,6 +115,26 @@ export const DISCOVERY_TOOLS: ToolDef[] = [
     },
   },
   {
+    name: 'read_table',
+    description:
+      "Extract EVERY row of a table into ONE structured output (e.g. a member's shares with their descriptions, balances and statuses). Name the columns exactly as their headers appear on screen. Use this instead of a series of single read calls whenever the data you want is a table: one output carries all the rows, and the capability keeps working when a member has a different number of rows than the one you are looking at.",
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        columns: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Column headers to extract, spelled exactly as they appear on screen.',
+        },
+        output_name: str('Output name, lowerCamelCase.'),
+        intent: str('One line: what this table is.'),
+      },
+      required: ['columns', 'output_name', 'intent'],
+      additionalProperties: false,
+    },
+  },
+  {
     name: 'answer_dialog',
     description: 'Answer the currently open native dialog (accept or dismiss). Decide deliberately based on its text.',
     strict: true,

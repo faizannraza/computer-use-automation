@@ -14,6 +14,11 @@ export interface CatalogEntry {
   description: string;
   approval: 'draft' | 'approved';
   maxRisk: string;
+  /** Which target application this capability drives — capabilities for
+   * several apps can share one catalog. */
+  app: string;
+  /** Operator role the app requires for this function, when it restricts it. */
+  requiresRole?: string;
   inputSchema: {
     type: 'object';
     properties: Record<string, unknown>;
@@ -60,6 +65,8 @@ function toEntry(artifact: CapabilityArtifact, file: string): CatalogEntry {
     description: describeForAgent(artifact),
     approval: artifact.provenance.approval.state,
     maxRisk: artifact.policy.maxRisk,
+    app: artifact.capability.app.appId,
+    ...(artifact.policy.requiresRole !== undefined ? { requiresRole: artifact.policy.requiresRole } : {}),
     inputSchema: { type: 'object', properties, required, additionalProperties: false },
     outputs,
     outcomes,

@@ -16,7 +16,7 @@ export const PolicySchema = z
     deniedPathPrefixes: z.array(z.string()).default(['/__']),
     /** Action kinds the automation may perform at all. */
     allowedActions: z
-      .array(z.enum(['navigate', 'activate', 'setValue', 'choose', 'read', 'answerDialog']))
+      .array(z.enum(['navigate', 'activate', 'setValue', 'choose', 'read', 'readTable', 'answerDialog']))
       .min(1),
     /**
      * How to treat irreversible actions:

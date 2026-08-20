@@ -105,6 +105,13 @@ interface ResultBase {
   version: string;
   runId: string;
   evidenceDir: string;
+  /**
+   * The operator role the run signed on as, when the invocation resolved one.
+   * Credentials reach an artifact through fixed env var names whichever role
+   * supplied them, so without this the result of a supervisor-authority run is
+   * indistinguishable from a teller's — there would be no field to query.
+   */
+  role?: string;
   stepsRun: StepTrace[];
   recoveriesUsed: RecoveryUse[];
   /** Human handoffs that occurred during the run (empty when fully unattended). */

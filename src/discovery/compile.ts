@@ -40,6 +40,23 @@ export interface CompileInputs {
   discoveryRunId: string;
   app: { appId: string; vendor: string };
   version: string;
+  /**
+   * Where this run's evidence was actually written, so `provenance.evidenceRef`
+   * points at it. Hardcoding `evidence/` produced artifacts whose provenance
+   * link resolved nowhere the moment a run used `--evidence-dir` — which the
+   * MERIDIAN runs all did. A provenance pointer that does not resolve is worse
+   * than none, because it reads as an audit trail and is not one.
+   */
+  evidenceBaseDir?: string;
+  /**
+   * The operator role this flow was recorded as, when it was not the app's
+   * default. MERIDIAN gates Place Account Hold behind a supervisor, and a
+   * capability that only works as a supervisor should SAY so — otherwise the
+   * catalog advertises an action that escalates for most callers, and the API
+   * has no declared requirement to enforce. Recorded, never inferred: the role
+   * is a fact about how the run happened.
+   */
+  requiresRole?: string;
 }
 
 export interface CompileReport {
@@ -180,15 +197,62 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
           ...base,
           action: { kind: 'setValue', target: buildTarget(id, action.element!, action), value: bindingFor(action.value!, `${id}.value`) },
         };
-      case 'choose':
+      case 'choose': {
+        // Prefer the option's VALUE when a caller param matches one: legacy
+        // labels embed balances and descriptions that change between runs,
+        // while the value attribute is the record's stable identifier. This is
+        // decided from recorded evidence, not guessed.
+        // Resolve what was actually chosen to its underlying value, then bind
+        // the param that equals it. Matching against *any* offered value would
+        // bind every choose step to whichever param happened to come first.
+        const labels = action.element?.options ?? [];
+        const values = action.element?.optionValues ?? [];
+        const chosen = action.option !== undefined && 'literal' in action.option ? action.option.literal : undefined;
+        let chosenValue: string | undefined;
+        if (chosen !== undefined) {
+          if (values.includes(chosen)) chosenValue = chosen;
+          else {
+            const at = labels.indexOf(chosen);
+            if (at >= 0) chosenValue = values[at];
+          }
+        }
+        const byValue = chosenValue !== undefined ? paramEntries.find(([, value]) => value === chosenValue) : undefined;
+        if (byValue) {
+          report.notes.push(
+            `${id}: option bound to {${byValue[0]}} and matched by VALUE — the visible label carries live data and would not survive a balance change`,
+          );
+          return {
+            ...base,
+            action: {
+              kind: 'choose',
+              target: buildTarget(id, action.element!, action),
+              option: { param: byValue[0] },
+              by: 'value',
+            },
+          };
+        }
         return {
           ...base,
-          action: { kind: 'choose', target: buildTarget(id, action.element!, action), option: bindingFor(action.option!, `${id}.option`) },
+          action: {
+            kind: 'choose',
+            target: buildTarget(id, action.element!, action),
+            option: bindingFor(action.option!, `${id}.option`),
+            ...(action.optionBy === 'value' ? { by: 'value' as const } : {}),
+          },
         };
+      }
       case 'read':
         return {
           ...base,
           action: { kind: 'read', target: buildTarget(id, action.element!, action), into: action.outputName! },
+        };
+      case 'readTable':
+        // Addressed by column header over a region, so there is no target to
+        // build. The headers survive verbatim: they are page chrome, not
+        // recorded entity data, so parameterizing them would only break them.
+        return {
+          ...base,
+          action: { kind: 'readTable', columns: action.columns!, into: action.outputName! },
         };
       case 'answerDialog':
         throw new Error('answerDialog steps are not compiled into the spine (declare a recovery instead)');
@@ -260,12 +324,17 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       // key on a stable row anchor × the column header.
       strategies.push({
         s: 'tableCell',
-        rowAnchor: { text: rowAnchorFor(el, `${id}.target.rowAnchor`) },
+        rowAnchor: rowAnchorFor(el, `${id}.target.rowAnchor`),
         columnHeader: el.colHeader,
       });
-    } else if ((el.role === 'textbox' || el.role === 'combobox') && el.label !== undefined) {
+    } else if (el.label !== undefined && el.label !== '') {
+      // Anything carrying a label — a form control, or a value cell named by
+      // its label cell — is addressed by that label first. For a read step
+      // this is what keeps the locator off the value being read.
       strategies.push({ s: 'labelText', label: el.label });
-      strategies.push({ s: 'roleName', role: el.role, name, nameMatch: 'exact' });
+      if (action.kind !== 'read') {
+        strategies.push({ s: 'roleName', role: el.role, name, nameMatch: 'exact' });
+      }
     } else {
       strategies.push({ s: 'roleName', role: el.role, name, nameMatch: 'exact' });
       // A row-anchored fallback only when the anchor is parameterized —
@@ -314,11 +383,18 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     return tokens.map((t) => (/\{[a-zA-Z]/.test(t) || anchors.has(t) ? t : '…')).join(' | ');
   }
 
-  function rowAnchorFor(el: RecordedElement, where: string): string {
+  /**
+   * Pick the row anchor for a table-cell target. Anchors taken from a whole
+   * recorded cell are emitted as `match: 'exact'` — a substring anchor matches
+   * any row merely containing it, which collides when one row's id contains
+   * another's (live example: share `100234-S0001-3` vs `100234-S0001`).
+   */
+  function rowAnchorFor(el: RecordedElement, where: string): { text: string; match?: 'exact' } {
     const tokens = (el.nearText ?? '').split(' | ').map((t) => t.trim()).filter((t) => t && t !== el.name);
-    if (tokens.length === 0) return paramize(el.name, where);
+    if (tokens.length === 0) return { text: paramize(el.name, where) };
     const paramized = tokens.map((t) => paramize(t, where));
-    return paramized.find((t) => /\{[a-zA-Z]/.test(t)) ?? paramized[0]!;
+    const chosen = paramized.find((t) => /\{[a-zA-Z]/.test(t)) ?? paramized[0]!;
+    return { text: chosen, match: 'exact' };
   }
 
   // ---- outcomes: grounded in probe evidence, attached to the step whose
@@ -399,10 +475,28 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
 
   // ---- outputs ----
   const outputs: CapabilityArtifact['outputs'] = {};
-  for (const action of spine.filter((a) => a.kind === 'read')) {
+  // Every extracting action declares its output — a step that reads into an
+  // undeclared output is a schema error, so missing a kind here would fail
+  // compilation rather than ship a capability that silently returns nothing.
+  for (const action of spine.filter((a) => a.kind === 'read' || a.kind === 'readTable')) {
     const hint = inputs.outputHints[action.outputName!] ?? {};
+    // A readTable output is a table STRUCTURALLY, so the action's kind wins
+    // over the hint rather than the other way round: a hint may name an
+    // output's sensitivity, never contradict its shape. (`OutputHint.type`
+    // cannot even express 'table'.) Getting this backwards ships a table
+    // declared `string`, which reads fine on disk and then silently skips
+    // both the per-cell redaction registration and the parse at the API
+    // edge — the caller gets a JSON blob where the contract promised rows.
+    const isTable = action.kind === 'readTable';
+    if (isTable && hint.type) {
+      report.notes.push(
+        `output ${action.outputName}: ignored --output type '${hint.type}'; a read_table output is always a table`,
+      );
+    }
     outputs[action.outputName!] = {
-      type: hint.type ?? inferType(action.readValue ?? ''),
+      // Inferring a type from a table's serialized JSON would only ever
+      // classify the whole table as one string.
+      type: isTable ? 'table' : (hint.type ?? inferType(action.readValue ?? '')),
       description: action.intent,
       sensitivity: hint.sensitivity ?? 'none',
       source: { stepId: stepForAction.get(action.seq)!, transform: 'trim' },
@@ -431,7 +525,7 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     provenance: {
       recordedAt: new Date().toISOString(),
       recordedBy: { kind: 'llm-discovery' as const, model: inputs.model, discoveryRunId: inputs.discoveryRunId },
-      evidenceRef: `evidence/discovery/${inputs.discoveryRunId}`,
+      evidenceRef: `${inputs.evidenceBaseDir ?? 'evidence'}/discovery/${inputs.discoveryRunId}`,
       approval: { state: 'draft' as const },
     },
     params: inputs.paramSpecs,
@@ -443,6 +537,7 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       // The entrypoint navigation is implicit in every capability — declare
       // it so the self-declaration is complete even when no step navigates.
       actionsUsed: [...new Set(['navigate' as const, ...spine.slice(1).map((a) => a.kind)])],
+      ...(inputs.requiresRole !== undefined ? { requiresRole: inputs.requiresRole } : {}),
       maxRisk: spine.some((a) => a.risk === 'irreversible')
         ? ('irreversible' as const)
         : spine.some((a) => a.risk === 'reversible')
@@ -453,6 +548,25 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     successCriteria,
     integrity: { contentHash: 'PENDING' },
   };
+  // Lint: a locator strategy that anchors on REDACTED text is dead weight.
+  // Redaction runs at the recording boundary, so if a caller param or a
+  // classified field appeared in the neighbour text the compiler mined, what
+  // survives into the artifact is a mask — and a mask never matches a live
+  // page, so that rung silently falls through on every replay. Say so, rather
+  // than shipping a locator that looks robust and is not.
+  for (const step of steps) {
+    const target = 'target' in step.action ? step.action.target : undefined;
+    if (!target) continue;
+    target.strategies.forEach((strategy, i) => {
+      const text = 'text' in strategy ? strategy.text : undefined;
+      if (typeof text === 'string' && /\*\*\*|«secret:/.test(text)) {
+        report.notes.push(
+          `${step.id}: strategy ${i} (${strategy.s}) anchors on redacted text and can never match at replay — it will always fall through to the next rung`,
+        );
+      }
+    });
+  }
+
   artifactRaw.integrity.contentHash = computeContentHash(artifactRaw);
   // Round-trip: a compiled artifact is schema-legal or compilation fails.
   const artifact = CapabilityArtifactSchema.parse(artifactRaw);

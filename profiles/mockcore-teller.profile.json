@@ -1,0 +1,32 @@
+{
+  "appId": "mockcore-teller",
+  "vendor": "MockCore",
+  "title": "MockCore Teller v7.2.14 (local, frameset-based)",
+  "baseUrl": "http://localhost:4173",
+  "policy": "policies/default.policy.json",
+
+  "credentials": {
+    "operatorIdEnv": "MOCK_CU_USER",
+    "operatorPasswordEnv": "MOCK_CU_PASS",
+    "defaultRole": "teller",
+    "roles": {
+      "teller": { "idEnv": "MOCK_CU_USER", "passwordEnv": "MOCK_CU_PASS", "description": "The only operator this app models; supervisor authority is proven by PIN on the override screen rather than by a second sign-on." }
+    }
+  },
+
+  "faultInjection": {
+    "kind": "endpoint",
+    "path": "/__faults",
+    "method": "POST",
+    "kinds": ["slow_load", "session_timeout", "permission_denied", "interstitial", "native_dialog", "duplicate_button", "app_error"],
+    "note": "Armed out-of-band against the app's own test endpoint, which the production policy denies to the automation. Contrast with MERIDIAN, which takes a per-request query parameter — the two mechanisms are why fault injection is adapter-shaped rather than a core concern."
+  },
+
+  "dataClassification": {
+    "pii": { "labels": ["Name:", "DOB:", "Address:", "Phone:"] },
+    "financial": { "columns": ["Balance"], "labels": ["Opening Balance"] }
+  },
+
+  "recoveries": [],
+  "anomalies": []
+}

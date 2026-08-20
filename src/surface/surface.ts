@@ -45,5 +45,34 @@ export interface Surface {
   settle(timeoutMs?: number): Promise<void>;
   /** Current top-level location (URL / window identity) for policy checks. */
   currentLocation(): string;
+  /**
+   * Optional: install the classifier that decides which observed elements are
+   * blacked out in evidence captures, so regulated data classified by the app
+   * profile does not persist in images.
+   *
+   * It takes a CALLBACK rather than a ref list because refs are meaningful only
+   * within one observation generation. A caller who classified the previous
+   * observation and handed back integers would be masking by numbers that the
+   * next observation has already reassigned — and the capture that most needs
+   * masking (the one where regulated data first appears) would go out clean,
+   * with the stale refs blacking out unrelated nodes on the capture after it.
+   * The surface invokes this against the observation it is about to capture.
+   *
+   * Optional because it is a property of a capturing surface, not of the seam.
+   */
+  setScreenshotMask?(classify: (observation: Observation) => number[]): void;
+  /**
+   * Optional harness affordance: force the target app's documented runtime
+   * fault on the next request. Optional because it is a property of a driver
+   * that can intercept requests — nothing in a recorded artifact can reach it.
+   */
+  armFaultInjection?(param: string, kind: string): Promise<void>;
+  /**
+   * Drop whatever the surface holds that makes the target treat this as an
+   * established session (cookies, storage). Restarting a run means starting
+   * over; without this, a session-based app skips its own sign-on and the
+   * flow re-enters halfway through.
+   */
+  resetSession?(): Promise<void>;
   close(): Promise<void>;
 }

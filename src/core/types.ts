@@ -34,12 +34,38 @@ export interface ObservedElement {
   bboxPct?: { x: number; y: number; w: number; h: number };
   /** True if the element can be acted on (clicked, typed into, chosen). */
   interactive: boolean;
-  /** Nearby anchor text (row text, preceding label) to disambiguate repeated controls. */
+  /**
+   * Nearby anchor text (row text, preceding label) to disambiguate repeated
+   * controls. Truncated to a payload budget ON A CELL BOUNDARY — a value it
+   * contains is present in full, never as a prefix, because a partial value
+   * cannot be matched by the redactor and would be written out in the clear.
+   */
   nearText?: string;
   /** For table cells: the column header this cell sits under, if detectable. */
   colHeader?: string;
+  /**
+   * For table cells: identity of the row this cell belongs to, stable within
+   * one observation (table ordinal + row ordinal). Row TEXT cannot serve as
+   * identity — a ledger's duplicate posting repeats it verbatim, and it is
+   * truncated besides — so anything grouping cells into rows must key on this
+   * and treat `nearText` only as a fallback for observations without it.
+   */
+  rowId?: string;
+  /**
+   * For table cells: the row's cells as discrete strings, each one WHOLE.
+   * `nearText` joins them with ' | ' and truncates, so a cell whose own text
+   * contains '|' (or a wide row) cannot be recovered from it by splitting.
+   * The walker bounds this by dropping trailing cells, never by cutting one:
+   * a half a value is unmatchable by the redactor's exact-string needles and
+   * would ship in cleartext. So it may be a PREFIX of the row's cells, but
+   * every string in it is exactly what that cell says.
+   */
+  cellTexts?: string[];
   /** For options/selects: the choices offered. */
   options?: string[];
+  /** Underlying values of those choices — often the stable identifier when
+   * the visible label carries volatile data. */
+  optionValues?: string[];
 }
 
 /** A held (not yet answered) native dialog surfaced into the observation. */
@@ -88,8 +114,16 @@ export type SemanticAction =
   | { kind: 'navigate'; url: string }
   | { kind: 'activate'; ref: number }
   | { kind: 'setValue'; ref: number; value: string }
-  | { kind: 'choose'; ref: number; option: string }
+  | { kind: 'choose'; ref: number; option: string; by?: 'label' | 'value' | undefined }
   | { kind: 'read'; ref: number }
+  /**
+   * Read a whole table (rows × named columns) rather than one cell — what
+   * "list this member's shares, balances and statuses" actually needs.
+   * Addressed by column names rather than a ref, because the table is a
+   * region of the surface, not a single control; a desktop driver would
+   * satisfy it from a native grid.
+   */
+  | { kind: 'readTable'; columns: string[]; frame?: { name?: string | undefined; urlPattern?: string | undefined } }
   | { kind: 'answerDialog'; accept: boolean; promptText?: string };
 
 /** What an action returns: read actions yield the extracted value. */

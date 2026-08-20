@@ -264,10 +264,54 @@ describe('compileTrace', () => {
     if (read.action.kind !== 'read') throw new Error('unexpected');
     expect(read.action.target.strategies[0]).toEqual({
       s: 'tableCell',
-      rowAnchor: { text: 'S00' },
+      // 'exact': the anchor is a whole recorded cell, so it must BE that cell —
+      // a substring anchor collides when one row's id contains another's.
+      rowAnchor: { text: 'S00', match: 'exact' },
       columnHeader: 'Balance',
     });
     expect(artifact.outputs['savingsBalance']).toMatchObject({ type: 'money', sensitivity: 'pii' });
+  });
+
+  it('compiles a table read into a targetless readTable step declaring a table output', () => {
+    // A readTable is addressed by column header, not by a control: the step
+    // carries no target, and the output it feeds is a table regardless of what
+    // the serialized rows happen to look like.
+    const tableTrace = structuredClone(trace);
+    tableTrace.actions.push(
+      act({
+        kind: 'readTable', intent: 'List the shares with balances and statuses', risk: 'read',
+        columns: ['Share', 'Description', 'Balance', 'Status'],
+        outputName: 'shares',
+        readValue: JSON.stringify([{ Share: 'S00', Description: 'Primary Savings', Balance: '$4,821.97', Status: 'OPEN' }]),
+        before: detailDigest, after: detailDigest,
+      }),
+    );
+    const { artifact } = compileTrace({
+      trace: tableTrace,
+      paramSpecs,
+      callerParamValues: { memberId: '12345' },
+      outputHints: { savingsBalance: { type: 'money', sensitivity: 'pii' } },
+      baseUrl: BASE,
+      model: 'claude-opus-4-8',
+      discoveryRunId: 'testrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    const step = artifact.steps.find((s) => s.action.kind === 'readTable')!;
+    expect(step.action).toEqual({
+      kind: 'readTable',
+      columns: ['Share', 'Description', 'Balance', 'Status'],
+      into: 'shares',
+    });
+    expect(step.post).toEqual([]); // a read observes; it does not transition state
+    expect(artifact.outputs['shares']).toEqual({
+      type: 'table',
+      description: 'List the shares with balances and statuses',
+      sensitivity: 'none',
+      source: { stepId: step.id, transform: 'trim' },
+    });
+    expect(artifact.policy.actionsUsed).toContain('readTable');
+    expect(computeContentHash(artifact)).toBe(artifact.integrity.contentHash);
   });
 
   it('attaches declared outcomes to the step whose control triggered them in the probe', () => {

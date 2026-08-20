@@ -1,0 +1,9 @@
+{
+  "allowedOrigins": ["https://web-sample.interface-hiring.com"],
+  "allowedPathPrefixes": [],
+  "deniedPathPrefixes": ["/settings"],
+  "allowedActions": ["navigate", "activate", "setValue", "choose", "read", "readTable"],
+  "irreversibleActionMode": "escalate",
+  "maxStepsPerRun": 40,
+  "maxRecoveryAttemptsPerRun": 5
+}

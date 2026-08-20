@@ -90,7 +90,22 @@ export function matchStrategy(loc: Locator, target: TargetRef, obs: Observation)
       case 'tableCell': {
         if (el.role !== 'cell' && el.role !== 'rowheader') break;
         if (el.colHeader === undefined || norm(el.colHeader) !== norm(loc.columnHeader)) break;
-        if (el.nearText !== undefined && norm(el.nearText).includes(norm(loc.rowAnchor.text))) score = 0.9;
+        if (el.nearText === undefined) break;
+        const anchor = norm(loc.rowAnchor.text);
+        if (loc.rowAnchor.match === 'exact') {
+          // The anchor must BE one of the row's cells, not merely appear
+          // somewhere in the row's text — see the schema note on id collisions.
+          //
+          // `cellTexts` is the authoritative list of whole cells. Splitting
+          // `nearText` is the fallback for observations recorded before that
+          // field existed, and it is lossy in exactly the way that matters
+          // here: a cell whose own text contains a '|' splits into two, so a
+          // whole-cell anchor can fail to match the cell it names.
+          const cells = el.cellTexts ?? el.nearText.split('|');
+          if (cells.some((cell) => norm(cell) === anchor)) score = 0.95;
+        } else if (norm(el.nearText).includes(anchor)) {
+          score = 0.9;
+        }
         break;
       }
       case 'structural':

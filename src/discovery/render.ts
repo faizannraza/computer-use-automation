@@ -7,6 +7,35 @@ import type { Observation, ObservedElement } from '../core/types.js';
 
 const MAX_ELEMENTS = 150;
 const MAX_TEXT = 1500;
+const MAX_ROW_TEXT = 80;
+
+/**
+ * Shorten a row's text on a CELL boundary, never inside one.
+ *
+ * Redaction is exact-string substitution over registered needles, applied at
+ * the write boundary. A value cut mid-string no longer matches its needle, so
+ * a length limit applied carelessly turns into a data leak: truncating
+ * `E-mail: | ada.lovelace@example.com` to 80 characters once shipped
+ * `ada.lovelacn@example.c` in cleartext — one character short of matching, and
+ * enough to identify the member. So a cell is included whole or not at all.
+ *
+ * `cellTexts` is the authoritative list of whole cells. Falling back to
+ * splitting `nearText` is for observations recorded before that field existed;
+ * it is imperfect (a cell containing a `|` shifts the split) but it is still
+ * cell-aligned, which is the property that matters here.
+ */
+function rowTextForModel(el: ObservedElement): string {
+  const cells = el.cellTexts ?? el.nearText?.split(' | ') ?? [];
+  const kept: string[] = [];
+  let used = 0;
+  for (const cell of cells) {
+    const cost = used === 0 ? cell.length : cell.length + 3;
+    if (used + cost > MAX_ROW_TEXT) break;
+    kept.push(cell);
+    used += cost;
+  }
+  return kept.join(' | ');
+}
 
 function renderElement(el: ObservedElement): string {
   const bits: string[] = [`[${el.ref}] ${el.role} ${JSON.stringify(el.name)}`];
@@ -14,7 +43,10 @@ function renderElement(el: ObservedElement): string {
   if (el.value !== undefined && el.value !== '') bits.push(`value=${JSON.stringify(el.value)}`);
   if (el.options !== undefined) bits.push(`options=[${el.options.map((o) => JSON.stringify(o)).join(', ')}]`);
   if (el.colHeader !== undefined) bits.push(`col=${JSON.stringify(el.colHeader)}`);
-  if (el.nearText !== undefined && el.nearText !== el.name) bits.push(`row=${JSON.stringify(el.nearText.slice(0, 80))}`);
+  if (el.nearText !== undefined && el.nearText !== el.name) {
+    const row = rowTextForModel(el);
+    if (row) bits.push(`row=${JSON.stringify(row)}`);
+  }
   const frame = el.framePath.map((f) => f.name ?? '?').join('/');
   if (frame) bits.push(`frame=${frame}`);
   return '  ' + bits.join(' ');

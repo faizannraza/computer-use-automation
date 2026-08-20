@@ -1,4 +1,6 @@
 /** The artifact schema's own guarantees: integrity, contract cross-checks. */
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CapabilityArtifactSchema,
@@ -9,6 +11,23 @@ import {
 } from '../src/schema/capability.js';
 
 const GOLD = 'tests/fixtures/member.readSavingsBalance.gold.json';
+
+describe('the hash rule (tripwire for every future schema change)', () => {
+  // loadCapability parses THEN hashes the parsed object, so a new `.default()`
+  // field anywhere in the schema silently rewrites canonical JSON for every
+  // artifact ever produced and breaks its stored hash — making committed
+  // capabilities unreplayable. New fields must be `.optional()`.
+  it('every shipped artifact still hash-verifies', () => {
+    const shipped = readdirSync('capabilities').filter((f) => f.endsWith('.json'));
+    expect(shipped.length).toBeGreaterThan(0);
+    for (const file of shipped) {
+      const { artifact, verified } = loadCapability(path.join('capabilities', file));
+      // Named per file so a failure says WHICH artifact broke.
+      expect(`${file}=${verified}`).toBe(`${file}=true`);
+      expect(computeContentHash(artifact)).toBe(artifact.integrity.contentHash);
+    }
+  });
+});
 
 describe('capability artifact', () => {
   it('the gold artifact parses and its content hash verifies', () => {

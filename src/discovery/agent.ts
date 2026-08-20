@@ -17,6 +17,8 @@ import type { Operator } from '../hitl/sessionController.js';
 import { ActionGate } from '../policy/actionGate.js';
 import type { Policy } from '../policy/policy.js';
 import { Redactor, maskValue } from '../policy/redact.js';
+import { classifiedElementRefs, classifyObservation, effectiveParamSensitivity } from '../policy/classify.js';
+import type { AppProfile } from '../profile/appProfile.js';
 import type { ParamSpec } from '../schema/capability.js';
 import { PlaywrightWebSurface } from '../surface/web/playwrightSurface.js';
 import { CapabilityArtifactSchema, computeContentHash } from '../schema/capability.js';
@@ -41,6 +43,19 @@ export interface DiscoveryOptions {
   saveDir?: string;
   app?: { appId: string; vendor: string };
   artifactVersion?: string;
+  /**
+   * Per-invocation values for `source: 'env'` params, keyed by env var name —
+   * the same role indirection replay uses. Discovery and replay must resolve
+   * credentials identically, or a flow recorded as one operator would replay
+   * as another.
+   */
+  envOverrides?: Record<string, string>;
+  /** The target app's profile — supplies the field classification that keeps
+   * regulated data out of the trace, the transcript and the screenshots. */
+  profile?: AppProfile;
+  /** Non-default operator role this run signs on as; recorded on the artifact
+   * so the capability declares the authority it actually needs. */
+  requiresRole?: string;
   /**
    * Human-in-the-loop for discovery: when present, irreversible clicks pause
    * the recording for approval on the live session (the same control-token
@@ -69,7 +84,7 @@ Rules:
 - Stay on the application origin you were given. Policy blocks everything else, including any /__ paths.
 - If a native dialog opens, read its text and answer_dialog deliberately.
 - Clicks that would commit a permanent business change (posting transactions, final confirmations) must be marked irreversible=true. Under policy such a click may pause while a human operator reviews it: if it is approved it happens exactly once, and if it is declined you must not retry it — steer another way or give_up.
-- Extract requested data with read into a well-named output.
+- Extract requested data into a well-named output: read for a single value, and read_table when the data is a TABLE (e.g. every share with its balance and status) — one read_table beats many reads, and it keeps working when the row count differs between records.
 - Never restate sensitive on-screen values (balances, member PII) in your intents, descriptions, or outcome markers — refer to them by output name. This is regulated financial data.
 - If the task asks you to probe an exceptional state (e.g. a not-found case), call begin_probe first, perform the probe, then declare_outcome with a marker you can literally see on screen. Probe actions are excluded from the replayable flow.
 - If you took a wrong turn, navigate back on the app's own controls and use revise to retract the wrong recorded actions.
@@ -83,10 +98,24 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   // Resolve all params up front (env-sourced ones come from process.env).
   const paramValues: Record<string, string> = {};
   for (const [name, spec] of Object.entries(opts.paramSpecs)) {
-    const raw = spec.source === 'env' ? process.env[spec.env!] : opts.paramValues[name];
-    if (raw === undefined || raw === '') throw new Error(`param '${name}' has no value (${spec.source})`);
+    const raw =
+      spec.source === 'env'
+        ? (opts.envOverrides?.[spec.env!] ?? process.env[spec.env!])
+        : opts.paramValues[name];
+    if (raw === undefined || raw === '') {
+      throw new Error(
+        spec.source === 'env'
+          ? `param '${name}' resolves from env var ${spec.env} (or an --app profile role), and neither supplied a value`
+          : `param '${name}' has no value`,
+      );
+    }
     paramValues[name] = raw;
-    redactor.register(name, raw, spec.sensitivity);
+    // Same rule as replay: the profile's field classification may RAISE a
+    // param's declared sensitivity, never lower it. A recording is where a
+    // mis-typed `--param email=...:none` would otherwise write a real address
+    // into the transcript before any observation exists for the classification
+    // sweep to catch — and the sweep never sees a caller input at all.
+    redactor.register(name, raw, effectiveParamSensitivity(name, spec.sensitivity, opts.profile?.dataClassification));
   }
   const callerParamValues = Object.fromEntries(
     Object.entries(opts.paramSpecs)
@@ -107,6 +136,11 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
     getHolder: () => controller?.holder() ?? 'agent',
     onEvent: (e) => log.event('gate', { kind: e.action.kind, decision: e.decision, location: e.location, risk: e.context.risk }),
   });
+  // Screenshot masking is installed on the surface, not applied per tool call:
+  // it must run inside the capture that shows the regulated data, not against
+  // the previous observation's (already reassigned) refs.
+  const classification = opts.profile?.dataClassification;
+  if (classification) surface.setScreenshotMask((observation) => classifiedElementRefs(observation, classification));
   const executor = new DiscoveryToolExecutor({
     surface,
     gate,
@@ -117,6 +151,14 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
     outputHints: opts.outputHints,
     runId: log.runId,
     ...(controller !== undefined ? { controller } : {}),
+    ...(opts.profile?.dataClassification !== undefined
+      ? {
+          classify: (observation) => {
+            const registered = classifyObservation(observation, opts.profile?.dataClassification, redactor);
+            if (registered > 0) log.event('classified_fields', { registered });
+          },
+        }
+      : {}),
   });
   const client = new Anthropic();
   const usage = { inputTokens: 0, outputTokens: 0, turns: 0 };
@@ -125,7 +167,10 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
     goal: opts.goal,
     model,
     params: Object.fromEntries(
-      Object.entries(opts.paramSpecs).map(([n, s]) => [n, maskValue(n, paramValues[n]!, s.sensitivity)]),
+      Object.entries(opts.paramSpecs).map(([n, s]) => [
+        n,
+        maskValue(n, paramValues[n]!, effectiveParamSensitivity(n, s.sensitivity, opts.profile?.dataClassification)),
+      ]),
     ),
   });
 
@@ -243,6 +288,8 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
       discoveryRunId: log.runId,
       app: opts.app ?? { appId: 'mockcore-teller', vendor: 'MockCore' },
       version: opts.artifactVersion ?? '1.0.0',
+      ...(opts.evidenceBaseDir !== undefined ? { evidenceBaseDir: opts.evidenceBaseDir } : {}),
+      ...(opts.requiresRole !== undefined ? { requiresRole: opts.requiresRole } : {}),
     });
   } catch (err) {
     const reason = `compile failed: ${err instanceof Error ? err.message : String(err)}`;

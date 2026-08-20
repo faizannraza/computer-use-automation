@@ -55,6 +55,14 @@ export interface ToolExecutorDeps {
   controller?: SessionController;
   /** Discovery run id, carried on interventions so evidence ties together. */
   runId: string;
+  /**
+   * Field classification sweep, run over every observation before anything is
+   * recorded. Discovery sees MORE regulated data than replay — the model is
+   * shown whole screens — so the sweep matters here at least as much: without
+   * it, member names and balances the flow never declared reach the trace and
+   * the model transcript.
+   */
+  classify?: (observation: Observation) => void;
 }
 
 export class DiscoveryToolExecutor {
@@ -79,15 +87,15 @@ export class DiscoveryToolExecutor {
     try {
       switch (name) {
         case 'observe': {
-          const obs = await surface.observe();
+          const obs = await this.observeClassified();
           log.screenshot('observe', obs.screenshot);
           return { blocks: renderObservationBlocks(obs) };
         }
         case 'navigate': {
-          const before = digestOf(surface.lastObservation() ?? (await surface.observe()));
+          const before = digestOf(surface.lastObservation() ?? (await this.observeClassified()));
           await gate.execute({ kind: 'navigate', url: String(input['url']) }, { risk: 'read' });
           await surface.settle();
-          const obs = await surface.observe();
+          const obs = await this.observeClassified();
           const shot = log.screenshot('navigate', obs.screenshot);
           recorder.record({
             kind: 'navigate',
@@ -135,7 +143,7 @@ export class DiscoveryToolExecutor {
             // identity — the model's intent line is context, not the thing
             // being approved. The element is re-located in the fresh
             // observation by identity; if the screen changed, nothing runs.
-            const freshObs = await surface.observe();
+            const freshObs = await this.observeClassified();
             const matches = freshObs.elements.filter((e) => identityKey(e) === identityKey(el));
             if (matches.length === 0) {
               // The escalation observe() renumbered refs — always hand the
@@ -172,14 +180,14 @@ export class DiscoveryToolExecutor {
               suggestedResolution:
                 'Review the pending irreversible action in the live window — do NOT perform it yourself. approve = the recording performs it exactly once; abort = refuse it (the model must steer another way).',
               options: ['approve', 'abort'],
-              observationSummary: summarizeObservation(freshObs),
+              observationSummary: summarizeObservation(freshObs, (t) => this.deps.redactor.apply(t)),
               ...(shot !== undefined ? { screenshotRef: shot } : {}),
             });
             const record = controller.records[controller.records.length - 1]!;
             if (resolution.action !== 'approve') {
               this.refusedTargets.add(refusalKey(target));
               recorder.recordDeclined(record.id, sanitizeForOperator(String(input['intent'])));
-              const postDeclineObs = await surface.observe();
+              const postDeclineObs = await this.observeClassified();
               return {
                 blocks: [
                   { type: 'text', text: 'The human operator DECLINED this irreversible action. Do not retry it — with any flag. Accomplish the goal another way, or give_up explaining what was refused. Fresh observation:' },
@@ -193,8 +201,27 @@ export class DiscoveryToolExecutor {
             // The approval binds to the state the human REVIEWED — so before
             // acting, re-observe and re-locate the control; if the identity
             // is no longer unique on the current screen, refuse to act.
-            const postApprovalObs = await surface.observe();
+            const postApprovalObs = await this.observeClassified();
             const postMatches = postApprovalObs.elements.filter((e) => identityKey(e) === identityKey(el));
+            // Identity is role + name + label + frame, which a legacy console
+            // repeats verbatim on every record of the same TYPE — the "Post
+            // Transfer" button on member A's screen is identical to the one on
+            // member B's. So a unique match is not enough: if the human
+            // navigated the live session during the handoff, the approved
+            // action would execute against a different account. Require the
+            // location to be the one they reviewed as well.
+            if (postApprovalObs.location !== freshObs.location) {
+              return {
+                blocks: [
+                  {
+                    type: 'text',
+                    text: `The session moved to a different screen during the approval (${freshObs.location} → ${postApprovalObs.location}) — the action was NOT performed, because the approval was given for the earlier screen. Observe the current state and decide again:`,
+                  },
+                  ...renderObservationBlocks(postApprovalObs),
+                ],
+                isError: true,
+              };
+            }
             if (postMatches.length !== 1) {
               return {
                 blocks: [
@@ -211,7 +238,7 @@ export class DiscoveryToolExecutor {
             await gate.execute({ kind: 'activate', ref: approvedTarget.ref }, { ...ctx, approved: true });
           }
           await surface.settle();
-          const obs = await surface.observe();
+          const obs = await this.observeClassified();
           const shot = log.screenshot('click', obs.screenshot);
           recorder.record({
             kind: 'activate',
@@ -268,8 +295,13 @@ export class DiscoveryToolExecutor {
         case 'choose': {
           const { obs: beforeObs, el } = this.requireRef(input);
           const option = String(input['option']);
+          // A legacy select's visible label often embeds live data (a balance);
+          // its value attribute carries the stable id. If the model named a
+          // value, honour it as a value — and record which it was, so the
+          // compiler can emit the durable form.
+          const by: 'label' | 'value' = (el.optionValues ?? []).includes(option) ? 'value' : 'label';
           await gate.execute(
-            { kind: 'choose', ref: el.ref, option },
+            { kind: 'choose', ref: el.ref, option, by },
             { risk: 'reversible', frameUrl: frameUrlOf(el) },
           );
           const digest = digestOf(beforeObs);
@@ -279,10 +311,11 @@ export class DiscoveryToolExecutor {
             risk: 'reversible',
             element: recordedElementOf(el),
             option: { literal: option },
+            optionBy: by,
             before: digest,
             after: digest,
           });
-          return textOut(`Chose ${JSON.stringify(option)} in [${el.ref}].`);
+          return textOut(`Chose ${JSON.stringify(option)} in [${el.ref}] (matched by ${by}).`);
         }
         case 'read': {
           const { obs: beforeObs, el } = this.requireRef(input);
@@ -317,12 +350,57 @@ export class DiscoveryToolExecutor {
           }
           return textOut(`Read ${JSON.stringify(res.readValue ?? '')} as output '${outputName}'.`);
         }
+        case 'read_table': {
+          const outputName = String(input['output_name']);
+          if (!/^[a-z][a-zA-Z0-9]*$/.test(outputName)) return textOut('output_name must be lowerCamelCase.', true);
+          const requested = input['columns'];
+          if (!Array.isArray(requested) || requested.length === 0 || !requested.every((c) => typeof c === 'string' && c.trim() !== '')) {
+            return textOut('columns must be a non-empty array of column header strings.', true);
+          }
+          const columns = requested as string[];
+          const hintSensitivity = outputHints[outputName]?.sensitivity ?? 'none';
+          // A table read is a region read over the latest observation, not an
+          // action on a ref — so it needs an observation to exist, but must
+          // not force a fresh one (that would renumber refs the model holds).
+          const beforeObs = surface.lastObservation() ?? (await this.observeClassified());
+          const res = await gate.execute({ kind: 'readTable', columns }, { risk: 'read' });
+          const digest = digestOf(beforeObs);
+          recorder.record({
+            kind: 'readTable',
+            intent: String(input['intent']),
+            risk: 'read',
+            columns,
+            outputName,
+            ...(res.readValue !== undefined ? { readValue: res.readValue } : {}),
+            before: digest,
+            after: digest,
+          });
+          // Same rule as a single read: a sensitive extraction is registered
+          // with the redactor the moment it exists and reaches the model only
+          // masked — a value the model never sees is one it cannot echo.
+          if ((hintSensitivity === 'pii' || hintSensitivity === 'secret') && res.readValue !== undefined && res.readValue !== '') {
+            redactor.register(outputName, res.readValue, hintSensitivity);
+            const masked = maskValue(outputName, res.readValue, hintSensitivity);
+            return textOut(
+              `Read a ${hintSensitivity}-classified table (${JSON.stringify(masked)}) as output '${outputName}'. The raw value is withheld from this transcript by policy — do not attempt to restate it from the screen.`,
+            );
+          }
+          // The confirmation carries the SHAPE of the result, not the table:
+          // a long table would crowd out the screen the model still has to
+          // work with, and every later turn would re-pay for those tokens.
+          const rows = parsedRows(res.readValue);
+          const preview = rows.length > 0 ? truncate(JSON.stringify(rows[0]), 300) : '(none — no cells sat under those column headers)';
+          return textOut(
+            `Read ${rows.length} row(s) into output '${outputName}' with columns [${columns.join(', ')}]. First row: ${preview}` +
+              (rows.length > 1 ? ` The other ${rows.length - 1} row(s) are captured in the output and left out of this transcript.` : ''),
+          );
+        }
         case 'answer_dialog': {
-          const before = digestOf(surface.lastObservation() ?? (await surface.observe()));
+          const before = digestOf(surface.lastObservation() ?? (await this.observeClassified()));
           const accept = input['accept'] === true;
           await gate.execute({ kind: 'answerDialog', accept }, { risk: 'reversible' });
           await surface.settle();
-          const obs = await surface.observe();
+          const obs = await this.observeClassified();
           recorder.record({
             kind: 'answerDialog',
             intent: String(input['intent']),
@@ -343,7 +421,7 @@ export class DiscoveryToolExecutor {
           const code = String(input['code']);
           const marker = String(input['marker']);
           if (!OUTCOME_CODE_RE.test(code)) return textOut('code must be SCREAMING_SNAKE.', true);
-          const obs = surface.lastObservation() ?? (await surface.observe());
+          const obs = surface.lastObservation() ?? (await this.observeClassified());
           if (!obs.visibleText.toLowerCase().includes(marker.toLowerCase())) {
             return textOut(`Marker ${JSON.stringify(marker)} is NOT visible on the current screen — declare only states you are observing.`, true);
           }
@@ -382,6 +460,13 @@ export class DiscoveryToolExecutor {
     }
   }
 
+  /** Observe, then classify before the observation can reach any writer. */
+  private async observeClassified(): Promise<Observation> {
+    const observation = await this.deps.surface.observe();
+    this.deps.classify?.(observation);
+    return observation;
+  }
+
   private requireRef(input: Record<string, unknown>): { obs: Observation; el: Observation['elements'][number] } {
     const obs = this.deps.surface.lastObservation();
     if (!obs) throw new Error('no observation yet — call observe first');
@@ -394,6 +479,23 @@ export class DiscoveryToolExecutor {
 
 function textOut(text: string, isError = false): ToolOutcome {
   return { blocks: [{ type: 'text', text }], ...(isError ? { isError: true } : {}) };
+}
+
+/** The rows a readTable produced, as the surface serialized them. A surface
+ * that answered with something else is summarized as zero rows rather than
+ * ending the run — the recorded value is unaffected either way. */
+function parsedRows(readValue: string | undefined): Record<string, string>[] {
+  if (readValue === undefined || readValue === '') return [];
+  try {
+    const parsed: unknown = JSON.parse(readValue);
+    return Array.isArray(parsed) ? (parsed as Record<string, string>[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max)}…` : s;
 }
 
 function frameUrlOf(el: Observation['elements'][number]): string | undefined {

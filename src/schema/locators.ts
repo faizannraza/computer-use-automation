@@ -56,7 +56,23 @@ export const LocatorSchema = z.discriminatedUnion('s', [
   z
     .object({
       s: z.literal('tableCell'),
-      rowAnchor: z.object({ text: z.string() }).strict(),
+      rowAnchor: z
+        .object({
+          text: z.string(),
+          /**
+           * How the anchor matches a row. 'exact' requires a cell in the row
+           * whose OWN text equals the anchor; the default (absent) matches any
+           * row whose text CONTAINS it.
+           *
+           * Substring matching collides when one row's identifier contains
+           * another's — observed live: a share `100234-S0001-3` made the
+           * anchor `100234-S0001` match two different shares' balances, and
+           * the engine correctly refused to guess between them. Optional (not
+           * defaulted) so existing artifacts keep their content hashes.
+           */
+          match: z.enum(['contains', 'exact']).optional(),
+        })
+        .strict(),
       columnHeader: z.string(),
     })
     .strict(),
