@@ -106,6 +106,11 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     const id = `s${stepNo}`;
     stepForAction.set(action.seq, id);
     steps.push(buildStep(id, action, stepNo === 1));
+    if (action.approvedIntervention !== undefined) {
+      report.notes.push(
+        `${id}: irreversible action was human-approved during discovery (intervention ${action.approvedIntervention}) — replay will escalate it the same way under the default policy`,
+      );
+    }
   }
 
   /** Innermost named frame the action's element lived in (undefined = main frame / navigate). */

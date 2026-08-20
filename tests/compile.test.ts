@@ -231,6 +231,25 @@ describe('compileTrace', () => {
     expect(normalReport.notes.every((n) => !n.includes('marker was parameterized'))).toBe(true);
   });
 
+  it('surfaces human-approved discovery actions in the compile report', () => {
+    const approvedTrace = structuredClone(trace);
+    const search = approvedTrace.actions.find((a) => a.intent === 'Run the search')!;
+    search.risk = 'irreversible';
+    search.approvedIntervention = 'int-01';
+    const { report } = compileTrace({
+      trace: approvedTrace,
+      paramSpecs,
+      callerParamValues: { memberId: '12345' },
+      outputHints: { savingsBalance: { type: 'money', sensitivity: 'pii' } },
+      baseUrl: BASE,
+      model: 'claude-opus-4-8',
+      discoveryRunId: 'testrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(report.notes.some((n) => n.includes('human-approved during discovery') && n.includes('int-01'))).toBe(true);
+  });
+
   it('parameterizes success criteria and keeps them from the final spine state', () => {
     const { artifact } = compiled();
     expect(artifact.successCriteria.length).toBeGreaterThan(0);

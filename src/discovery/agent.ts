@@ -12,6 +12,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import path from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { RunLog } from '../evidence/runLog.js';
+import { SessionController } from '../hitl/sessionController.js';
+import type { Operator } from '../hitl/sessionController.js';
 import { ActionGate } from '../policy/actionGate.js';
 import type { Policy } from '../policy/policy.js';
 import { Redactor, maskValue } from '../policy/redact.js';
@@ -39,6 +41,14 @@ export interface DiscoveryOptions {
   saveDir?: string;
   app?: { appId: string; vendor: string };
   artifactVersion?: string;
+  /**
+   * Human-in-the-loop for discovery: when present, irreversible clicks pause
+   * the recording for approval on the live session (the same control-token
+   * handoff replay uses) — which is what makes risky flows DISCOVERABLE
+   * rather than hand-authored. Without it, the gate's refusal reaches the
+   * model as a tool error and it must steer around the action.
+   */
+  operator?: Operator;
 }
 
 export interface DiscoveryRunResult {
@@ -58,7 +68,7 @@ Rules:
 - Parameters: the task lists named parameters. When a field should receive a parameter's value, call type with param=<name> instead of literal text — always for credentials/secrets (their values are injected by the harness; you never see them), and for any value the capability should take as an input at replay time.
 - Stay on the application origin you were given. Policy blocks everything else, including any /__ paths.
 - If a native dialog opens, read its text and answer_dialog deliberately.
-- Clicks that would commit a permanent business change (posting transactions, final confirmations) must be marked irreversible=true.
+- Clicks that would commit a permanent business change (posting transactions, final confirmations) must be marked irreversible=true. Under policy such a click may pause while a human operator reviews it: if it is approved it happens exactly once, and if it is declined you must not retry it — steer another way or give_up.
 - Extract requested data with read into a well-named output.
 - Never restate sensitive on-screen values (balances, member PII) in your intents, descriptions, or outcome markers — refer to them by output name. This is regulated financial data.
 - If the task asks you to probe an exceptional state (e.g. a not-found case), call begin_probe first, perform the probe, then declare_outcome with a marker you can literally see on screen. Probe actions are excluded from the replayable flow.
@@ -87,10 +97,24 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
   const log = new RunLog('discovery', { baseDir: opts.evidenceBaseDir ?? 'evidence', redactor });
   const recorder = new Recorder(opts.goal);
   const surface = await PlaywrightWebSurface.launch({ headed: opts.headed ?? false });
+  // Discovery gets the same control-token wiring as replay: while a human
+  // holds the session, the gate locks the recording out too.
+  const controller = opts.operator ? new SessionController(surface, log, opts.operator) : undefined;
   const gate = new ActionGate(opts.policy, surface, {
+    getHolder: () => controller?.holder() ?? 'agent',
     onEvent: (e) => log.event('gate', { kind: e.action.kind, decision: e.decision, location: e.location, risk: e.context.risk }),
   });
-  const executor = new DiscoveryToolExecutor({ surface, gate, recorder, log, redactor, paramValues, outputHints: opts.outputHints });
+  const executor = new DiscoveryToolExecutor({
+    surface,
+    gate,
+    recorder,
+    log,
+    redactor,
+    paramValues,
+    outputHints: opts.outputHints,
+    runId: log.runId,
+    ...(controller !== undefined ? { controller } : {}),
+  });
   const client = new Anthropic();
   const usage = { inputTokens: 0, outputTokens: 0, turns: 0 };
 

@@ -43,6 +43,9 @@ export interface RecordedAction {
   option?: RecordedValue;
   outputName?: string;
   readValue?: string;
+  /** Intervention id when a human approved this (irreversible) action during
+   * discovery — provenance the compiler surfaces in its report. */
+  approvedIntervention?: string;
   /** True while an exceptional-state probe is active — excluded from the step spine. */
   probe: boolean;
   /** Which probe (outcome code) this action belongs to, when probe is true. */

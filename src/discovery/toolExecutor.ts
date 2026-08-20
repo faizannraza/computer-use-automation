@@ -11,10 +11,12 @@
  */
 import type { Observation } from '../core/types.js';
 import type { RunLog } from '../evidence/runLog.js';
+import type { SessionController } from '../hitl/sessionController.js';
 import type { ActionGate } from '../policy/actionGate.js';
 import { PolicyViolation } from '../policy/actionGate.js';
 import type { Redactor } from '../policy/redact.js';
 import { maskValue } from '../policy/redact.js';
+import { summarizeObservation } from '../replay/detectors.js';
 import type { OutputHint } from './compile.js';
 import type { Recorder } from './recorder.js';
 import { digestOf, recordedElementOf } from './recorder.js';
@@ -43,6 +45,16 @@ export interface ToolExecutorDeps {
   /** Resolved values for every declared param (env-sourced ones included). */
   paramValues: Record<string, string>;
   outputHints: Record<string, OutputHint>;
+  /**
+   * Human-in-the-loop for DISCOVERY: when present, an irreversible click that
+   * the gate refuses with RISK_NEEDS_ESCALATION pauses the recording and
+   * routes the same approve_risky intervention replay uses — so risky flows
+   * can be discovered, not only replayed. Without it, the model receives the
+   * policy refusal as a tool error and must steer (the pre-HITL behavior).
+   */
+  controller?: SessionController;
+  /** Discovery run id, carried on interventions so evidence ties together. */
+  runId: string;
 }
 
 export class DiscoveryToolExecutor {
@@ -84,10 +96,44 @@ export class DiscoveryToolExecutor {
         case 'click': {
           const { obs: beforeObs, el } = this.requireRef(input);
           const irreversible = input['irreversible'] === true;
-          await gate.execute(
-            { kind: 'activate', ref: el.ref },
-            { risk: irreversible ? 'irreversible' : 'reversible', frameUrl: frameUrlOf(el) },
-          );
+          const ctx = { risk: irreversible ? ('irreversible' as const) : ('reversible' as const), frameUrl: frameUrlOf(el) };
+          let approvedIntervention: string | undefined;
+          try {
+            await gate.execute({ kind: 'activate', ref: el.ref }, ctx);
+          } catch (err) {
+            const controller = this.deps.controller;
+            if (!(err instanceof PolicyViolation) || err.code !== 'RISK_NEEDS_ESCALATION' || controller === undefined) {
+              throw err;
+            }
+            // Discovery-time escalation: the SAME approve_risky handoff replay
+            // uses — control token flips, the human decides on the live
+            // session, and the intervention is written to evidence. On
+            // approve, the same action executes exactly once with approval
+            // attached; the recorded action carries the intervention id so
+            // the compiled artifact's provenance shows a human approved it.
+            const shot = log.screenshot('intervention', beforeObs.screenshot);
+            const resolution = await controller.escalate({
+              kind: 'approve_risky',
+              capabilityId: '(discovery)',
+              version: '—',
+              runId: this.deps.runId,
+              stepIntent: String(input['intent']),
+              reason: err.message,
+              suggestedResolution:
+                'Review the pending irreversible action in the live window. approve = the recording performs it; abort = refuse it (the model must steer another way).',
+              options: ['approve', 'abort'],
+              observationSummary: summarizeObservation(beforeObs),
+              ...(shot !== undefined ? { screenshotRef: shot } : {}),
+            });
+            if (resolution.action !== 'approve') {
+              return textOut(
+                'The human operator DECLINED this irreversible action. Do not retry it. Accomplish the goal another way, or give_up explaining what was refused.',
+                true,
+              );
+            }
+            approvedIntervention = controller.records[controller.records.length - 1]!.id;
+            await gate.execute({ kind: 'activate', ref: el.ref }, { ...ctx, approved: true });
+          }
           await surface.settle();
           const obs = await surface.observe();
           const shot = log.screenshot('click', obs.screenshot);
@@ -99,6 +145,7 @@ export class DiscoveryToolExecutor {
             before: digestOf(beforeObs),
             after: digestOf(obs),
             ...(shot !== undefined ? { screenshotRef: shot } : {}),
+            ...(approvedIntervention !== undefined ? { approvedIntervention } : {}),
           });
           return { blocks: renderObservationBlocks(obs) };
         }

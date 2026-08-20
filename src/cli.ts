@@ -123,6 +123,10 @@ async function discoverCmd(argv: string[]): Promise<void> {
       'base-url': { type: 'string', default: 'http://localhost:4173' },
       policy: { type: 'string', default: 'policies/default.policy.json' },
       headed: { type: 'boolean', default: false },
+      // Human-in-the-loop for DISCOVERY: irreversible clicks pause the
+      // recording and hand you the live browser for approval — this is what
+      // lets a risky flow be discovered instead of hand-authored. Forces --headed.
+      hitl: { type: 'boolean', default: false },
       'max-turns': { type: 'string', default: '30' },
       'evidence-dir': { type: 'string', default: 'evidence' },
       'save-dir': { type: 'string', default: 'capabilities' },
@@ -192,6 +196,9 @@ async function discoverCmd(argv: string[]): Promise<void> {
 
   console.error(`[discover] goal: ${values.goal}`);
   console.error(`[discover] model turns cap: ${values['max-turns']} — this performs a REAL LLM run`);
+  if (values.hitl && !values.headed) {
+    console.error('[hitl] forcing --headed: the human operator needs to see the live session');
+  }
   const result = await runDiscovery({
     goal: values.goal,
     paramSpecs,
@@ -199,12 +206,13 @@ async function discoverCmd(argv: string[]): Promise<void> {
     outputHints,
     policy: loadPolicy(values.policy!),
     baseUrl: values['base-url']!,
-    headed: values.headed!,
+    headed: values.headed! || values.hitl!,
     maxTurns: Number(values['max-turns']),
     evidenceBaseDir: values['evidence-dir']!,
     saveDir: values['save-dir']!,
     artifactVersion: values['artifact-version']!,
     ...(values.model ? { model: values.model } : {}),
+    ...(values.hitl ? { operator: new TerminalOperator() } : {}),
   });
   console.error(`\n[${result.status.toUpperCase()}] discovery run ${result.runId}`);
   console.error(`  evidence: ${result.evidenceDir}`);
