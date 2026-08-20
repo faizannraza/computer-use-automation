@@ -169,9 +169,22 @@ export async function replayCapability(resolved: ResolvedCapability, opts: Repla
   // 'navigate' — and recovery handlers act too ('dismiss' activates a
   // control, 'answerDialog' answers one). All of it is checked here, not
   // first discovered by the gate after a browser has already launched.
-  const recoveryKinds = artifact.recoveries
-    .map((r) => (r.handler.kind === 'dismiss' ? ('activate' as const) : r.handler.kind === 'answerDialog' ? ('answerDialog' as const) : undefined))
-    .filter((k): k is 'activate' | 'answerDialog' => k !== undefined);
+  const recoveryKinds = artifact.recoveries.flatMap((r): ('activate' | 'answerDialog')[] => {
+    switch (r.handler.kind) {
+      case 'dismiss':
+        return ['activate'];
+      case 'answerDialog':
+        return ['answerDialog'];
+      case 'restartRun': // re-enters via the entrypoint navigate, already counted
+      case 'escalate': // the human acts, not the gate
+        return [];
+      default: {
+        // A new handler kind must decide its gate needs here or fail to compile.
+        const exhaustive: never = r.handler;
+        throw new Error(`unhandled recovery handler kind: ${JSON.stringify(exhaustive)}`);
+      }
+    }
+  });
   const actionsNeeded = [
     ...new Set<(typeof artifact.policy.actionsUsed)[number]>([...artifact.policy.actionsUsed, 'navigate', ...recoveryKinds]),
   ];

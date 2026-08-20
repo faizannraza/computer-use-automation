@@ -29,7 +29,7 @@ in the root README.
 | `replay/20260815-225541-9hma/` | **Hard failure**: duplicate-Search-button fault (ambiguity trap) | `failed TARGET_AMBIGUOUS` at step s6 — refuses to guess; failure report names both candidates, expected vs observed, screenshot, and the step traces of everything that completed before it |
 | `replay/20260819-201206-fmbe/` | **Cross-tenant, without the overlay**: the discovered artifact pointed at a second, re-skinned tenant instance (`npm run mock:summit` — Sign In renamed "Log On", Search renamed "Find Member") | `failed TARGET_NOT_FOUND` at s3 — an honest, named miss on the renamed control; the engine never guess-clicks a lookalike |
 | `replay/20260819-201218-msr5/` | **Cross-tenant reuse**: the same artifact through `tenants/summit-fcu.overlay.json` — two additive `prependStrategy` patches, nothing else | `success` against the re-skinned tenant, every step at strategy 0 — the two patched steps resolve via the tenant's prepended locators, the other seven via the artifact's own — record once, reuse per tenant via a reviewed overlay, no re-recording |
-| `replay/20260815-225543-qcc7/` | **Escalation & handoff**: risky `member.openSubAccount` flow with the permission fault armed | `success` after two interventions: first the irreversible confirm paused for approval (`approve_risky`), then supervisor authorization escalated (`human_action_required`) — the operator entered the supervisor PIN on the same live session (3 captured `human_action` events, values recorded as length only — the PIN appears nowhere), resumed, and the step's postcondition verified the human's work. See `intervention-int-01.json` / `intervention-int-02.json` for the routed context. Operator resolutions came through the same `Operator` interface the interactive terminal console implements — see `interventions[].note` in `result.json`. |
+| `replay/20260815-225543-qcc7/` | **Escalation & handoff** (operator scripted for reproducibility — same `Operator` seam the interactive terminal console implements): risky `member.openSubAccount` flow with the permission fault armed | `success` after two interventions: first the irreversible confirm paused for approval (`approve_risky`), then supervisor authorization escalated (`human_action_required`) — the operator entered the supervisor PIN on the same live session (3 captured `human_action` events, values recorded as length only — the PIN appears nowhere), resumed, and the step's postcondition verified the human's work. See `intervention-int-01.json` / `intervention-int-02.json` for the routed context and `interventions[].note` in `result.json` for the scripted-operator disclosure. |
 
 ## Notes
 
@@ -40,6 +40,10 @@ in the root README.
 - `_scratch/` (git-ignored) is working space used by the test suite; the
   committed runs above are the curated set. Running demo commands adds new
   run folders here — `git clean -fd evidence/` restores the committed set.
+- `cu replay --times N` writes a loose `replay/stability-<runid>.json`
+  report (not a run folder) alongside the N individual run folders. The
+  stability report and `cu discover --hitl` are exercised by the offline
+  test suite rather than by committed evidence runs.
 - Screenshots may show fake seed data (members like "Alexis Testmember");
   the seed is conspicuously synthetic by design. Screenshot redaction is a
   documented limitation (see REPORT.md § Safety).

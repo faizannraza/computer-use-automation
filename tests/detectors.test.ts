@@ -90,6 +90,20 @@ describe('evaluateCondition', () => {
     expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'Standing', frame: { name: 'ghost' } }), obs)).toBe(false);
   });
 
+  it('a BLANK observed frame is evidence of absence — unlike an unobserved one', async () => {
+    const blankWork: Observation = {
+      ...obs,
+      frameTexts: [
+        { framePath: [{ name: 'menu', url: 'http://localhost:4173/nav' }], text: 'Main Menu' },
+        { framePath: [{ name: 'work', url: 'http://localhost:4173/blank' }], text: '' },
+      ],
+    };
+    // The work frame was walked and is genuinely empty: absence holds,
+    // presence does not.
+    expect(await evaluateCondition(cond({ c: 'textAbsent', pattern: 'Processing', frame: { name: 'work' } }), blankWork)).toBe(true);
+    expect(await evaluateCondition(cond({ c: 'textPresent', pattern: 'anything', frame: { name: 'work' } }), blankWork)).toBe(false);
+  });
+
   it('rejects an empty frame hint — it would match every frame and look scoped while being unscoped', () => {
     expect(() => cond({ c: 'textPresent', pattern: 'x', frame: {} })).toThrow(/name and\/or urlPattern/);
   });

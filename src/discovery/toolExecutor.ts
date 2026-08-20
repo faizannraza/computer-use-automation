@@ -105,7 +105,9 @@ export class DiscoveryToolExecutor {
           const irreversible = input['irreversible'] === true;
           // Sticky refusal: the risk label is model-supplied, so a declined
           // control cannot be re-issued as "reversible" to slip past the gate.
-          if (this.refusedTargets.has(identityKey(el))) {
+          // Keyed on identity + the frame's document URL: pinned to this
+          // control on this screen, not to every same-named control in the app.
+          if (this.refusedTargets.has(refusalKey(el))) {
             return textOut(
               'This control was DECLINED by the human operator earlier in this run and must not be activated, with any flag. Accomplish the goal another way, or give_up.',
               true,
@@ -114,6 +116,7 @@ export class DiscoveryToolExecutor {
           const ctx = { risk: irreversible ? ('irreversible' as const) : ('reversible' as const), frameUrl: frameUrlOf(el) };
           let approvedIntervention: string | undefined;
           let humanActionsDuringApproval: number | undefined;
+          let approvedTarget: Observation['elements'][number] | undefined;
           let beforeDigest = digestOf(beforeObs);
           try {
             await gate.execute({ kind: 'activate', ref: el.ref }, ctx);
@@ -134,8 +137,26 @@ export class DiscoveryToolExecutor {
             // observation by identity; if the screen changed, nothing runs.
             const freshObs = await surface.observe();
             const matches = freshObs.elements.filter((e) => identityKey(e) === identityKey(el));
-            if (matches.length !== 1) {
-              return textOut('The screen changed before the risky action could be reviewed — observe and decide again.', true);
+            if (matches.length === 0) {
+              // The escalation observe() renumbered refs — always hand the
+              // model the fresh listing alongside the refusal, so its next
+              // action is grounded in what the page looks like NOW.
+              return {
+                blocks: [
+                  { type: 'text', text: 'The screen changed before the risky action could be reviewed — nothing was performed. Decide again from this fresh observation:' },
+                  ...renderObservationBlocks(freshObs),
+                ],
+                isError: true,
+              };
+            }
+            if (matches.length > 1) {
+              return {
+                blocks: [
+                  { type: 'text', text: 'Multiple controls share this identity — the harness cannot present an ambiguous irreversible action for human approval. Nothing was performed. Disambiguate first:' },
+                  ...renderObservationBlocks(freshObs),
+                ],
+                isError: true,
+              };
             }
             const target = matches[0]!;
             const shot = log.screenshot('intervention', freshObs.screenshot);
@@ -156,17 +177,38 @@ export class DiscoveryToolExecutor {
             });
             const record = controller.records[controller.records.length - 1]!;
             if (resolution.action !== 'approve') {
-              this.refusedTargets.add(identityKey(el));
+              this.refusedTargets.add(refusalKey(target));
               recorder.recordDeclined(record.id, sanitizeForOperator(String(input['intent'])));
-              return textOut(
-                'The human operator DECLINED this irreversible action. Do not retry it — with any flag. Accomplish the goal another way, or give_up explaining what was refused.',
-                true,
-              );
+              const postDeclineObs = await surface.observe();
+              return {
+                blocks: [
+                  { type: 'text', text: 'The human operator DECLINED this irreversible action. Do not retry it — with any flag. Accomplish the goal another way, or give_up explaining what was refused. Fresh observation:' },
+                  ...renderObservationBlocks(postDeclineObs),
+                ],
+                isError: true,
+              };
             }
+            // The handoff may have lasted minutes and the human may have
+            // changed the screen in place (no navigation, so refs stay live).
+            // The approval binds to the state the human REVIEWED — so before
+            // acting, re-observe and re-locate the control; if the identity
+            // is no longer unique on the current screen, refuse to act.
+            const postApprovalObs = await surface.observe();
+            const postMatches = postApprovalObs.elements.filter((e) => identityKey(e) === identityKey(el));
+            if (postMatches.length !== 1) {
+              return {
+                blocks: [
+                  { type: 'text', text: 'The screen changed during the approval — the action was NOT performed. Observe the current state and decide again:' },
+                  ...renderObservationBlocks(postApprovalObs),
+                ],
+                isError: true,
+              };
+            }
+            approvedTarget = postMatches[0]!;
             approvedIntervention = record.id;
             if (record.humanActions > 0) humanActionsDuringApproval = record.humanActions;
-            beforeDigest = digestOf(freshObs); // what the human actually approved
-            await gate.execute({ kind: 'activate', ref: target.ref }, { ...ctx, approved: true });
+            beforeDigest = digestOf(postApprovalObs); // the state the approved action actually acts on
+            await gate.execute({ kind: 'activate', ref: approvedTarget.ref }, { ...ctx, approved: true });
           }
           await surface.settle();
           const obs = await surface.observe();
@@ -175,7 +217,9 @@ export class DiscoveryToolExecutor {
             kind: 'activate',
             intent: String(input['intent']),
             risk: irreversible ? 'irreversible' : 'reversible',
-            element: recordedElementOf(el),
+            // On the approval path the element is re-recorded from the state
+            // the human approved, so anchors (row text, geometry) are current.
+            element: recordedElementOf(approvedTarget ?? el),
             before: beforeDigest,
             after: digestOf(obs),
             ...(shot !== undefined ? { screenshotRef: shot } : {}),
@@ -358,10 +402,17 @@ function frameUrlOf(el: Observation['elements'][number]): string | undefined {
 
 /** Element identity independent of the observation's ref numbering: role,
  * accessible name, label, and the named frame path. Used to re-locate a
- * control across observations and to pin refused controls. */
+ * control across observations of the SAME screen. */
 function identityKey(el: Observation['elements'][number]): string {
   const frames = el.framePath.map((f) => f.name ?? '?').join('/');
   return `${el.role}|${el.name}|${el.label ?? ''}|${frames}`;
+}
+
+/** Refusal identity: element identity plus the frame DOCUMENT urls, so a
+ * declined control is pinned to its screen — a same-named control on a
+ * different screen of the app is a different decision. */
+function refusalKey(el: Observation['elements'][number]): string {
+  return `${identityKey(el)}|${el.framePath.map((f) => f.url).join('/')}`;
 }
 
 /** Operator-facing text from the model is sanitized: control characters

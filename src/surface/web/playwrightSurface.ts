@@ -126,8 +126,12 @@ export class PlaywrightWebSurface implements Surface {
       if (collected.visibleText) {
         const marker = frame === this.page.mainFrame() ? '' : `[frame ${frame.name() || frame.url()}] `;
         texts.push(marker + collected.visibleText);
-        frameTexts.push({ framePath, text: collected.visibleText });
       }
+      // Every successfully-walked frame is recorded, even with empty text: a
+      // BLANK observed frame is evidence ("the text is absent"), which is a
+      // different fact from an UNOBSERVED frame (no evidence at all) — a
+      // scoped textAbsent must distinguish the two.
+      frameTexts.push({ framePath, text: collected.visibleText });
     }
 
     const obs: Observation = {

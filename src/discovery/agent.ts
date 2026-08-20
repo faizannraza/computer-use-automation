@@ -10,7 +10,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import path from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { RunLog } from '../evidence/runLog.js';
 import { SessionController } from '../hitl/sessionController.js';
 import type { Operator } from '../hitl/sessionController.js';
@@ -262,6 +262,17 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
     opts.saveDir ?? 'capabilities',
     `${artifact.capability.id}@${artifact.capability.version}.json`,
   );
+  try {
+    assertArtifactWritable(artifactPath);
+  } catch (err) {
+    // The run itself is safe — trace, transcript, compile report, and the
+    // compiled draft are all in the evidence dir. Only the capabilities/
+    // copy is refused.
+    const reason = `${err instanceof Error ? err.message : String(err)} (the compiled draft is preserved at ${log.dir}/artifact.json)`;
+    log.event('run_result', { status: 'error', reason });
+    return { status: 'error', runId: log.runId, evidenceDir: log.dir, reason, usage };
+  }
+  mkdirSync(path.dirname(artifactPath), { recursive: true });
   writeFileSync(artifactPath, JSON.stringify(artifact, null, 2) + '\n');
   log.event('run_result', { status: 'compiled', artifactPath, usage });
   return { status: 'compiled', runId: log.runId, evidenceDir: log.dir, artifactPath, usage };
@@ -291,6 +302,28 @@ export async function runDiscovery(opts: DiscoveryOptions): Promise<DiscoveryRun
             }),
     }));
     log.writeJson('transcript', elided);
+  }
+}
+
+/**
+ * Discovery output must never silently replace a reviewed capability: an
+ * existing APPROVED artifact (or an unreadable file) at the target path
+ * refuses the write. Overwriting an existing DRAFT is allowed — that is the
+ * normal iterate-on-discovery loop.
+ */
+export function assertArtifactWritable(file: string): void {
+  if (!existsSync(file)) return;
+  let state: string | undefined;
+  try {
+    const existing = JSON.parse(readFileSync(file, 'utf8')) as { provenance?: { approval?: { state?: string } } };
+    state = existing.provenance?.approval?.state;
+  } catch {
+    throw new Error(`refusing to overwrite ${file} — the existing file is not a readable artifact; pass --save-dir <dir> or --artifact-version <semver>`);
+  }
+  if (state === 'approved') {
+    throw new Error(
+      `refusing to overwrite ${file} — it is an APPROVED artifact and discovery output is an unreviewed draft; pass --save-dir <dir> or --artifact-version <semver>`,
+    );
   }
 }
 

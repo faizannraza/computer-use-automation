@@ -11,6 +11,7 @@ import { ActionGate } from '../src/policy/actionGate.js';
 import { PolicySchema } from '../src/policy/policy.js';
 import { Redactor } from '../src/policy/redact.js';
 import { RunLog } from '../src/evidence/runLog.js';
+import { evaluateCondition } from '../src/replay/detectors.js';
 import { TargetRefSchema } from '../src/schema/locators.js';
 import { PlaywrightWebSurface } from '../src/surface/web/playwrightSurface.js';
 
@@ -108,6 +109,13 @@ describe('member lookup flow through Surface + ActionGate only', () => {
     await surface.settle();
     obs = await surface.observe();
     expect(obs.visibleText).toContain('Member Information');
+
+    // Frame-scoped conditions against a REAL browser observation: the member
+    // detail lives in the work frame, so the scoped check passes there and —
+    // the whole point — the same text cannot be satisfied by the menu frame.
+    expect(await evaluateCondition({ c: 'textPresent', pattern: 'Member Information', frame: { name: 'work' } }, obs)).toBe(true);
+    expect(await evaluateCondition({ c: 'textPresent', pattern: 'Member Information', frame: { name: 'menu' } }, obs)).toBe(false);
+    expect(await evaluateCondition({ c: 'textPresent', pattern: 'Member Search', frame: { name: 'menu' } }, obs)).toBe(true);
 
     // Read the savings balance out of the legacy accounts table.
     const balanceCell = await resolveOk({

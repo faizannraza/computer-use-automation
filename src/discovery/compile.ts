@@ -225,11 +225,11 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
     // frame, so asserting it is precise. Untagged markers keep the stricter
     // text-anywhere rule, because their condition would be unscoped.
     const beforeTexts = new Set(action.before.markers.map((m) => m.text));
-    const beforeFramed = new Set(action.before.markers.map((m) => `${m.frame ?? ''} ${m.text}`));
+    const beforeFramed = new Set(action.before.markers.map((m) => `${m.frame ?? ''}\u0000${m.text}`));
     const actionFrame = actionFrameOf(action);
     const chosen = rankMarkers(
       action.after.markers.filter((m) =>
-        m.frame !== undefined ? !beforeFramed.has(`${m.frame} ${m.text}`) : !beforeTexts.has(m.text),
+        m.frame !== undefined ? !beforeFramed.has(`${m.frame}\u0000${m.text}`) : !beforeTexts.has(m.text),
       ),
       actionFrame,
     ).slice(0, 2);

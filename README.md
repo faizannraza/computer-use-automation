@@ -4,7 +4,7 @@ An end-to-end system that lets AI agents operate legacy back-office applications
 
 1. An **LLM-driven agent** takes a natural-language goal and operates a live UI (observe, decide, act), with every action passing through a policy gate.
 2. The successful run is compiled — deterministically, no LLM — into a **typed, versioned capability artifact**: a reviewable contract with typed inputs, typed outputs, and named business outcomes.
-3. That artifact **replays with no model in the loop**, using a semantic locator ladder and per-step checkpoints. Everything it sees gets classified: expected business outcomes ("no such member") are not recoverable conditions (session timeout), and neither is a hard failure (ambiguous target).
+3. That artifact **replays with no model in the loop**, using a semantic locator ladder and per-step checkpoints. Everything it sees is classified three ways: an expected business outcome ("no such member"), a recoverable condition (session timeout), or a hard failure (ambiguous target).
 4. When the system can't safely proceed — an irreversible action awaiting a decision, a supervisor-only screen — it escalates to a human who **takes control of the same live session**, then hands control back.
 
 > **The model discovers. The artifact becomes a reusable capability. Deterministic replay is how the AI agent invokes it in production.**
@@ -21,10 +21,10 @@ The target application is a self-contained, intentionally *legacy-hostile* mock 
         |                                                                     |
         +-------------------+  every action, both paths  +--------------------+
                             v                            v
-                 +--------------------------------------------------+
+                 +---------------------------------------------------+
                  | ActionGate: allowlist / action kinds / risk class |
                  |             / HITL control token                  |
-                 +-------------------------+------------------------+
+                 +-------------------------+-------------------------+
                                            v
                  Surface seam: observe / act / resolve
                  (Playwright web driver today; desktop by design)
@@ -83,13 +83,15 @@ npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.j
 npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
   --param memberId=12345 --inject-fault duplicate_button:on
 # → status failed, TARGET_AMBIGUOUS at s6, expected/observed + both candidates + screenshot
+
+curl -s -X POST localhost:4173/__reset   # ':on' faults stay armed — clear before the next demo
 ```
 
 **Cross-tenant reuse, live** — a second, re-skinned tenant instance ("Summit FCU": Sign In renamed *Log On*, Search renamed *Find Member*). The same discovered artifact fails honestly without the tenant overlay, and succeeds with two additive `prependStrategy` patches — record once, reuse per tenant:
 
 ```bash
-# Terminal 1 (replaces the default mock for this demo):
-npm run mock:summit         # same vendor product, tenant-re-skinned, port 4174
+# Terminal 1 (alongside the default mock — this one serves port 4174):
+npm run mock:summit         # same vendor product, tenant-re-skinned
 
 # Terminal 2:
 npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
@@ -120,10 +122,10 @@ npm run cu -- replay --capability capabilities/member.openSubAccount@1.0.0.json 
 # → escalates twice, you resolve on the live session, run completes with the confirmation number
 ```
 
-**Run discovery yourself** (the only step needing `ANTHROPIC_API_KEY`; one run costs well under $1):
+**Run discovery yourself** (the only step needing `ANTHROPIC_API_KEY`; the committed 15-turn run cost ≈ $2 at Opus pricing). Note `--save-dir`: the default is `capabilities/`, and discovery refuses to overwrite an approved artifact there — point it somewhere fresh:
 
 ```bash
-npm run cu -- discover \
+npm run cu -- discover --save-dir /tmp/cu-discovered --max-turns 20 \
   --goal "Sign in to MockCore Teller. Look up member 12345 and read the current balance of their REGULAR SAVINGS account from the member's accounts table into an output named 'savingsBalance'. After reading the balance, probe one exceptional state: search for member number 99999 (which does not exist) and declare the not-found behavior as business outcome MEMBER_NOT_FOUND with a marker you can see on screen. Then declare_done with capability_id 'member.readSavingsBalance'." \
   --param memberId=12345:internal \
   --env-param operatorId=MOCK_CU_USER:internal \

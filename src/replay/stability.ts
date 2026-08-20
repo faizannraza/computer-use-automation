@@ -12,7 +12,7 @@ import type { ReplayResult } from '../schema/result.js';
 
 export interface StepStability {
   stepId: string;
-  /** How many of the N runs reached this step. */
+  /** How many of the N runs COMPLETED this step (a trace is recorded on step success). */
   runs: number;
   /** strategyIndex → how many runs resolved there. One key = stable. */
   strategyIndexCounts: Record<string, number>;
@@ -58,8 +58,10 @@ export function buildStabilityReport(results: ReplayResult[]): StabilityReport {
     reasons.push(`no run completed (${Object.keys(statuses).join(', ')}) — reproducible failure is not stability`);
   }
 
+  // Vacuously true with zero successful runs — the 'no run completed' reason
+  // above is the signal in that case, not this flag.
   const successOutputs = results.filter((r) => r.status === 'success').map((r) => JSON.stringify(r.outputs));
-  const outputsConsistent = new Set(successOutputs).size <= 1;
+  const outputsConsistent = successOutputs.length === 0 || new Set(successOutputs).size === 1;
   if (!outputsConsistent) reasons.push('successful runs returned different outputs');
 
   // Per-step aggregation across runs (steps identified by id). Intents are
