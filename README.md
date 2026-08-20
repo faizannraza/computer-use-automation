@@ -1,55 +1,66 @@
 # Computer-Use Automation System
 
-> **Adaptation project:** this core is now pointed at **MERIDIAN CORE**
-> ([web-sample.interface-hiring.com](https://web-sample.interface-hiring.com/)), with its
-> capabilities exposed as a **callable API**, driven by a **chatbot**, and watchable on a
-> **dashboard**. Start at [Running against MERIDIAN CORE](#running-against-meridian-core), and see
-> [`ADAPTATION.md`](ADAPTATION.md) for what adapting actually took and what it exposed.
+**An AI agent operates a legacy banking application that has no API — safely, deterministically, and
+with an audit trail — by driving its UI the way a person would.**
 
-An end-to-end system that lets AI agents operate legacy back-office applications that have no API:
+The live target is **MERIDIAN CORE** ([web-sample.interface-hiring.com](https://web-sample.interface-hiring.com/)):
+a period-accurate credit-union servicing console. Server-rendered HTML, table layout, no test IDs, a
+hidden token its forms must carry, and functions a teller is not allowed to perform.
 
-1. An **LLM-driven agent** takes a natural-language goal and operates a live UI (observe, decide, act), with every action passing through a policy gate.
-2. The successful run is compiled — deterministically, no LLM — into a **typed, versioned capability artifact**: a reviewable contract with typed inputs, typed outputs, and named business outcomes.
-3. That artifact **replays with no model in the loop**, using a semantic locator ladder and per-step checkpoints. Everything it sees is classified three ways: an expected business outcome ("no such member"), a recoverable condition (session timeout), or a hard failure (ambiguous target).
-4. When the system can't safely proceed — an irreversible action awaiting a decision, a supervisor-only screen — it escalates to a human who **takes control of the same live session**, then hands control back.
+The core idea, in four steps:
 
-> **The model discovers. The artifact becomes a reusable capability. Deterministic replay is how the AI agent invokes it in production.**
+1. An **LLM-driven agent** takes a goal in English and operates the live UI — observe, decide, act —
+   with every action passing through one policy gate.
+2. That successful run is compiled — **deterministically, no LLM** — into a typed, versioned,
+   content-hashed **capability artifact**: a reviewable contract with typed inputs, typed outputs,
+   and named business outcomes.
+3. The artifact **replays with no model in the loop**. Everything it sees is classified three ways:
+   an expected business outcome ("no such member"), a recoverable condition (a maintenance
+   interstitial), or a hard failure (an ambiguous target).
+4. When it cannot safely proceed — an irreversible action, a supervisor-only screen — it **stops and
+   escalates to a human**, who decides on the same live session.
 
-Two target applications are wired up, each described by a file in [`profiles/`](profiles/) rather
-than by code: **MERIDIAN CORE**, the hosted legacy console this adaptation targets, and **MockCore
-Teller**, a self-contained, intentionally *legacy-hostile* mock (framesets, table layouts, no test
-IDs) with deterministic fault injection, so every scenario in
-[`evidence/replay/`](evidence/README.md) reproduces offline on your machine. The MERIDIAN runs in
-[`evidence/meridian/`](evidence/meridian/README.md) are the live set and need the hosted target.
+> **The model discovers once. Deterministic replay is how an agent invokes it in production.**
+
+Seven capabilities are recorded against MERIDIAN CORE, exposed as a **callable API**, driven by a
+**chatbot**, and watchable on a **dashboard** where a human approves anything irreversible.
+
+**Start here:** [Run the console](#run-the-console) · [`ADAPTATION.md`](ADAPTATION.md) for what
+adapting to this target took and what it cost · [`evidence/meridian/`](evidence/meridian/README.md)
+for 19 committed runs against the live target, indexed one row per runtime state.
 
 ```
- goal (natural language)                        typed params
-        |                                            |
-        v                                            v
-  discovery agent --> recorder --> compiler --> capability artifact --> replay engine
-  (LLM in the loop)                (no LLM)     (typed, versioned,      (no LLM, ever)
-        |                                        hashed, draft/approved)      ^
-        |                                                                     |
-        |                                             chatbot --> capability API --> dashboard
-        |                                          (LLM plans;    (invoke by name,   (watch it run,
-        |                                           never acts)    typed args)        approve, audit)
-        |                                                                     |
-        +-------------------+  every action, every path  +--------------------+
-                            v                            v
-                 +---------------------------------------------------+
-                 | ActionGate: allowlist / action kinds / risk class  |
-                 |             / HITL control token                   |
-                 +-------------------------+-------------------------+
-                                           v
-                 Surface seam: observe / act / resolve
-                 (Playwright web driver today; desktop by design)
-                                           v
-              MERIDIAN CORE (hosted) | MockCore Teller (local mock)
-                    described by profiles/, not by code
-
-  escalation:  SessionController hands the same live session to a human, then back
-  evidence:    every run writes redacted JSONL + screenshots + a typed result
+   goal (natural language)                    typed params        "move $1 from A to B"
+          |                                        |                      |
+          v                                        v                      v
+   discovery agent --> recorder --> compiler --> ARTIFACT --> replay engine <-- API <-- chatbot
+     (LLM in loop)                  (NO LLM)    (typed,        (NO LLM, ever)   |     (LLM plans,
+          |                                      versioned,          |          |      never acts)
+          |                                      hashed,             |          v
+          |                                      approved)           |      dashboard
+          |                                                          |      (watch / APPROVE / audit)
+          +----------+  every action, every path  +------------------+
+                     v                            v
+        +-----------------------------------------------------+
+        |  ActionGate:  control token | origin+path allowlist  |
+        |               action kinds  | risk class             |
+        +-----------------------------+-----------------------+
+                                      v
+                    Surface seam:  observe / resolve / act
+                    (Playwright web today; desktop by design)
+                                      v
+                      +---------------------------------+
+                      |  app profile (JSON, per target) |
+                      +---------------------------------+
+                         MERIDIAN CORE   |   MockCore
 ```
+
+**One artifact, two engines, one gate.** Discovery and replay never import each other — the artifact
+is their only interface — and every action from every path is authorised in the same place.
+
+A second target, **MockCore Teller**, ships as a local mock so the whole system is demonstrable with
+no network and no API key. Which application is being driven is a JSON file in
+[`profiles/`](profiles/), not code.
 
 ## Setup
 
@@ -58,251 +69,302 @@ Requires Node.js >= 20.
 ```bash
 npm install
 npx playwright install chromium
-cp .env.example .env        # defaults work as-is for everything except discovery
+cp .env.example .env        # works as-is; the MERIDIAN operators in it are the brief's public demo accounts
 ```
 
-**Keys/config:** `ANTHROPIC_API_KEY` in `.env` is needed by exactly two things — `cu discover`
-(recording a new capability) and the chatbot's LLM planner. **Everything else — deterministic
-replay, the capability API, the dashboard, the mock app, human-in-the-loop, and the entire test
-suite — runs with no key**, because the production path never calls a model; the chatbot also ships
-a deterministic `scripted` planner behind the same interface for exactly this reason. The committed
-artifacts were produced by real discovery runs (evidence under `evidence/`), so replay needs nothing
-re-recorded.
+**Keys.** `ANTHROPIC_API_KEY` is needed by exactly two things: `cu discover` (recording a *new*
+capability) and the chatbot's LLM planner. **Everything else — deterministic replay, the capability
+API, the dashboard, human-in-the-loop, and the entire test suite — runs with no key**, because the
+production path never calls a model. The chatbot also ships a deterministic `scripted` planner
+behind the same interface, so even that surface is demonstrable without one.
 
 ```bash
-npm test                    # 329 tests: schema, resolver, gate, engine, compiler, profiles, API, HITL — all local
+npm run typecheck && npm run lint && npm test    # 349 tests, ~26 s, fully offline
 ```
 
-## Demo path
+---
 
-**Terminal 1 — start the target app** (sign in manually if you like: `teller1` / `Passw0rd!` at http://localhost:4173):
+## Run the console
+
+One process serves the API, the dashboard and the chatbot.
 
 ```bash
-npm run mock
+npm run demo
 ```
 
-**Terminal 2 — replay the discovered capability** (deterministic; no LLM, no API key):
+Then open **<http://127.0.0.1:4180/>** (dashboard) and **<http://127.0.0.1:4180/chat/>** (chatbot).
+
+That is the whole setup. `npm run demo` points the server at MERIDIAN CORE and turns on two
+**presentation** settings, which the startup banner names so they are never a surprise:
+
+| | |
+|---|---|
+| `CU_ALLOW_INJECT=1` | puts the app's own fault kinds on the invoke form, so you can force a 503 or a 440 from the UI. Off by default, because injection rewrites the request *beneath* the ActionGate — a recorded capability can never reach it; only the operator starting the process can. |
+| `CU_DEMO_SLOW_MO=700` | paces every run so a person can follow it, including runs the chatbot starts. Off by default: a production replay runs headless at full speed. |
+
+Two other entry points, same server:
 
 ```bash
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json --param memberId=12345
-# → status success, outputs.savingsBalance = "$4,821.97"
-
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json --param memberId=99999
-# → status business_outcome, code MEMBER_NOT_FOUND (a result, not a crash; exit code 0)
+npm run api:meridian   # MERIDIAN CORE, no presentation settings — how it would actually run
+npm run api:mock       # the local mock; needs `npm run mock` in another terminal, and no network
 ```
 
-Add `--headed` to watch the browser drive the flow, and `--slow-mo 600` to pace it for an audience (a demo aid — production replays run headless at full speed).
+## What to look at, in order
 
-**Replay through a runtime error** — inject a mid-flow session timeout; the tenant overlay supplies the recovery and the run re-authenticates and completes:
+Everything below is a **read** until step 4. Nothing changes the target until you choose to.
+
+### 1. The catalog, and the fence it runs under
+
+The dashboard's left column lists seven capabilities — one per function in the brief — each badged
+`approved`, its risk class, and (on `member.placeHold`) `role: supervisor`. The header states the
+policy the run is under before anything happens: allowed origin, **denied paths `/settings`**, six
+allowed verbs, and `irreversible → escalate`.
+
+`/settings` is the target's own global fault-injection screen. The automation is denied it
+deliberately: a system that can switch off its target's failure injection is not demonstrating error
+handling.
+
+### 2. Watch a capability drive the live app
+
+Click **`member.readBalances`** → `memberId` `103001` → tick **Watch headed browser** → **Invoke**.
+
+- Each step shows its intent, duration, action kind, risk chip, and the **locator strategy rank**
+  (`strategy 0 · roleName · 1.00`). Strategy 0 is the most robust rung on the ladder; a step that
+  starts resolving at rung 2 is UI drift, captured on every replay for free.
+- The last step is a single `readTable` returning every share, balance and status as typed rows.
+- The **live view** shows the screenshot the run captured — with the member's name, e-mail, phone,
+  address and every balance **blacked out**, while share ids, types and statuses stay readable.
+
+That masking is not a filter over the image. The app profile declares which fields are regulated —
+by label, by label *pattern*, and by column header — and the mask is burned into the capture inside
+the same observation the classifier ran on. The caller still receives the real values: an invoke
+response is the **caller** channel, `evidence/` is the **auditor** channel, and the same run reads
+differently through the two on purpose.
+
+### 3. The three ways a run can end badly
+
+Invoke these from the same form. Because `npm run demo` enabled it, there is a **fault** dropdown.
+
+| Capability | Params | Fault | Result |
+|---|---|---|---|
+| `member.readBalances` | `memberId` `999999` | — | `business_outcome` · `MEMBER_NOT_FOUND` |
+| `member.readBalances` | `memberId` `103001` | `maintenance` | `success` · `recovered ×1` |
+| `member.placeHold` | `102777` / `102777-S0070-3` / `FRAUD` / `demo` | — | `escalated` |
+
+Three different things, reported three different ways. "No such member" is a **result** the caller
+switches on — the CLI even exits zero. The maintenance interstitial is **recoverable**: it restarted
+and finished. The supervisor screen is a state only a **person** can clear, so it escalated with
+context rather than guessing.
+
+Run history now shows all three side by side with different pills. Conflating those three is the
+most common failure in this problem, so the distinction is structural: separate schema sections,
+separate result types, one explicit priority order.
+
+### 4. The human gate — nothing irreversible happens without it
+
+In the **chatbot**, click *Transfer $1.00 from 103001-S0070-7 to 103001-MMKT-8*.
+
+The planner picks a capability by name from the catalog. It cannot invent a capability and it cannot
+invent a parameter. Switch to the dashboard: an amber bar appears naming the capability, the version,
+the step, the policy reason, and a summary of the screen in which the member's name is **already
+masked**.
+
+Click **Approve — let it post**. A confirmation number comes back.
+
+Three things make that gate real rather than decorative:
+
+- Approving requires that intervention's **one-time nonce**, which is deliberately absent from the
+  listing endpoint — a guard published by the endpoint it guards is not a guard.
+- Before acting, the engine re-observes, re-locates the control **by identity**, refuses if the match
+  is ambiguous, refuses if the page navigated, and diffs the form's values against what the human
+  reviewed. The approval binds to the transaction, not just to the button.
+- `HttpOperator` implements the same `Operator` interface the terminal console does, and the gate
+  checks a control token on **every** action — so the automation is genuinely locked out while a
+  human holds the session.
+
+**The API cannot post money unattended.** Structurally, not by policy document.
+
+### 5. Prove the artifacts were not hand-written
 
 ```bash
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
-  --tenant tenants/demo-fcu.overlay.json --param memberId=12345 --inject-fault session_timeout:once
-# → status success, recoveriesUsed: [SESSION_TIMEOUT]
+npm run cu -- recompile capabilities-meridian/member.readBalances@1.0.0.json \
+  --trace evidence/meridian/discovery/20260820-124803-gz6r \
+  --app profiles/meridian-core.profile.json
+# → "recompiles identically (modulo the approval block and its hash) — the shipped
+#    artifact is exactly what this compiler produces from this trace."
 ```
 
-**Replay into a hard failure** — two identical Search buttons; the engine refuses to guess:
+The compiler is deterministic code. Point it at the committed trace and the executable spine — steps,
+locators, conditions, risk classes, success criteria — re-derives byte for byte, with no network and
+no key. Five of the seven reproduce exactly; the two that do not are explained in
+[`evidence/meridian/README.md`](evidence/meridian/README.md).
+
+Then, in the dashboard: **Audit trail → Element maps**. Screenshots show what a *person* would have
+seen; the element map shows what the **locator ladder** saw. That is the only artifact that explains
+why a target resolved, or why it refused as ambiguous.
+
+### 6. The evidence
+
+[`evidence/meridian/README.md`](evidence/meridian/README.md) indexes **19 committed runs** — one per
+row of the brief's runtime-state taxonomy, all against the live target, no model in any of them:
+
+**9 success** (every one of the seven capabilities completes at least once) · **6 business outcomes**
+· **3 escalations** · **1 hard failure**. All six of the target's `inject` kinds are covered.
+
+---
+
+## Command line
+
+The console is the nice way in; everything is also a command.
 
 ```bash
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
-  --param memberId=12345 --inject-fault duplicate_button:on
-# → status failed, TARGET_AMBIGUOUS at s6, expected/observed + both candidates + screenshot
-
-curl -s -X POST localhost:4173/__reset   # ':on' faults stay armed — clear before the next demo
-```
-
-**Cross-tenant reuse, live** — a second, re-skinned tenant instance ("Summit FCU": Sign In renamed *Log On*, Search renamed *Find Member*). The same discovered artifact fails honestly without the tenant overlay, and succeeds with two additive `prependStrategy` patches — record once, reuse per tenant:
-
-```bash
-# Terminal 1 (alongside the default mock — this one serves port 4174):
-npm run mock:summit         # same vendor product, tenant-re-skinned
-
-# Terminal 2:
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
-  --param memberId=12345 --base-url http://localhost:4174 --policy policies/summit-fcu.policy.json
-# → status failed, TARGET_NOT_FOUND at s3 (the renamed control) — an honest miss, never a guessed click
-
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
-  --tenant tenants/summit-fcu.overlay.json --param memberId=12345 --policy policies/summit-fcu.policy.json
-# → status success — the tenant's locators fire at strategy 0; the artifact was not re-recorded
-```
-
-**Multi-run stability** (stretch goal) — replay N times and aggregate a flakiness report (status flapping, output consistency, per-step strategy-rank distribution — the drift signal, summed):
-
-```bash
-npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
-  --param memberId=12345 --times 3
-# → [STABLE] member.readSavingsBalance@1.0.0 over 3 runs + a stability-*.json report
-```
-
-**Human-in-the-loop** — the risky flow: you are the operator. A headed browser opens; the terminal stops you twice (type `approve` for the irreversible confirm; then enter supervisor PIN `7391` in the browser window and type `resume`):
-
-```bash
-curl -s -X POST localhost:4173/__faults -H 'content-type: application/json' \
-  -d '{"fault":"permission_denied","mode":"once"}'
-npm run cu -- replay --capability capabilities/member.openSubAccount@1.0.0.json \
-  --param memberId=12345 --param "acctType=HOLIDAY CLUB" --param "nickname=Vacation Fund" \
-  --param initialDeposit=50.00 --hitl
-# → escalates twice, you resolve on the live session, run completes with the confirmation number
-```
-
-**Run discovery yourself** (the only step needing `ANTHROPIC_API_KEY`; the committed 15-turn run cost ≈ $2 at Opus pricing). Note `--save-dir`: the default is `capabilities/`, and discovery refuses to overwrite an approved artifact there — point it somewhere fresh:
-
-```bash
-npm run cu -- discover --save-dir /tmp/cu-discovered --max-turns 20 \
-  --goal "Sign in to MockCore Teller. Look up member 12345 and read the current balance of their REGULAR SAVINGS account from the member's accounts table into an output named 'savingsBalance'. After reading the balance, probe one exceptional state: search for member number 99999 (which does not exist) and declare the not-found behavior as business outcome MEMBER_NOT_FOUND with a marker you can see on screen. Then declare_done with capability_id 'member.readSavingsBalance'." \
-  --param memberId=12345:internal \
-  --env-param operatorId=MOCK_CU_USER:internal \
-  --env-param operatorPassword=MOCK_CU_PASS:secret \
-  --output savingsBalance:money:pii
-# → compiles a DRAFT artifact; review it, then: npm run cu -- approve <file> --by "your name"
-```
-
-Discovery also takes `--hitl`: irreversible clicks then pause the *recording* for your approval on the live session (the same control-token handoff replay uses) — which is what makes risky flows discoverable rather than hand-authored.
-
-**Agent-facing catalog** (stretch goal) — capabilities as callable tools, invoked by name with typed args:
-
-```bash
-npm run cu -- catalog
-npm run cu -- catalog --invoke member.readSavingsBalance --param memberId=10001
-```
-
-`replay`/`catalog` exit codes: `0` = success **or** a named business outcome (both legitimate results), `2` = failed, `3` = escalated.
-
-Demo runs write new folders under `evidence/` by design (every run leaves evidence). To clear them,
-delete the new run directories by name — **do not** run `git clean -fd evidence/`, which would also
-take any evidence not yet committed.
-
-## Running against MERIDIAN CORE
-
-The adaptation target is the hosted sample app — nothing to install, and no local mock involved.
-Credentials are the brief's public demo operators; put them in `.env` (see `.env.example`):
-
-```bash
-MERIDIAN_TELLER_ID=teller1
-MERIDIAN_TELLER_PASSWORD=password
-MERIDIAN_SUPERVISOR_ID=super1
-MERIDIAN_SUPERVISOR_PASSWORD=password
-```
-
-**Replay a capability from the command line** (deterministic; no model, no key):
-
-```bash
+# deterministic replay — no model, no key
 npm run cu -- replay --capability capabilities-meridian/member.readBalances@1.0.0.json \
-  --param memberId=100234 --app profiles/meridian-core.profile.json
-# → success, outputs.shares = every share with its balance and status
+  --app profiles/meridian-core.profile.json --param memberId=103001
 ```
 
 `--app` points the run at the target's profile: base URL, policy, operator roles, app-level
-recoveries, and the field classification that redacts regulated data. Add `--role supervisor` to
-sign on with the other operator, `--headed --slow-mo 1000` to watch it drive, or
-`--inject maintenance@s4` to force one of the app's documented faults on a chosen step.
+recoveries and the field classification. Useful flags:
 
-### The API, the dashboard and the chatbot
-
-One process serves all three:
+| | |
+|---|---|
+| `--role supervisor` | sign on as the other operator |
+| `--headed --slow-mo 700` | watch it drive, paced for a person |
+| `--inject maintenance@s4` | force one of the app's documented faults on a chosen step |
+| `--times 10` | replay N times and aggregate a flakiness report |
+| `--hitl` | approve irreversible steps yourself, on the live session |
 
 ```bash
-CU_APP_PROFILE=profiles/meridian-core.profile.json \
-CU_CAPABILITIES_DIR=capabilities-meridian \
-CU_EVIDENCE_DIR=evidence/meridian \
-npm run api
+npm run cu -- validate capabilities-meridian/*.json   # schema + integrity for all seven
+npm run cu -- catalog --dir capabilities-meridian     # the tool definitions an agent would consume
 ```
 
-- **Dashboard** — <http://127.0.0.1:4180/> — the catalog, live runs with step timelines and
-  streaming screenshots, run history (discovery *and* replay), the evidence trail, and the
-  approval panel.
-- **Chatbot** — <http://127.0.0.1:4180/chat/> — ask for a task in English; it invokes capabilities
-  by name and reports the structured result, including when it stopped.
-- **API** — invoke by name with typed args:
+> **Note.** CLI output is the **caller** channel and is deliberately *not* redacted — that is where
+> real balances are supposed to appear. If you are showing a screen to other people, use the
+> dashboard, which reads from the redacted evidence channel.
+
+### The API directly
 
 ```bash
 curl -s localhost:4180/api/capabilities | jq '.[].name'
 
 curl -s -X POST localhost:4180/api/capabilities/member.readBalances/invoke \
-  -H 'content-type: application/json' -d '{"params":{"memberId":"100234"}}'
+  -H 'content-type: application/json' -d '{"params":{"memberId":"103001"}}'
 ```
 
-> **The target is shared and other people are using it.** Shares get opened, and
-> put on hold, between one run and the next — a share that is `HOLD` today may
-> have been `OPEN` when this was written. Before running the transfer below,
-> read the member first and pick two shares that are currently **OPEN**:
-> `npm run cu -- replay --capability capabilities-meridian/member.readBalances@1.0.0.json --app profiles/meridian-core.profile.json --param memberId=103001`
-
-**Irreversible capabilities pause for a human.** A transfer returns `202` with a run id, stops on
-the confirmation screen, and posts nothing until someone approves it in the dashboard:
+An irreversible capability returns `202` with a run id and parks:
 
 ```bash
 curl -s -X POST localhost:4180/api/capabilities/member.transferFunds/invoke \
   -H 'content-type: application/json' \
-  -d '{"params":{"memberId":"103001","fromShare":"103001-S0070-7","toShare":"103001-MMKT-4","amount":"1.00","memo":"Q3 rebalance"}}'
-# → 202 {"runId":"…","status":"running","reason":"…pause for human approval before anything posts"}
-curl -s localhost:4180/api/interventions              # the pending decision + its screenshot
-curl -s localhost:4180/api/interventions/<key>/nonce  # fetched at approve time, never listed
+  -d '{"params":{"memberId":"103001","fromShare":"103001-S0070-7","toShare":"103001-MMKT-8","amount":"1.00","memo":"Q3 rebalance"}}'
+
+curl -s localhost:4180/api/interventions               # the pending decision + its screenshot
+curl -s localhost:4180/api/interventions/<key>/nonce   # fetched at approve time, never listed
+curl -s -X POST localhost:4180/api/interventions/<key>/resolve \
+  -H 'content-type: application/json' -d '{"action":"approve","nonce":"<nonce>"}'
 ```
 
-Approving needs that intervention's one-time nonce, which is deliberately **not** on the listing —
-otherwise the thing guarding an irreversible post is one unauthenticated GET away from whoever wants
-it. Be clear about what that buys, though: the API has **no authentication**. The real boundary is
-the transport — a loopback bind, plus a `Host` header check, because a loopback bind alone does not
-survive DNS rebinding (a page whose DNS flips to `127.0.0.1` becomes same-origin, and then CORS is
-irrelevant). The nonce means a caller must name one specific pending decision rather than harvest
-approvals from a listing it polls. Real deployment needs real authentication here.
+**Be clear about the security posture:** this API has **no authentication**. Its boundary is the
+transport — a loopback bind *plus* a `Host` check, because a loopback bind alone does not survive DNS
+rebinding. The nonce means a caller must name one specific pending decision rather than harvest
+approvals from a listing. A real deployment needs real authentication here.
 
-### If replays suddenly start failing
+### Recording a new capability
 
-Two causes, in order of likelihood — check them before suspecting the capability.
-
-**1. The target's global fault switch is armed.** MERIDIAN's System Settings screen sets a
-*server-side, app-wide* error mode and a random error rate, and the app is **shared** — anyone can
-arm it, and it stays armed. The symptom is unmistakable: *every* capability fails the same way at
-once, with a recovery code that repeats.
-
-```bash
-npm run cu -- replay --capability capabilities-meridian/member.readBalances@1.0.0.json \
-  --app profiles/meridian-core.profile.json --param memberId=103001
-# recoveriesUsed: [MAINTENANCE_INTERSTITIAL] on a run you did not inject → the switch is on
-```
-
-Clear it by hand at <https://web-sample.interface-hiring.com/settings> (Force error mode → *none*,
-Random error rate → `0`). The automation cannot do this for you: `policies/meridian.policy.json`
-denies `/settings`, deliberately — a system that can turn off its own target's failure injection is
-not demonstrating error handling.
-
-**2. The share you named has changed.** Shares get opened and put on `HOLD` by other people between
-runs. Read the member first and pick shares that are currently `OPEN`.
-
-**Offline / no key.** Replay, the API, the dashboard and the whole test suite need no model — the
-production path never calls one. Only two things do: `cu discover` (recording a new capability) and
-the chatbot's LLM planner. The chatbot also ships a deterministic `scripted` planner behind the same
-interface, so the surface is demonstrable with no key and no network to a model provider.
-
-**Record a new capability** (the only step that uses the model):
+The only step that uses a model.
 
 ```bash
 npm run cu -- discover --app profiles/meridian-core.profile.json \
-  --goal "Sign on, look up member 100234, and read every share with its balance and status." \
-  --param memberId=100234:internal \
+  --goal "Sign on, look up member 103001, and read every share with its balance and status." \
+  --param memberId=103001:internal \
   --env-param operatorId=MERIDIAN_OPERATOR_ID:internal \
   --env-param operatorPassword=MERIDIAN_OPERATOR_PASSWORD:secret \
   --output shares \
   --save-dir /tmp/cu-discovered --evidence-dir evidence/meridian
+# → a DRAFT artifact. Review it, then: npm run cu -- approve <file> --by "your name"
 ```
 
-`--output` takes `name[:type[:sensitivity]]`. Both hints are optional and neither can contradict the
-recording: a value read with `read_table` is declared `type: 'table'` structurally, whatever the
-flag says, because an artifact that calls a table a string parses fine and then hands the caller a
-JSON blob instead of rows.
+Recording a flow that posts money needs a human to authorise each irreversible click: add `--hitl` to
+approve them interactively, or `--authorise-recording-as "<name>"` to pre-authorise a scripted
+session — which stamps the authoriser's name onto every `intervention_resolved` event in the run log.
 
-Recording a flow that posts money needs a human to authorise each irreversible click: add `--hitl`
-to approve them interactively, or `--authorise-recording-as "<name>"` to pre-authorise a scripted
-recording session — which stamps the authoriser's name onto every `intervention_resolved` event in
-the run log, and flags the step in the compile report.
+All seven capabilities cost about **$6 total** to record — roughly $0.90 each. Discovery runs once;
+the ten-thousandth replay costs one browser session.
+
+---
+
+## Offline: the same system with no network
+
+**MockCore Teller** is a local mock built legacy-hostile on purpose — framesets, table layout, no
+test IDs — with deterministic fault injection. Every scenario in
+[`evidence/replay/`](evidence/README.md) reproduces on your machine with no network and no key.
+
+```bash
+npm run mock                         # terminal 1
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json --param memberId=12345
+# → success, savingsBalance = "$4,821.97"
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json --param memberId=99999
+# → business_outcome MEMBER_NOT_FOUND (a result, not a crash; exit code 0)
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --tenant tenants/demo-fcu.overlay.json --param memberId=12345 --inject-fault session_timeout:once
+# → success, recoveriesUsed: [SESSION_TIMEOUT]
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --param memberId=12345 --inject-fault duplicate_button:on
+# → failed TARGET_AMBIGUOUS at s6 — it refuses to guess, and names both candidates
+
+curl -s -X POST localhost:4173/__reset    # ':on' faults stay armed — clear before the next run
+```
+
+**Cross-tenant reuse** — the same artifact against a re-skinned tenant ("Log On" instead of "Sign
+In", "Find Member" instead of "Search"):
+
+```bash
+npm run mock:summit    # terminal 1, alongside the default mock — serves port 4174
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --param memberId=12345 --base-url http://localhost:4174 --policy policies/summit-fcu.policy.json
+# → failed TARGET_NOT_FOUND at s3 — an honest miss on the renamed control, never a guessed click
+
+npm run cu -- replay --capability capabilities/member.readSavingsBalance@1.0.0.json \
+  --tenant tenants/summit-fcu.overlay.json --param memberId=12345 --policy policies/summit-fcu.policy.json
+# → success — two additive locator patches, the artifact was not re-recorded
+```
+
+For the console, dashboard and chatbot against the mock: `npm run api:mock`.
+
+---
+
+## If a run suddenly fails
+
+**The target is shared, and other people are using it.** Two causes, in order of likelihood.
+
+**1. Its global fault switch is armed.** MERIDIAN's System Settings screen sets a *server-side,
+app-wide* error mode that anyone can turn on and that stays on. The symptom is unmistakable: *every*
+capability fails the same way at once, with a repeating recovery code on a run you did not inject.
+Clear it by hand at <https://web-sample.interface-hiring.com/settings> (error mode → none, rate → 0).
+The automation cannot do it for you — `/settings` is denied on purpose.
+
+**2. The share you named has changed.** Shares get opened and put on `HOLD` between runs. Read the
+member first and pick shares that are currently `OPEN`:
+
+```bash
+npm run cu -- replay --capability capabilities-meridian/member.readBalances@1.0.0.json \
+  --app profiles/meridian-core.profile.json --param memberId=103001
+```
 
 ## Repo map
 
 ```
-apps/mock-cu/       the target app: legacy-hostile mock credit union + fault injection + tenant skins
+capabilities-meridian/  the seven MERIDIAN CORE capabilities — all LLM-discovered, then approved
+profiles/           which application this is: meridian-core, mockcore-teller (JSON, not code)
+evidence/meridian/  19 committed live runs + 7 discovery runs (see its README for the index)
+
+apps/mock-cu/       the offline target: legacy-hostile mock credit union + fault injection + skins
 src/core/           surface-agnostic vocabulary (Observation, SemanticAction) + templates
 src/surface/        the Surface seam; Playwright web implementation (element map, locator ladder)
 src/policy/         policy config, redaction, and the ActionGate; every action funnels through it
@@ -315,13 +377,11 @@ src/profile/        app profiles: what is true of a TARGET APP rather than of on
 src/api/            the capability API (invoke by name), run registry, SSE, HTTP operator
 src/chat/           the chatbot's planner — LLM tool-calling over the catalog, plus a scripted mode
 web/                dashboard/ (watch, approve, audit) and chat/ — plain HTML/JS, no build step
-capabilities/       shipped MockCore artifacts (readSavingsBalance LLM-discovered; openSubAccount hand-authored)
-capabilities-meridian/  the seven MERIDIAN CORE capabilities, all LLM-discovered then approved
-profiles/           the app profiles themselves: meridian-core, mockcore-teller
+capabilities/       MockCore artifacts (readSavingsBalance LLM-discovered; openSubAccount hand-authored)
 tenants/            tenant overlays (demo-fcu recoveries; summit-fcu re-skin re-ranking)
 policies/           allowlist/risk policies: default, summit-fcu, meridian
-evidence/           MockCore runs + meridian/ (see each directory's README.md for the index)
-tests/              329 tests (~26 s) incl. live end-to-end scenarios against the mock app;
+evidence/replay/    MockCore runs, reproducible offline (see evidence/README.md)
+tests/              349 tests (~26 s) incl. live end-to-end scenarios against the mock app;
                     fixtures/ holds a hand-authored gold artifact used only as
                     test fixture and compiler diff baseline
 ADAPTATION.md       what pointing the core at MERIDIAN CORE took, and what it exposed

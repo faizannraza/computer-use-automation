@@ -497,12 +497,20 @@ export function shapeResult(ctx: ApiContext, name: string, result: ReplayResult)
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const port = Number(process.env['CU_API_PORT'] ?? 4180);
+  // An EMPTY env var means "not configured", not "configure me with an empty
+  // string". `cp .env.example .env` leaves the optional keys present-but-blank,
+  // and `CU_POLICY=` alone was enough to crash a fresh clone on first run with
+  // an ENOENT on path `''` — the first thing a new reader would ever see.
+  const env = (name: string): string | undefined => {
+    const raw = process.env[name];
+    return raw !== undefined && raw.trim() !== '' ? raw : undefined;
+  };
+  const port = Number(env('CU_API_PORT') ?? 4180);
   const { app, ctx } = createApiApp({
-    ...(process.env['CU_APP_PROFILE'] !== undefined ? { profileFile: process.env['CU_APP_PROFILE'] } : {}),
-    ...(process.env['CU_EVIDENCE_DIR'] !== undefined ? { evidenceBaseDir: process.env['CU_EVIDENCE_DIR'] } : {}),
-    ...(process.env['CU_CAPABILITIES_DIR'] !== undefined ? { capabilitiesDir: process.env['CU_CAPABILITIES_DIR'] } : {}),
-    ...(process.env['CU_POLICY'] !== undefined ? { policyFile: process.env['CU_POLICY'] } : {}),
+    ...(env('CU_APP_PROFILE') !== undefined ? { profileFile: env('CU_APP_PROFILE')! } : {}),
+    ...(env('CU_EVIDENCE_DIR') !== undefined ? { evidenceBaseDir: env('CU_EVIDENCE_DIR')! } : {}),
+    ...(env('CU_CAPABILITIES_DIR') !== undefined ? { capabilitiesDir: env('CU_CAPABILITIES_DIR')! } : {}),
+    ...(env('CU_POLICY') !== undefined ? { policyFile: env('CU_POLICY')! } : {}),
   });
   // Loopback bind AND a loopback-Host check: the bind stops the network, the
   // Host check stops a rebound browser tab.
