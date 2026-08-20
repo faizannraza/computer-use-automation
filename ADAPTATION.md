@@ -155,10 +155,18 @@ guard.
 Stated plainly rather than left for a reviewer to find: **the API has no authentication.** Its
 boundary is the transport — a loopback bind *plus* a `Host` check, because loopback alone does not
 survive DNS rebinding. Fault injection is a harness affordance, refused on the API unless the server
-is started with an explicit flag, since it rewrites requests to the live target beneath the gate. And
-a capability declaring `requiresRole` is refused when the caller asks for a different one **in both
-directions** — a routine teller action running on supervisor credentials is the failure nobody looks
-for.
+is started with an explicit flag, since it rewrites requests to the live target beneath the gate. And the API refuses any
+invocation whose role differs from the one the capability was **recorded** with — `requiresRole` when
+it declares one, the profile's default when it does not. That second half is the point: the compiler
+only writes `requiresRole` when it differs from the default, so the three capabilities that move
+money declare nothing, and a guard keyed on "is `requiresRole` set?" waves them straight through on
+supervisor credentials. The under-privileged direction is loud — the app refuses it anyway, and that
+refusal is the real authorization boundary. The over-privileged one is silent: it works, it posts,
+and the only trace is whichever operator id happens to be logged.
+
+The CLI deliberately does **not** enforce this. Watching the target itself refuse a teller's Place
+Account Hold, and the run escalate with context rather than guess, is a more honest demonstration of
+what actually protects the account than a pre-flight 403.
 
 Redaction had to get stronger. Sensitivity annotations cover only what a *flow* declares, and a
 servicing console puts far more on screen — a name search lists other members, none of whom is a

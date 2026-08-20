@@ -529,6 +529,49 @@ describe('requiresRole is enforced, and the role a run used is recorded', () => 
 
   afterAll(() => restricted.close());
 
+  /**
+   * The direction nobody looks for. A capability that declares NO role was
+   * still recorded with one — the profile's default — and the compiler only
+   * writes `requiresRole` when it differs from that default. So the three
+   * capabilities that move money declare nothing, and a guard keyed on "is
+   * requiresRole set?" waves them through on supervisor credentials: it works,
+   * it posts, and the only trace is whichever operator id happens to be logged.
+   */
+  it('refuses a capability recorded as the default role when a HIGHER role is asked for', async () => {
+    // `main` serves the shipped capabilities; none of them declare a role.
+    const res = await fetch(`${base}/api/capabilities/member.readBalances/invoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ params: { memberId: '103001' }, options: { role: 'supervisor' } }),
+    });
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("was recorded as role 'teller'");
+    expect(body.error).toContain("resolves to role 'supervisor'");
+  });
+
+  it('still admits that capability at the role it was recorded with', async () => {
+    // The control. Without it the test above would pass on a server that
+    // refused everything.
+    const res = await fetch(`${base}/api/capabilities/member.readBalances/invoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ params: { memberId: '103001' }, options: { role: 'teller' } }),
+    });
+    expect(res.status).not.toBe(403);
+  });
+
+  it('creates no run for an over-privileged request — refused before a browser exists', async () => {
+    const before = ((await (await fetch(`${base}/api/runs`)).json()) as unknown[]).length;
+    await fetch(`${base}/api/capabilities/member.readBalances/invoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ params: { memberId: '103001' }, options: { role: 'supervisor' } }),
+    });
+    const after = ((await (await fetch(`${base}/api/runs`)).json()) as unknown[]).length;
+    expect(after).toBe(before);
+  });
+
   const invoke = async (body: unknown): Promise<Response> =>
     fetch(`${restrictedBase}/api/capabilities/member.readBalances/invoke`, {
       method: 'POST',
@@ -562,18 +605,24 @@ describe('requiresRole is enforced, and the role a run used is recorded', () => 
   });
 
   it('carries the resolved role into /api/runs and /api/runs/:id', async () => {
+    // Against the RESTRICTED server, where 'supervisor' is the role the
+    // capability was recorded with — so this exercises a non-default role
+    // being recorded, rather than an over-privileged request the guard now
+    // refuses before a run exists.
     const started = (await (
-      await post('/api/capabilities/member.readBalances/invoke', { params: {}, options: { role: 'supervisor', async: true } })
+      await invoke({ params: {}, options: { role: 'supervisor', async: true } })
     ).json()) as { runId: string };
-    // Wait for the run to reach its terminal state (params fail immediately).
-    for (let i = 0; i < 50 && ctx.store.isLive(started.runId); i++) await new Promise((r) => setTimeout(r, 10));
+    await awaitRun(restrictedBase, started.runId);
 
-    const listed = ((await (await get('/api/runs?limit=500')).json()) as { runId: string; role?: string }[]).find(
-      (r) => r.runId === started.runId,
-    );
+    const listed = ((await (await fetch(`${restrictedBase}/api/runs?limit=500`)).json()) as {
+      runId: string;
+      role?: string;
+    }[]).find((r) => r.runId === started.runId);
     expect(listed?.role).toBe('supervisor');
 
-    const detail = (await (await get(`/api/runs/${started.runId}`)).json()) as { summary: { role?: string } };
+    const detail = (await (
+      await fetch(`${restrictedBase}/api/runs/${started.runId}`)
+    ).json()) as { summary: { role?: string } };
     expect(detail.summary.role).toBe('supervisor');
   });
 });

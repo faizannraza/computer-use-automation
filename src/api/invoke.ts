@@ -212,19 +212,50 @@ export function startInvocation(ctx: ApiContext, req: InvokeRequest): StartedInv
     throw new InvocationError(400, `unknown param(s): ${unknown.join(', ')}. Declared: ${[...declared].join(', ')}`);
   }
 
-  // `requiresRole` reached the catalog and the dashboard badge but nothing ever
-  // checked it, so any caller could run a supervisor-only function as a teller
-  // — and, just as bad, run a routine teller function on supervisor
-  // credentials with no field an auditor could query. The app's own refusal is
-  // still the real authorization boundary; this refuses the mismatch BEFORE a
-  // browser exists, and refuses in both directions rather than silently
-  // upgrading the caller to the role the artifact wants.
+  // The authority a capability may run with is the authority it was RECORDED
+  // with — `requiresRole` when it declares one, the profile's default when it
+  // does not. Both directions matter and only one of them is obvious:
+  //
+  //   under-privileged  a teller invoking a supervisor-only hold. Loud: the app
+  //                     refuses it anyway, and that refusal is the real
+  //                     authorization boundary.
+  //   over-privileged   a routine teller capability invoked with `role:
+  //                     supervisor`. SILENT: it works, it posts, and the only
+  //                     trace is whichever operator id happens to be logged.
+  //
+  // Checking `requiresRole !== undefined` only catches the loud one — and the
+  // capabilities that move money (transfer, open share, update info) are
+  // exactly the ones that declare no role, because the compiler only records
+  // one when it differs from the default. So the guard has to compare against
+  // the recorded authority, not against the presence of a declaration.
+  //
+  // This is the API boundary only, deliberately. The CLI still lets you run a
+  // supervisor-gated capability as a teller, because watching the TARGET refuse
+  // it — and the run escalate with context — is the more honest demonstration
+  // of what actually protects the account.
+  // An UNKNOWN role is a different answer from a FORBIDDEN one, so it is
+  // checked first: "that role does not exist here" is a 400 the caller fixes by
+  // spelling it correctly, not a 403 they might read as an authorization
+  // decision about a role they legitimately hold.
+  const askedRole = req.options?.role;
+  if (askedRole !== undefined && ctx.profile.credentials?.roles[askedRole] === undefined) {
+    const known = Object.keys(ctx.profile.credentials?.roles ?? {});
+    throw new InvocationError(
+      400,
+      `profile '${ctx.profile.appId}' has no operator role '${askedRole}'${known.length > 0 ? ` (roles: ${known.join(', ')})` : ''}`,
+    );
+  }
+  const recordedRole = merged.artifact.policy.requiresRole ?? ctx.profile.credentials?.defaultRole;
   const resolvedRole = req.options?.role ?? ctx.profile.credentials?.defaultRole;
-  const requiresRole = merged.artifact.policy.requiresRole;
-  if (requiresRole !== undefined && resolvedRole !== requiresRole) {
+  if (recordedRole !== undefined && resolvedRole !== recordedRole) {
+    const declared = merged.artifact.policy.requiresRole !== undefined;
     throw new InvocationError(
       403,
-      `capability '${req.name}' declares requiresRole '${requiresRole}'; this invocation resolves to role '${resolvedRole ?? '(none)'}' — invoke it with options.role '${requiresRole}'`,
+      `capability '${req.name}' ${declared ? `declares requiresRole '${recordedRole}'` : `was recorded as role '${recordedRole}'`}; ` +
+        `this invocation resolves to role '${resolvedRole ?? '(none)'}' — ` +
+        (declared
+          ? `invoke it with options.role '${recordedRole}'`
+          : `omit options.role, or re-record the capability as '${resolvedRole ?? '(none)'}' if it genuinely needs that authority`),
     );
   }
 

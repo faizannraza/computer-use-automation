@@ -29,6 +29,12 @@ Seven capabilities are recorded against MERIDIAN CORE, exposed as a **callable A
 adapting to this target took and what it cost · [`evidence/meridian/`](evidence/meridian/README.md)
 for 19 committed runs against the live target, indexed one row per runtime state.
 
+![The operations console mid-run: policy fence in the header, per-step locator strategy, live masked screenshot, typed table output](docs/screenshots/dashboard-run.jpg)
+
+*A capability replaying against the live target. The header states the policy the run is under; each
+step shows which rung of the locator ladder resolved it; the live view shows the screenshot the run
+captured, with regulated fields already masked; and the output is a typed table, not scraped text.*
+
 ```
    goal (natural language)                    typed params        "move $1 from A to B"
           |                                        |                      |
@@ -135,6 +141,8 @@ Click **`member.readBalances`** → `memberId` `103001` → tick **Watch headed 
 - The **live view** shows the screenshot the run captured — with the member's name, e-mail, phone,
   address and every balance **blacked out**, while share ids, types and statuses stay readable.
 
+![The member record as captured into evidence: name, e-mail, phone, address and every balance blacked out; share ids, types and statuses readable](docs/screenshots/redacted-capture.png)
+
 That masking is not a filter over the image. The app profile declares which fields are regulated —
 by label, by label *pattern*, and by column header — and the mask is burned into the capture inside
 the same observation the classifier ran on. The caller still receives the real values: an invoke
@@ -162,12 +170,16 @@ separate result types, one explicit priority order.
 
 ### 4. The human gate — nothing irreversible happens without it
 
+![The chatbot: seven capabilities as pills with risk dots, and four suggested prompts including one tagged "needs approval"](docs/screenshots/chatbot.jpg)
+
 In the **chatbot**, click *Transfer $1.00 from 103001-S0070-7 to 103001-MMKT-8*.
 
 The planner picks a capability by name from the catalog. It cannot invent a capability and it cannot
 invent a parameter. Switch to the dashboard: an amber bar appears naming the capability, the version,
 the step, the policy reason, and a summary of the screen in which the member's name is **already
 masked**.
+
+![The approval gate: capability, version, step, the policy reason, and a screen summary in which the member's name is already masked](docs/screenshots/approval-gate.jpg)
 
 Click **Approve — let it post**. A confirmation number comes back.
 
