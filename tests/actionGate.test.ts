@@ -150,3 +150,70 @@ describe('ActionGate', () => {
     }
   });
 });
+
+/**
+ * Two halves of the fence that had never been exercised.
+ *
+ * A mutation audit weakened the origin check to compare hostnames, and disabled
+ * the positive path allowlist entirely. Neither broke a single test. In both
+ * cases the CODE was already correct — what was missing was anything that would
+ * notice if it stopped being.
+ */
+describe('the parts of the fence no test had touched', () => {
+  const https = PolicySchema.parse({
+    allowedOrigins: ['https://core.example.com'],
+    allowedActions: ['navigate'],
+    irreversibleActionMode: 'escalate',
+  });
+
+  // Every existing origin test uses `http://localhost:9999` and denies a
+  // different HOST, so scheme and port were never part of the comparison under
+  // test. On this target the allowlist is an https origin, and both of these
+  // reach a real service: the first in plaintext, the second a different port
+  // on the same box.
+  it.each([
+    ['a plaintext downgrade', 'http://core.example.com/members'],
+    ['a port swap', 'https://core.example.com:8443/members'],
+  ])('denies %s of an allowlisted host', async (_label, url) => {
+    const { surface, act } = fakeSurface('https://core.example.com/');
+    const gate = new ActionGate(https, surface);
+    await expect(gate.execute({ kind: 'navigate', url }, { risk: 'read' })).rejects.toMatchObject({
+      code: 'OFF_ORIGIN',
+    });
+    expect(act).not.toHaveBeenCalled();
+  });
+
+  it('still allows the exact origin', async () => {
+    // The positive control: without it, an origin check that denied everything
+    // would satisfy the two cases above.
+    const { surface, act } = fakeSurface('https://core.example.com/');
+    await new ActionGate(https, surface).execute(
+      { kind: 'navigate', url: 'https://core.example.com/members' },
+      { risk: 'read' },
+    );
+    expect(act).toHaveBeenCalledOnce();
+  });
+
+  // All three shipped policies leave `allowedPathPrefixes` empty, so the
+  // positive half of the path check has never run — in a test or in production.
+  // If anyone writes a confining policy, nothing currently guarantees it confines.
+  it('confines a run to allowedPathPrefixes when a policy sets any', async () => {
+    const confined = PolicySchema.parse({
+      allowedOrigins: ['http://localhost:9999'],
+      allowedPathPrefixes: ['/members'],
+      allowedActions: ['navigate'],
+      irreversibleActionMode: 'escalate',
+    });
+    const { surface, act } = fakeSurface();
+    const gate = new ActionGate(confined, surface);
+    await expect(
+      gate.execute({ kind: 'navigate', url: 'http://localhost:9999/admin/users' }, { risk: 'read' }),
+    ).rejects.toMatchObject({ code: 'PATH_DENIED' });
+    expect(act).not.toHaveBeenCalled();
+
+    // And it normalises the same way the denylist does, so a legacy router's
+    // case-insensitivity cannot lock the automation out of its own allowlist.
+    await gate.execute({ kind: 'navigate', url: 'http://localhost:9999/Members/103001' }, { risk: 'read' });
+    expect(act).toHaveBeenCalledOnce();
+  });
+});

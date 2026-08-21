@@ -159,3 +159,24 @@ describe('rendering', () => {
     expect(summary).toContain('Member Details');
   });
 });
+
+/**
+ * `urlMatches` is anchored, and that had never been tested.
+ *
+ * The one existing negative case (a glob ending in "login", against a members
+ * URL) fails for the wrong reason: the URL contains no "login" substring
+ * anywhere, so it returns false whether the regex is anchored or not. Unanchor
+ * globToRegExp and the suite stays green while a glob ending in "members"
+ * starts matching every member DETAIL page — a postcondition meant to assert
+ * "we are back on the list screen" would pass on the record you just opened.
+ */
+describe('urlMatches anchoring', () => {
+  it('does not treat a prefix as a match', async () => {
+    // obs.location is http://localhost:4173/members/12345
+    expect(await evaluateCondition(ConditionSchema.parse({ c: 'urlMatches', pattern: '*/members' }), obs)).toBe(false);
+  });
+
+  it('still matches when the pattern covers the whole path', async () => {
+    expect(await evaluateCondition(ConditionSchema.parse({ c: 'urlMatches', pattern: '*/members/*' }), obs)).toBe(true);
+  });
+});

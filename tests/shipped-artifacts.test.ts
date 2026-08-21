@@ -85,8 +85,15 @@ describe('shipped capability artifacts', () => {
   it('never commits a masked value into a step, which would replay as literal asterisks', () => {
     // The redactor runs over discovery traces; if a marker or a param example
     // survived into a committed step value, replay would type `***` into a live
-    // banking form. The schema refuses to LOAD such an artifact, so this asserts
-    // the shipped set never regressed into needing that refusal.
+    // banking form.
+    //
+    // The schema does NOT catch this. `MASKED_TEXT` in capability.ts is applied
+    // only to the `when` clause of outcomes, recoveries and anomalies — a
+    // detector that can never fire — and never to step values. An earlier
+    // version of this comment claimed the schema refuses to load such an
+    // artifact, which would have let a reviewer skip adding that rule. So this
+    // assertion is the only thing standing between a masked value and a live
+    // form, and it is not a belt-and-braces check.
     const masked = /\*\*\*|«secret:/;
     for (const { file } of shipped) {
       const { artifact } = loadCapability(file);

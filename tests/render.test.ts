@@ -80,7 +80,13 @@ describe('rendering an observation for the model', () => {
   it('falls back to cell-aligned splitting for observations recorded without cellTexts', () => {
     const text = renderObservationText(obsOf([cell(0, { name: 'x', nearText: cells.join(' | ') })]));
     const row = /row="((?:[^"\\]|\\.)*)"/.exec(text);
-    const rendered = row ? (JSON.parse(`"${row[1]!}"`) as string) : '';
+    // Without this, the test cannot fail: when the regex misses, `rendered` is
+    // '', `''.split(' | ')` yields [''], the `continue` fires, and the loop
+    // makes zero assertions. Verified by suppressing the `row=` attribute in
+    // render.ts — two sibling tests failed and this one still passed.
+    expect(row, 'no row= attribute was rendered at all').not.toBeNull();
+    const rendered = JSON.parse(`"${row![1]!}"`) as string;
+    expect(rendered, 'the row rendered empty').not.toBe('');
     for (const part of rendered.split(' | ')) {
       if (part === '') continue;
       expect(cells).toContain(part);

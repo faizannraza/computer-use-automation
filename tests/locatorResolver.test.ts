@@ -106,3 +106,107 @@ describe('resolveTarget', () => {
     expect(res).toMatchObject({ ok: true, ref: 0, strategyIndex: 1 });
   });
 });
+
+/**
+ * The three decisions the ladder exists to make, none of which had a test.
+ *
+ * The existing suite covers the happy path (one confident candidate), the
+ * trivial refusal (an exact tie), and the trivial threshold. A mutation audit
+ * showed that "pick the best-scoring candidate", "how close is too close", and
+ * "an exact anchor is exact" could all be broken with the suite still green —
+ * and those are precisely the decisions that separate acting on the right
+ * control from acting on the wrong one.
+ */
+describe('the decisions the ladder actually makes', () => {
+  it('picks the best-scoring candidate, not the first one observed', async () => {
+    // Both match the same rung; the weaker `contains` match is observed FIRST.
+    // Take away the sort and replay clicks whichever control the DOM listed
+    // first — on a screen with "Post Transfer" and "Post Transfer to Savings",
+    // that is a different button.
+    const o = obs([
+      el({ ref: 0, role: 'button', name: 'Post Transfer to Savings' }), // contains → 0.8
+      el({ ref: 1, role: 'button', name: 'Post Transfer' }), // exact → 1.0
+    ]);
+    const res = await resolveTarget(
+      target({
+        framePath: [],
+        strategies: [{ s: 'roleName', role: 'button', name: 'Post Transfer', nameMatch: 'contains' }],
+      }),
+      o,
+    );
+    expect(res).toMatchObject({ ok: true, ref: 1, score: 1 });
+  });
+
+  it('acts when one candidate is decisively better, rather than refusing everything', async () => {
+    // The counterweight to the ambiguity refusal, and the reason the epsilon is
+    // a threshold rather than "any tie refuses". Two DIFFERENT scores with a
+    // clear gap (1.0 vs 0.8) must resolve, or the ladder would refuse any
+    // screen holding a control whose name contains another control's name —
+    // which on a legacy console is most of them.
+    const o = obs([
+      el({ ref: 0, role: 'button', name: 'Apply Hold' }), // exact → 1.0
+      el({ ref: 1, role: 'button', name: 'Apply Hold Now' }), // contains → 0.8
+    ]);
+    const res = await resolveTarget(
+      target({
+        framePath: [],
+        strategies: [{ s: 'roleName', role: 'button', name: 'Apply Hold', nameMatch: 'contains' }],
+      }),
+      o,
+    );
+    // 1.0 − 0.8 = 0.2 > AMBIGUITY_EPSILON, so it acts, on the exact match.
+    // Note what this does NOT pin: a gap SMALLER than the epsilon. Within one
+    // rung the compiler only ever emits scores 0.2 apart, so the sub-epsilon
+    // case is reachable only through the geometry modifier, which no fixture
+    // constructs. That gap is real and is called out in the review notes.
+    expect(res).toMatchObject({ ok: true, ref: 0 });
+  });
+
+  it("an exact rowAnchor must BE a cell, not merely appear inside one", async () => {
+    // `match: 'exact'` carries the longest justifying comment in the resolver
+    // and is used by no shipped artifact, so the branch had zero coverage.
+    // Relaxed to a substring, anchor `S01` also matches row `S010` — the wrong
+    // account's balance, returned confidently.
+    const o = obs([
+      el({
+        ref: 0,
+        role: 'cell',
+        name: '$9.99',
+        colHeader: 'Balance',
+        cellTexts: ['S010', 'Holiday Club', '$9.99'],
+        nearText: 'S010 | Holiday Club | $9.99',
+      }),
+    ]);
+    const res = await resolveTarget(
+      target({
+        framePath: [],
+        strategies: [{ s: 'tableCell', rowAnchor: { text: 'S01', match: 'exact' }, columnHeader: 'Balance' }],
+      }),
+      o,
+    );
+    expect(res).toMatchObject({ ok: false, reason: 'not_found' });
+  });
+
+  it('the same exact rowAnchor still resolves the row it really names', async () => {
+    // The positive control: without it the test above passes if `tableCell`
+    // stops matching anything at all.
+    const o = obs([
+      el({
+        ref: 0,
+        role: 'cell',
+        name: '$1.00',
+        colHeader: 'Balance',
+        cellTexts: ['S01', 'Everyday', '$1.00'],
+        nearText: 'S01 | Everyday | $1.00',
+      }),
+    ]);
+    const res = await resolveTarget(
+      target({
+        framePath: [],
+        strategies: [{ s: 'tableCell', rowAnchor: { text: 'S01', match: 'exact' }, columnHeader: 'Balance' }],
+      }),
+      o,
+    );
+    expect(res).toMatchObject({ ok: true, ref: 0 });
+  });
+});

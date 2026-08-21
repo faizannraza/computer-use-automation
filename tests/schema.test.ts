@@ -1,5 +1,6 @@
 /** The artifact schema's own guarantees: integrity, contract cross-checks. */
-import { readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -171,5 +172,86 @@ describe('capability artifact', () => {
     const bad = structuredClone(artifact) as { outputs: Record<string, { source: { stepId: string } }> };
     bad.outputs['savingsBalance']!.source.stepId = 's3';
     expect(() => CapabilityArtifactSchema.parse(bad)).toThrow(/must source from a read step/);
+  });
+});
+
+/**
+ * The integrity chain, tested at the end nobody was testing.
+ *
+ * Everything DOWNSTREAM of `verified` is covered: the engine refuses to replay
+ * when it is false, the CLI exits non-zero, the API pre-flight rejects. What
+ * was never covered is that `loadCapability` ever PRODUCES false — every test
+ * loads a genuine on-disk artifact, so the detector itself was only ever
+ * observed agreeing. Hard-code `verified: true` and `cu validate`, the API
+ * pre-flight and the CI gate all go green on an artifact edited after signing.
+ */
+describe('tamper detection', () => {
+  const tamper = (mutate: (a: Record<string, unknown>) => void): string => {
+    const a = JSON.parse(readFileSync(GOLD, 'utf8')) as Record<string, unknown>;
+    mutate(a);
+    const file = path.join(mkdtempSync(path.join(os.tmpdir(), 'cu-tamper-')), 'tampered.json');
+    writeFileSync(file, JSON.stringify(a, null, 2));
+    return file;
+  };
+
+  it('verifies an untouched artifact', () => {
+    // The control. Without it, a `verified` that returned false unconditionally
+    // would pass every assertion below.
+    expect(loadCapability(GOLD).verified).toBe(true);
+  });
+
+  it('reports verified:false when prose is edited after hashing', () => {
+    const file = tamper((a) => {
+      (a['capability'] as Record<string, unknown>)['description'] = 'edited after hashing';
+    });
+    expect(loadCapability(file).verified).toBe(false);
+  });
+
+  it('reports verified:false when a STEP is edited after hashing', () => {
+    // The case that matters: the executable spine changed, and the hash is the
+    // only thing that can say so.
+    const file = tamper((a) => {
+      const steps = a['steps'] as Record<string, unknown>[];
+      steps[0]!['risk'] = 'read';
+    });
+    expect(loadCapability(file).verified).toBe(false);
+  });
+
+  it('reports verified:false when the recorded hash itself is swapped', () => {
+    const file = tamper((a) => {
+      (a['integrity'] as Record<string, unknown>)['contentHash'] = 'f'.repeat(64);
+    });
+    expect(loadCapability(file).verified).toBe(false);
+  });
+});
+
+/**
+ * Two `superRefine` rules that shipped without a negative case.
+ *
+ * The file has negative cases for four of its cross-checks and none for these
+ * two — the pattern a mutation audit found across the suite: a rule added to an
+ * existing list tends to arrive without the test that proves it fires.
+ */
+describe('schema cross-checks that had no negative case', () => {
+  const shipped = (): Record<string, unknown> =>
+    JSON.parse(readFileSync('capabilities-meridian/member.readBalances@1.0.0.json', 'utf8')) as Record<string, unknown>;
+
+  it('rejects a readTable output declared as a scalar', () => {
+    // The damage this prevents is two-fold and both halves are silent: the API
+    // hands the caller a JSON blob where it promised structure, and the engine
+    // skips per-cell redactor registration, so no table cell ever becomes a
+    // needle.
+    const a = shipped();
+    (a['outputs'] as Record<string, Record<string, unknown>>)['shares']!['type'] = 'string';
+    expect(() => CapabilityArtifactSchema.parse(a)).toThrow(/table/i);
+  });
+
+  it('rejects duplicate step ids', () => {
+    // Step ids key the engine's attempt counters and its onDetect lookups, so a
+    // duplicate silently corrupts both rather than failing.
+    const a = shipped();
+    const steps = a['steps'] as Record<string, unknown>[];
+    steps.push({ ...steps[0] });
+    expect(() => CapabilityArtifactSchema.parse(a)).toThrow(/unique/i);
   });
 });
