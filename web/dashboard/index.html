@@ -13,9 +13,13 @@
 <header id="topbar">
   <div class="brand">
     <span class="brand-mark"></span>
+    <!-- One line. The vendor name and the full base URL used to live on a
+         second line here; the URL is already the `origin` chip on the right
+         (which is where it is load-bearing, since it states the fence), and
+         printing it twice cost a whole row of the viewport to say it again. -->
     <div class="brand-text">
       <h1 id="app-title">Capability Operations Console</h1>
-      <div class="brand-sub"><span id="app-vendor" class="mono">—</span> <span class="sep">/</span> <a id="app-baseurl" class="mono link" href="#" target="_blank" rel="noreferrer">—</a></div>
+      <span id="app-meta" class="mono">—</span>
     </div>
   </div>
   <div id="policy-strip" class="policy-strip" aria-label="Active policy fence"></div>

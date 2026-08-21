@@ -159,8 +159,14 @@ async function boot() {
   try { capabilities = await getJson('/api/capabilities'); } catch { capabilities = []; }
 
   if (profile) {
-    document.getElementById('app-title').textContent = profile.title || 'Capability Console';
-    document.getElementById('app-base').textContent = profile.baseUrl || '';
+    // Same trim as the console header: the application's name, and the host it
+    // is being driven at. The vendor, the marketing descriptor and the URL
+    // scheme are not things anyone reads twice.
+    var title = profile.title || 'Capability Console';
+    document.getElementById('app-title').textContent = title.split('\u2014')[0].trim() || title;
+    var host = profile.baseUrl || '';
+    try { host = new URL(profile.baseUrl).host; } catch { /* keep whatever was given */ }
+    document.getElementById('app-base').textContent = host;
     document.getElementById('foot-base').textContent = profile.title || 'the target application';
     document.title = (profile.vendor || 'Capability') + ' — Chat';
   }
@@ -647,9 +653,15 @@ function setBusy(value) {
    instead of printing "auto (auto)". */
 function showMode() {
   var mode = forcedMode || serverMode;
-  $modeState.textContent = forcedMode ? 'mode: ' + mode + ' (forced)'
-    : mode ? 'mode: ' + mode + ' (auto)'
-    : 'mode: auto';
+  // The two buttons are labelled "model" and "deterministic"; this line used to
+  // print the server's raw token ('llm') beside them, plus an (auto)/(forced)
+  // parenthetical that the pressed button already communicates. One word, with
+  // the detail on hover.
+  var label = mode === 'llm' ? 'model' : mode === 'scripted' ? 'deterministic' : 'auto';
+  $modeState.textContent = label;
+  $modeState.title = forcedMode
+    ? 'Planner pinned to ' + label + ' for this session'
+    : 'Planner chosen automatically (' + label + ')';
 }
 
 /* Only a FORCED mode lights a button. The lit segment means "I pinned this",

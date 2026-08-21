@@ -100,12 +100,16 @@ body {
   background: rgba(255,255,255,.85); border-radius: 2px;
   box-shadow: 0 4px 0 rgba(255,255,255,.6), 0 8px 0 rgba(255,255,255,.35);
 }
-.brand-text { min-width: 0; }
+.brand-text { min-width: 0; display: flex; align-items: baseline; gap: 9px; }
 #app-title {
   margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.015em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34vw;
 }
-.brand-sub { color: var(--fg-faint); font-size: 12px; margin-top: 0; white-space: nowrap; }
+/* Version and profile id, dim and on the same line as the name — the whole
+   brand block is now one row instead of two. */
+#app-meta { color: var(--fg-faint); font-size: 12px; white-space: nowrap; flex: none; }
+.policy-link { color: inherit; text-decoration: none; display: inline-flex; align-items: baseline; gap: 6px; }
+.policy-link:hover { text-decoration: underline; }
 
 /* The fence, stated once and quietly. It is context, not a dashboard — four
    stacked label/value cards were taking the top eighth of the screen for

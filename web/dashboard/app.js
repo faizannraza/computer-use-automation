@@ -102,27 +102,40 @@ async function loadProfile() {
   try {
     const p = await api('/api/profile');
     S.profile = p;
-    $('app-title').textContent = p.title || 'Capability Operations Console';
-    $('app-vendor').textContent = `${p.vendor || '—'} · ${p.appId || '—'}`;
-    const a = $('app-baseurl');
-    a.textContent = p.baseUrl || '—';
-    a.href = p.baseUrl || '#';
-    renderPolicy(p.policy || {});
+    // The profile's title reads "MERIDIAN CORE — Member Services Platform
+    // v4.2.1". Only two parts of that earn permanent header space: the name of
+    // the application, and its version — a version bump is the likeliest reason
+    // a recorded artifact stops resolving. The marketing descriptor and the
+    // vendor do not, so they are dropped. `appId` stays because it names the
+    // profile JSON driving this run, which is the thing that makes the target
+    // swappable.
+    const title = p.title || 'Capability Operations Console';
+    const version = /\bv\d[\w.]*/.exec(title)?.[0];
+    $('app-title').textContent = title.split('—')[0].trim() || title;
+    $('app-meta').textContent = [version, p.appId].filter(Boolean).join(' · ') || '—';
+    renderPolicy(p.policy || {}, p.baseUrl);
   } catch (err) {
     $('policy-strip').append(h('div', { class: 'policy-item is-guard' }, h('span', { class: 'k', text: 'profile' }), h('span', { class: 'v', text: String(err.message) })));
   }
 }
 
 /** The fence, stated in the header: what this automation may touch at all. */
-function renderPolicy(policy) {
+function renderPolicy(policy, baseUrl) {
   const strip = clear($('policy-strip'));
   const item = (k, v, guard) => h('div', { class: 'policy-item' + (guard ? ' is-guard' : '') },
     h('span', { class: 'k', text: k }), h('span', { class: 'v', text: v }));
-  // Short labels and a hostname rather than a full origin: the origin is
-  // already spelled out under the title, and this row exists to be CONFIRMED
-  // at a glance, not read.
+  // Hostnames rather than full origins: this row exists to be CONFIRMED at a
+  // glance, not read. It is now the only place the target's address appears,
+  // so the chip carries the link that used to sit under the title.
   const host = (o) => { try { return new URL(o).host; } catch { return o; } };
-  strip.append(item('origin', (policy.allowedOrigins || []).map(host).join(' ') || 'none'));
+  const origin = item('origin', (policy.allowedOrigins || []).map(host).join(' ') || 'none');
+  if (baseUrl) {
+    const link = h('a', { class: 'policy-link', href: baseUrl, target: '_blank', rel: 'noreferrer',
+      title: `Open ${baseUrl}` });
+    link.append(...origin.childNodes);
+    origin.append(link);
+  }
+  strip.append(origin);
   strip.append(item('denies', (policy.deniedPathPrefixes || []).join(' ') || 'none'));
   strip.append(item('actions', `${(policy.allowedActions || []).length}`));
   strip.append(item('irreversible', policy.irreversibleActionMode || 'unknown', true));
