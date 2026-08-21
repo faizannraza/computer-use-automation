@@ -16,14 +16,13 @@ Two boundaries did change, and additively: the artifact schema gained a new acti
 output type and three fields — every one `.optional()`, never `.default()` — and the `Surface` seam
 gained three optional methods. The proof that this is extension rather than redefinition is that the
 artifacts recorded against the *previous* application still hash-verify today, and a test asserts it.
-The replay engine grew by about half again; its classification order — the part that is a design
+The replay engine grew by about two-thirds again (653 to 1,118 lines); its classification order — the part that is a design
 claim — is the same five lines it always was. MERIDIAN is a different shape of legacy — one page instead of a frameset, a
-numbered menu, a per-transaction token — and the existing vocabulary already described it: labels
+numbered menu, a hidden token on its posting forms — and the existing vocabulary already described it: labels
 resolve through the preceding-cell fallback the first target needed, the shares table's header row is
 mined by the same bold-row heuristic, buttons name themselves from `value`, and frame hints are empty.
 
-What the target *did* expose were four gaps — three vocabulary, one real adaptation debt. I would not
-claim otherwise, because a reviewer can run `git diff --stat`.
+What the target *did* expose were four gaps — three vocabulary, one real adaptation debt.
 
 | # | Added | Coupling? |
 |---|---|---|
@@ -110,7 +109,7 @@ condition-based waiting, explicit classification — with the target's taxonomy 
   capabilities that observed them; `RECORD_NOT_FOUND`, `TRANSACTION_REJECTED` declared once in the
   profile and checked on *every* step, because no single flow owns them.
 - **Recoverable**: `MAINTENANCE_INTERSTITIAL` and `SESSION_EXPIRED`, both cleared by restarting from
-  the entrypoint — which re-mints the transaction token rather than re-posting a consumed one.
+  the entrypoint — which mints a token bound to the new session rather than re-posting one bound to a session that has ended.
 - **Anomaly** — fail fast instead of waiting out the clock: `APPLICATION_ERROR` on the 500 page.
 - **Hard failures**: an ambiguous or unresolvable target.
 - **Escalation**: a teller attempting Place Account Hold gets the app's own supervisor-override
@@ -129,7 +128,7 @@ inventing `INSUFFICIENT_FUNDS` would mean pattern-matching prose the app never p
 stable. And a last-name search matching several members is not exceptional at all — `readTable`
 returns every match as a row, so "two Smiths" is a two-row answer, not an error.
 
-The **per-transaction token** is where computer use beats request-reconstruction. We never read,
+The **hidden form token** — which the brief calls per-transaction and which the evidence shows is per-session — is where computer use beats request-reconstruction. We never read,
 store or replay it: the browser submits the form the operator sees, so it is carried inherently. What
 the system does is *assert* one is present before a posting step — the walker observes hidden inputs
 by name, value deliberately never captured — so a form served without a token fails loudly instead of
@@ -155,18 +154,22 @@ guard.
 Stated plainly rather than left for a reviewer to find: **the API has no authentication.** Its
 boundary is the transport — a loopback bind *plus* a `Host` check, because loopback alone does not
 survive DNS rebinding. Fault injection is a harness affordance, refused on the API unless the server
-is started with an explicit flag, since it rewrites requests to the live target beneath the gate. And the API refuses any
-invocation whose role differs from the one the capability was **recorded** with — `requiresRole` when
-it declares one, the profile's default when it does not. That second half is the point: the compiler
-only writes `requiresRole` when it differs from the default, so the three capabilities that move
-money declare nothing, and a guard keyed on "is `requiresRole` set?" waves them straight through on
-supervisor credentials. The under-privileged direction is loud — the app refuses it anyway, and that
-refusal is the real authorization boundary. The over-privileged one is silent: it works, it posts,
-and the only trace is whichever operator id happens to be logged.
+is started with an explicit flag, since it rewrites requests to the live target beneath the gate.
 
-The CLI deliberately does **not** enforce this. Watching the target itself refuse a teller's Place
-Account Hold, and the run escalate with context rather than guess, is a more honest demonstration of
-what actually protects the account than a pre-flight 403.
+The API refuses any invocation whose role differs from the one the capability was **recorded** with —
+`requiresRole` when it declares one, the profile's default when it does not. The second clause is
+where the work is. The compiler writes `requiresRole` only when it differs from the default, so the
+three capabilities that move money declare nothing, and the obvious guard — "is `requiresRole` set?"
+— would have waved exactly those three through on supervisor credentials. It would also have failed
+quietly: the under-privileged direction is loud, because the app refuses it anyway and that refusal
+is the real authorization boundary, but an over-privileged transfer succeeds, posts, and leaves no
+trace beyond whichever operator id happened to be logged. Comparing against the recorded authority
+catches both directions.
+
+The CLI deliberately does not apply this pre-flight check, which is why the escalation is demonstrable
+at all: the run reaches MERIDIAN's supervisor-override screen and hands the decision to a person.
+Both are worth showing — the API refuses on authority it can check locally, the target refuses on
+authority only it holds.
 
 Redaction had to get stronger. Sensitivity annotations cover only what a *flow* declares, and a
 servicing console puts far more on screen — a name search lists other members, none of whom is a
@@ -176,7 +179,7 @@ matched elements are masked in the screenshot of that same observation. Share id
 not regulated and stay readable, which is what keeps the evidence debuggable.
 
 Recording all seven capabilities cost **about $6** in total — roughly $0.90 each, 113 model turns,
-1.1M input tokens at `claude-opus-4-8`. That number matters more than it looks: discovery is the only
+1.1M input tokens at `claude-opus-4-8`. Discovery is the only
 place a model runs, it runs once per capability, and everything after it is deterministic. The
 marginal cost of the ten-thousandth transfer is one browser session.
 

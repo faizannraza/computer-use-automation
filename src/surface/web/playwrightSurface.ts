@@ -333,16 +333,27 @@ export class PlaywrightWebSurface implements Surface {
       case 'setValue': {
         const handle = await this.elementHandle(action.ref);
         if (this.typeDelayMs > 0) {
-          // Same end state as fill(), reached visibly. fill() first so the
-          // field is cleared and any framework listener sees a reset, then the
-          // characters go in one at a time.
+          // Visible typing, with fill() as the authority on the end state.
+          //
+          // `type` is NOT equivalent to `fill`, and the difference is a gate
+          // bypass rather than a cosmetic one: Playwright maps `\n` to the
+          // Enter key, so typing a newline into a single-line input SUBMITS THE
+          // FORM — dispatching a request the ActionGate authorised as a
+          // `setValue` at `reversible` risk. `member.updateInfo`'s address is
+          // caller-supplied free text with no declared pattern, and the chatbot
+          // path fills it with model-authored strings, so this is reachable.
+          // (`fill` also applies HTML value sanitization, which `type` skips —
+          // so the two disagree on the stored value as well.)
+          //
+          // Type a newline-free string for the effect, then let `fill` set the
+          // real value. The audience sees the field being typed; the field ends
+          // up holding exactly what a headless run would have put there.
           await handle.fill('', { timeout: 5000 });
           // `type` on an ElementHandle rather than Locator.pressSequentially:
           // the gate hands us a ref into the current observation, and turning
           // that back into a Locator would re-query the page and could bind to
           // a different node than the one authorised.
-          await handle.type(action.value, { delay: this.typeDelayMs, timeout: 15000 });
-          return {};
+          await handle.type(action.value.replace(/[\r\n]+/g, ' '), { delay: this.typeDelayMs, timeout: 15000 });
         }
         await handle.fill(action.value, { timeout: 5000 });
         return {};
@@ -400,7 +411,19 @@ export class PlaywrightWebSurface implements Surface {
 
   private async tryScreenshot(): Promise<Buffer | undefined> {
     try {
-      if (this.maskRefs.length > 0) await this.setMaskAttribute(true);
+      if (this.maskRefs.length > 0) {
+        // Fail CLOSED. If any frame refused the mask, the capture would be a
+        // perfectly ordinary-looking PNG with a member's name and balances in
+        // it, written to committed evidence and announced as normal — there is
+        // nothing downstream that could tell it apart from a masked one. No
+        // screenshot is a gap in the audit trail; an unmasked screenshot is a
+        // disclosure, and only one of those is recoverable.
+        const masked = await this.setMaskAttribute(true);
+        if (!masked) {
+          await this.setMaskAttribute(false);
+          return undefined;
+        }
+      }
       const png = await this.page.screenshot({ timeout: 3000 });
       if (this.maskRefs.length > 0) await this.setMaskAttribute(false);
       return png;
@@ -415,11 +438,14 @@ export class PlaywrightWebSurface implements Surface {
    * observation classified — no second, selector-based notion of "where the
    * sensitive data is" that could drift from the first.
    */
-  private async setMaskAttribute(on: boolean): Promise<void> {
+  private async setMaskAttribute(on: boolean): Promise<boolean> {
+    let allApplied = true;
     const byFrame = new Map<Frame, number[]>();
     for (const ref of this.maskRefs) {
       const loc = this.refMap.get(ref);
-      if (!loc) continue;
+      // A ref with no stashed location cannot be masked, and we do not know
+      // what it was — treat it as a failure rather than a no-op.
+      if (!loc) { allApplied = false; continue; }
       byFrame.set(loc.frame, [...(byFrame.get(loc.frame) ?? []), loc.index]);
     }
     for (const [frame, indices] of byFrame) {
@@ -443,8 +469,14 @@ export class PlaywrightWebSurface implements Surface {
           },
           { indices, on },
         )
-        .catch(() => undefined); // a frame mid-navigation must not fail a capture
+        .catch(() => {
+          // Reported, not swallowed. The caller decides what an unmasked frame
+          // means; here it is only a fact. (A frame mid-navigation is the usual
+          // cause, and it makes the capture unsafe rather than merely lossy.)
+          allApplied = false;
+        });
     }
+    return allApplied;
   }
 }
 

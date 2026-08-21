@@ -120,12 +120,35 @@ export class RunStore {
     this.announceDone(run);
   }
 
-  /** Mark a run that died outside the engine's own failure handling. */
+  /**
+   * Mark a run that died OUTSIDE the engine's own failure handling — a browser
+   * that would not launch, an evidence directory that could not be created, a
+   * surface that threw on close.
+   *
+   * The reason is deliberately not forwarded to subscribers. Every other line
+   * on this stream came through `RunLog`, which redacts at the write boundary;
+   * this one never touched a redactor, because the run died before (or after)
+   * the engine owned one. Playwright's errors quote the page they were driving,
+   * so forwarding `err.message` verbatim would make this the single event on
+   * the server capable of streaming regulated text to every subscriber — and
+   * `publish` also buffers it, so it would replay to every later subscriber too.
+   *
+   * The operator loses nothing: the detail goes to the console they started the
+   * server in, which is the one place already trusted with unredacted output.
+   */
   fail(runId: string, reason: string): void {
     const run = this.live.get(runId);
     if (!run) return;
     run.summary = { ...run.summary, status: 'error', finishedAt: new Date().toISOString(), live: false };
-    this.publish(runId, JSON.stringify({ ts: new Date().toISOString(), type: 'run_error', reason }));
+    console.error(`[run ${runId}] died outside the engine: ${reason}`);
+    this.publish(
+      runId,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        type: 'run_error',
+        reason: 'the run ended before the engine could report on it — see the server console for the cause',
+      }),
+    );
     this.announceDone(run);
   }
 

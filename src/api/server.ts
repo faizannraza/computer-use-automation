@@ -30,6 +30,7 @@ import { createReadStream, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import { z } from 'zod';
 import type { Request, Response } from 'express';
 import { loadCatalog } from '../catalog/catalog.js';
 import { HttpOperator } from './httpOperator.js';
@@ -67,6 +68,30 @@ export interface ServerOptions {
 
 /** Hostnames a `Host` header may name for this to be a loopback request. */
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
+/**
+ * The chatbot's request body. Bounded on purpose: `max(50)` and the 20k
+ * per-message cap keep an unauthenticated local caller from turning one POST
+ * into a large Anthropic bill, and `.strict()` refuses the extra keys that
+ * would otherwise reach the planner's context as content the model treats as
+ * its own prior tool output.
+ */
+const ChatRequestSchema = z
+  .object({
+    messages: z
+      .array(
+        z
+          .object({
+            role: z.enum(['user', 'assistant']),
+            content: z.string().max(20_000),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(50),
+    mode: z.enum(['llm', 'scripted']).optional(),
+  })
+  .strict();
 
 /**
  * The hostname a `Host` header names, with any port stripped.
@@ -305,6 +330,15 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
 
   /** Server-sent events: the run's history, then everything as it happens. */
   app.get('/api/runs/:runId/stream', (req, res) => {
+    const live = ctx.store.isLive(String(req.params.runId));
+    // Resolve BEFORE committing to a 200. A run id that does not exist is not
+    // a run with no events: streaming an empty history and a `done` renders a
+    // finished, blank run in the console, while `GET /api/runs/:runId` 404s the
+    // very same id. Once writeHead has gone out there is no status left to send.
+    if (!live && ctx.store.detail(String(req.params.runId)) === undefined) {
+      res.status(404).json({ error: `no run '${String(req.params.runId)}'` });
+      return;
+    }
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -314,7 +348,6 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
     const send = (line: string): void => {
       res.write(`data: ${line}\n\n`);
     };
-    const live = ctx.store.isLive(String(req.params.runId));
     if (!live) {
       // A finished run: replay its recorded events so history renders through
       // the same view as a live run. Deliberately NOT combined with the live
@@ -329,6 +362,10 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
     // simply stop arriving, the client never learns the run finished, and it
     // never fetches the structured result — so the outputs panel stays empty
     // for exactly the runs a person watched happen.
+    // `finish` closes over `keepAlive` and `unsubscribe`, both declared below:
+    // it is passed to `subscribe` as a callback, so it has to be defined first.
+    // Safe because `subscribe` only REGISTERS the callback — the earliest call
+    // is the explicit one after the declarations.
     let closed = false;
     const finish = (): void => {
       if (closed) return;
@@ -336,6 +373,11 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
       clearInterval(keepAlive);
       res.write('event: done\ndata: {}\n\n');
       res.end();
+      // Drop the listener in the same breath as ending the response. Leaving it
+      // registered until `req.on('close')` fires leaves a window in which a
+      // publish writes to an ended response — and that raises an ASYNC error on
+      // the response object, which `publish`'s try/catch cannot catch.
+      unsubscribe();
     };
     const { history, unsubscribe } = ctx.store.subscribe(String(req.params.runId), send, finish);
     for (const line of history) send(line);
@@ -447,8 +489,26 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
 
   // ---- the chatbot's back end ----
   app.post('/api/chat', async (req, res) => {
+    // Every artifact, policy, overlay and profile in this repo is Zod-validated;
+    // this body was the one shape that went through unchecked, straight into
+    // `req.messages.map(...)`. That made `{}` a 500 with a raw JS error, and it
+    // let a caller hand the planner arbitrary content blocks — forged
+    // tool_results included — in the context it reasons over. `.strict()`
+    // matters more than the field types here: it is what refuses the extra key.
+    const parsed = ChatRequestSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: `invalid chat request: ${parsed.error.issues[0]?.message ?? 'bad shape'}` });
+      return;
+    }
     try {
-      res.json(await handleChat(ctx, (req.body ?? {}) as never));
+      // Spread conditionally rather than passing `mode: undefined`, which
+      // `exactOptionalPropertyTypes` treats as a different thing from absent.
+      res.json(
+        await handleChat(ctx, {
+          messages: parsed.data.messages,
+          ...(parsed.data.mode !== undefined ? { mode: parsed.data.mode } : {}),
+        }),
+      );
     } catch (err) {
       fail(res, err);
     }
@@ -477,6 +537,26 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
   // served even if they were added after the process started.
   app.use('/chat', express.static(path.join(WEB_ROOT, 'chat')));
   app.use('/', express.static(path.join(WEB_ROOT, 'dashboard')));
+
+  // ---- the last word on any error ----
+  // Without this, anything that throws before a route can answer — a malformed
+  // JSON body, an over-large body, an unexpected route failure — falls through
+  // to Express's default handler, which serves `err.stack` as HTML whenever
+  // NODE_ENV is unset. That is every script in package.json. The trace names
+  // the operator's home directory, the checkout path and the dependency
+  // layout, and it is the one channel on this server that has never passed
+  // through a redactor. It is also, during a demo, on a projector.
+  //
+  // Four arguments, and `next` unused: Express identifies an error handler by
+  // arity alone, so the parameter has to stay.
+  app.use((err: unknown, _req: Request, res: Response, _next: express.NextFunction) => {
+    const status = typeof (err as { status?: unknown }).status === 'number' ? (err as { status: number }).status : 500;
+    // A 4xx is the caller's own malformed request, so its message is safe and
+    // useful. A 5xx is ours: say nothing, and keep the detail server-side.
+    const message = status >= 400 && status < 500 ? ((err as Error).message ?? 'bad request') : 'internal error';
+    if (status >= 500) console.error('[api] unhandled error:', err);
+    if (!res.headersSent) res.status(status).json({ error: message });
+  });
 
   return { app, ctx };
 }

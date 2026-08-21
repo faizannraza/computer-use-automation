@@ -22,7 +22,7 @@
 </header>
 
 <!-- ────────────── intervention bar (loud, hidden by default) ────────────── -->
-<section id="intervention-bar" class="intervention-bar" hidden aria-live="assertive"></section>
+<section id="intervention-bar" class="intervention-bar" hidden aria-live="polite"></section>
 
 <!-- ───────────────────────── main grid ───────────────────────── -->
 <main id="grid">
@@ -72,7 +72,7 @@
 
       <div id="stream-banner" class="stream-banner" hidden></div>
 
-      <div id="timeline" class="panel-body scroll timeline"></div>
+      <div id="timeline" aria-live="polite" aria-relevant="additions" class="panel-body scroll timeline"></div>
 
       <div id="result-panel" class="result-panel" hidden></div>
     </section>

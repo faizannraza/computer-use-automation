@@ -208,17 +208,25 @@ describe('live runs: lifecycle and detail', () => {
     expect(store.result('run-live-1')?.runId).toBe('run-live-1');
   });
 
-  it('fail() records the error and publishes it as an event', () => {
+  it('fail() records the error and announces it without streaming the detail', () => {
     const store = new RunStore(base);
     store.start('run-dead', 'replay', 'member.readBalances', '1.0.0');
     const seen: string[] = [];
     store.subscribe('run-dead', (line) => seen.push(line));
 
-    store.fail('run-dead', 'browser vanished');
+    // A message from outside the engine has passed through no redactor —
+    // Playwright's errors quote the page they were driving — so subscribers are
+    // told THAT the run died, not what the failure said. The cause goes to the
+    // server console, which is already trusted with unredacted output.
+    store.fail('run-dead', 'browser vanished at https://bank.example/members/103001 — Ada Lovelace');
     expect(store.list().find((r) => r.runId === 'run-dead')?.status).toBe('error');
     expect(store.isLive('run-dead')).toBe(false);
     expect(seen).toHaveLength(1);
-    expect(JSON.parse(seen[0] ?? '{}')).toMatchObject({ type: 'run_error', reason: 'browser vanished' });
+    const event = JSON.parse(seen[0] ?? '{}') as { type: string; reason: string };
+    expect(event.type).toBe('run_error');
+    expect(event.reason).not.toContain('Ada Lovelace');
+    expect(event.reason).not.toContain('bank.example');
+    expect(event.reason).toContain('server console');
   });
 
   it('finish()/publish() on an unknown run are no-ops, not throws', () => {

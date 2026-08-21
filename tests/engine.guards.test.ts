@@ -551,3 +551,61 @@ describe('F6 / F11b — what run_start writes about the caller', () => {
     expect(result.role).toBeUndefined();
   });
 });
+
+describe('a step intent is prose, and prose is not a channel for secrets', () => {
+  // The exploit: the compiler rewrites «secret:operatorPassword» to
+  // {operatorPassword} so that intents read like sentences. But {name} is the
+  // engine's own executable substitution syntax, so substituteDeep resolved it
+  // against the LIVE credential — and unlike every other field, the intent is
+  // echoed on the CALLER channel, which is unredacted by design: CLI stdout,
+  // the /invoke response body, the text above the approval button, and the
+  // tool-result payload sent to Anthropic on every chatbot turn.
+  //
+  // All seven shipped MERIDIAN artifacts carry such an intent, so this fired on
+  // every successful replay. Evidence on disk was never affected — that path
+  // redacts at the write boundary — which is exactly why nothing caught it.
+  /** The step that types `param`, whichever of the two legal value shapes it uses. */
+  const stepTyping = (a: CapabilityArtifact, param: string): Step => {
+    const step = a.steps.find((s) => {
+      if (s.action.kind !== 'setValue' || !('value' in s.action)) return false;
+      const v: unknown = s.action.value;
+      if (typeof v === 'string') return v.includes(`{${param}}`);
+      return typeof v === 'object' && v !== null && (v as { param?: string }).param === param;
+    });
+    if (!step) throw new Error(`fixture no longer types '${param}' — rewrite this test`);
+    return step;
+  };
+
+  const templatedIntent = (from: CapabilityArtifact): CapabilityArtifact =>
+    variant(from, (a) => {
+      stepTyping(a, 'operatorPassword').intent = 'Enter the operator {operatorPassword} into the Password field.';
+    });
+
+  it('never resolves a secret placeholder into the intent returned to the caller', async () => {
+    const result = await replayCapability({ artifact: templatedIntent(gold), bindings: { baseUrl: base } }, opts());
+    expect(result.status).toBe('success');
+
+    const password = process.env.MOCK_CU_PASS!;
+    expect(password.length).toBeGreaterThan(0);
+    // The whole result, as the CLI prints it and the API returns it.
+    expect(JSON.stringify(result)).not.toContain(password);
+
+    const intent = result.stepsRun.find((s) => s.intent.includes('Password field'))?.intent;
+    expect(intent).toBeDefined();
+    expect(intent).not.toContain(password);
+    // Masked, not deleted: the sentence still explains what the step did, and
+    // the marker names which secret was used.
+    expect(intent).toContain('«secret:operatorPassword»');
+  });
+
+  it('still resolves non-secret placeholders, so an intent stays readable', async () => {
+    // The fix must not make every intent generic. A member id is `internal`,
+    // not regulated, and the caller is entitled to read it back.
+    const withMemberId = variant(gold, (a) => {
+      stepTyping(a, 'memberId').intent = 'Search for member {memberId}.';
+    });
+    const result = await replayCapability({ artifact: withMemberId, bindings: { baseUrl: base } }, opts());
+    expect(result.status).toBe('success');
+    expect(result.stepsRun.map((s) => s.intent)).toContain('Search for member 12345.');
+  });
+});

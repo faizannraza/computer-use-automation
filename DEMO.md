@@ -76,8 +76,12 @@ A browser opens and drives the real application. While it runs, the console show
   address and every balance masked, while share IDs, types and statuses stay readable
 - **`OUTPUTS`** — `shares : table`, rendered as typed rows
 
-The mask is applied inside the same observation the classifier ran on, so no unmasked capture is ever
-written. The caller receives the real values; the evidence directory receives the masked ones.
+The mask is applied inside the same observation the classifier ran on, so a capture is never written
+ahead of its own masking. What gets masked is what the profile declares — by label, by label pattern,
+and by column header — and the two channels behave differently on purpose: text redaction is
+**cumulative** (once a value has been seen anywhere in the run, every later write is scrubbed of it),
+while screenshot masking is computed **per screen**. The caller receives the real values; the
+evidence directory receives the masked ones.
 
 ### A second capability, a different shape of answer
 
@@ -150,7 +154,7 @@ evidence set: **19 replay runs and 7 discovery runs**, all against the live targ
 | 6 `business_outcome` | member not found (by number and by name), transaction rejected, record not found, bad credentials |
 | 3 `escalated` | supervisor override required, and an unattended irreversible run that stopped |
 | 1 `failed` | an injected HTTP 500, failed fast against a declared anomaly |
-| 4 rows badged `recovered ×N` | reached success through a recovery rather than cleanly |
+| 4 rows badged `recovered ×N` | ran a recovery: two then reached success, two escalated to a human |
 
 All six of the target's fault kinds — `validation`, `notfound`, `permission`, `timeout`,
 `maintenance`, `server` — have a committed run. `evidence/meridian/README.md` indexes them one row
@@ -226,7 +230,7 @@ resolved, or why it was refused as ambiguous.
 
 ```bash
 npm run cu -- validate capabilities-meridian/*.json     # schema + content hash, all seven
-npm test                                                # 352 tests, ~26s, no network, no key
+npm test                                                # 379 tests, ~26s, no network, no key
 ```
 
 Every artifact is content-hashed over canonical JSON. Approving re-hashes, so a post-approval edit is
@@ -364,7 +368,7 @@ npm run api:mock        # console, dashboard and chatbot against the mock
 | Chatbot balance read | ~13s |
 | Chatbot transfer, to the approval gate | ~20s |
 | `cu recompile` | ~1s |
-| `cu validate`, all nine artifacts | ~7s |
+| `cu validate`, all seven MERIDIAN artifacts | under 1s |
 | Offline test suite | ~26s |
 
 | | |

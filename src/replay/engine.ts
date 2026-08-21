@@ -688,6 +688,19 @@ async function run(
 
     for (const rawStep of artifact.steps) {
       const step = substituteDeep(rawStep, subst) as Step;
+      // The intent is PROSE, and prose travels further than any other field on
+      // a step: it is printed by the CLI, returned in the /invoke response,
+      // shown above the approval button, and sent to Anthropic on every chatbot
+      // tool call — all of which are the unredacted CALLER channel by design.
+      //
+      // It is also templated. The compiler rewrites «secret:operatorPassword»
+      // to {operatorPassword} so intents read naturally, but {name} is not a
+      // notation here — it is this engine's executable substitution syntax, so
+      // substituteDeep resolves it to the live credential like any other field.
+      // Scrubbing the intent is what keeps a secret from riding out inside a
+      // human-readable sentence. Everything the caller is entitled to still
+      // arrives unmasked: outputs, action values, and the result itself.
+      step.intent = scrubText(step.intent);
       const t0 = Date.now();
       const trace: StepTrace = { stepId: step.id, intent: step.intent, status: 'failed', ms: 0 };
       log.event('step_start', { stepId: step.id, intent: step.intent, kind: step.action.kind, risk: step.risk });
@@ -831,7 +844,20 @@ async function run(
                 for (const cell of Object.values(row)) redactor.register(extracting.into, cell, spec.sensitivity);
               }
             } catch {
-              /* not parseable — the whole-value needle above still applies */
+              // The whole-value needle registered above does NOT cover this
+              // case: it matches the serialized table, so a cell appearing on
+              // its own — in an element map, in an observation summary — is
+              // still in the clear. Say so in the run log rather than passing
+              // silently, because the alternative is evidence that looks
+              // redacted and is not. (Unreachable for a table this engine
+              // extracted, which is always valid JSON; it exists for the day
+              // that stops being true.)
+              log.event('redaction_incomplete', {
+                stepId: step.id,
+                output: extracting.into,
+                sensitivity: spec.sensitivity,
+                reason: 'table value did not parse; per-cell needles were not registered',
+              });
             }
           }
         }

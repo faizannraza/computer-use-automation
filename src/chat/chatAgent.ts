@@ -263,14 +263,16 @@ function renderOutput(value: unknown): string {
   const rows = typeof value === 'string' ? tryRows(value) : Array.isArray(value) ? (value as unknown[]) : undefined;
   if (rows === undefined) return String(value);
   if (rows.length === 0) return '(no rows)';
-  const line = (row: unknown): string =>
-    typeof row === 'object' && row !== null
-      ? Object.entries(row as Record<string, unknown>)
-          .map(([k, v]) => `${k} ${String(v)}`)
-          .join(', ')
-      : String(row);
-  const shown = rows.slice(0, 6).map(line);
-  return `${rows.length} row(s) [${shown.join(' | ')}${rows.length > shown.length ? ' | …' : ''}]`;
+  // A table is described by its SHAPE here, not dumped. This string is the
+  // one-line caption on the tool-call card; the assistant's own reply renders
+  // the same rows as a table immediately below it, so spelling six rows out as
+  // `Share ID 103001-S0001, Type Regular Shares, … | …` put a run-on paragraph
+  // of duplicated data at the top of the first card of the demo. The model is
+  // unaffected — it receives the full structured result on a separate channel.
+  const first = rows[0];
+  const columns =
+    typeof first === 'object' && first !== null && !Array.isArray(first) ? Object.keys(first as Record<string, unknown>) : [];
+  return columns.length > 0 ? `${rows.length} row(s) — ${columns.join(', ')}` : `${rows.length} row(s)`;
 }
 
 function tryRows(value: string): unknown[] | undefined {

@@ -100,12 +100,25 @@ export class ActionGate {
       if (!this.policy.allowedOrigins.includes(url.origin)) {
         return deny('OFF_ORIGIN', `origin '${url.origin}' is not in the allowlist`);
       }
-      if (this.policy.deniedPathPrefixes.some((p) => url.pathname.startsWith(p))) {
+      // Compare on a NORMALISED path. `startsWith` is case-sensitive and
+      // exact-slash, but the targets these policies describe are legacy web
+      // servers that route case-insensitively and collapse repeated slashes —
+      // so `/Settings` and `//settings` reach the very screen `/settings`
+      // names, while sailing past a literal prefix match. A denylist that the
+      // target's own router disagrees with is not a denylist.
+      //
+      // Normalising the ALLOW list the same way is deliberate: it can only
+      // widen what is permitted for spellings the target already treats as
+      // equivalent, and leaving the two sides asymmetric is how a path ends up
+      // denied by one rule and allowed by the other.
+      const probePath = url.pathname.toLowerCase().replace(/\/{2,}/g, '/');
+      const normalise = (p: string): string => p.toLowerCase().replace(/\/{2,}/g, '/');
+      if (this.policy.deniedPathPrefixes.some((p) => probePath.startsWith(normalise(p)))) {
         return deny('PATH_DENIED', `path '${url.pathname}' is explicitly denied`);
       }
       if (
         this.policy.allowedPathPrefixes.length > 0 &&
-        !this.policy.allowedPathPrefixes.some((p) => url.pathname.startsWith(p))
+        !this.policy.allowedPathPrefixes.some((p) => probePath.startsWith(normalise(p)))
       ) {
         return deny('PATH_DENIED', `path '${url.pathname}' is outside the allowed prefixes`);
       }

@@ -60,6 +60,40 @@ discovery.
 `member.placeHold` is the one capability recorded as a **supervisor** — the app
 refuses it for a teller — and it is the only one that declares `requiresRole`.
 
+### Recompiling all seven: five identical, and two that are worth more than that
+
+`cu recompile <artifact> --trace <its discovery run>` re-derives an artifact from
+the trace it came from, with no network and no key, and diffs the result against
+the shipped file. Run against all seven:
+
+| | |
+|---|---|
+| **5 of 7** | `recompiles identically (modulo the approval block and its hash)` |
+| `session.signOn` | **1 difference**, in `capability.description` only |
+| `member.updateInfo` | **cannot be recompiled at all** (exit 65) |
+
+Neither exception is a discrepancy in what executes, and both are more
+interesting than a green line.
+
+**`session.signOn`** differs by one character of prose: the shipped description
+reads `… 'Invalid operator ID or ...' error`, and today's compiler produces
+`… 'Invalid operator ID or...'`. `readableProse` gained a rule that closes the
+space before trailing punctuation *after* this artifact was recorded. Every
+executable field — steps, locators, conditions, risk classes, outcomes, success
+criteria — re-derives byte for byte. It is worth showing rather than hiding: the
+check is tight enough to notice a single space in a sentence nothing runs.
+
+**`member.updateInfo`** stops with `param 'email' is caller-sourced but records
+no example, so its recorded value cannot be recovered`. Its `email`, `phone` and
+`address` params are `sensitivity: pii`, so the redactor removed their values
+from the trace at the moment it was written. Recompiling needs those values to
+re-derive the steps that typed them, and they are gone — permanently, from the
+only copy. Supply them by hand with `--param` and it recompiles.
+
+That is the trade working exactly as designed, and it cuts both ways: the same
+property that makes this artifact unreproducible from its trace is the property
+that makes the trace safe to commit to a public repository. We chose the second.
+
 ## Replay — the runtime-state taxonomy, one run per row
 
 No model is involved in any of these. Together they cover **all six** of the
@@ -103,7 +137,7 @@ Injected at the entrypoint. Classified as recoverable, cleared by restarting the
 Injected at the entrypoint. Matched the profile's APPLICATION_ERROR anomaly and failed immediately with the observed state instead of waiting out the step clock.
 
 **`20260820-125921-psm2` — session expired mid-flow (440) → RECOVERED**  
-Injected on the search step. Re-authenticated from the entrypoint — which also mints a fresh transaction token rather than re-posting a consumed one — and completed. `recoveriesUsed: SESSION_EXPIRED`.
+Injected on the search step. Re-authenticated from the entrypoint — which also mints a token bound to the new session rather than re-posting one bound to a session that has ended — and completed. `recoveriesUsed: SESSION_EXPIRED`.
 
 **`20260820-125924-korr` — record not found (404) → BUSINESS OUTCOME**  
 Injected mid-flow. Reported as the app-wide RECORD_NOT_FOUND outcome — a result the caller handles, not a crash.

@@ -63,7 +63,7 @@
   "recoveries": [
     {
       "code": "SESSION_EXPIRED",
-      "description": "The operator session ended mid-flow (idle timeout, or an injected 440). Recover by restarting from the entrypoint, which re-authenticates and mints a fresh transaction token rather than re-posting a consumed one.",
+      "description": "The operator session ended mid-flow (idle timeout, or an injected 440). Recover by restarting from the entrypoint, which re-authenticates and mints a token bound to the new session rather than re-posting one bound to a session that has ended.",
       "when": {
         "c": "any",
         "of": [

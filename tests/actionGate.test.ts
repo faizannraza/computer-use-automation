@@ -53,6 +53,33 @@ describe('ActionGate', () => {
     ).rejects.toMatchObject({ code: 'PATH_DENIED' });
   });
 
+  // A denylist is only as strong as the router it is describing. MERIDIAN's
+  // `/settings` — the global fault switch, the one screen the policy names —
+  // is served by a legacy stack that routes case-insensitively and collapses
+  // repeated slashes. `startsWith` does neither, so `/Settings` reached the
+  // very screen `/settings` denies, and did it through the discovery path,
+  // where the URL is chosen by a model reading the target's own text.
+  it.each(['/__Faults', '/__FAULTS', '//__faults', '/__faults/../__faults'])(
+    'denies %s — the same route spelled a way `startsWith` would miss',
+    async (pathname) => {
+      const { surface, act } = fakeSurface();
+      const gate = new ActionGate(policy, surface);
+      await expect(
+        gate.execute({ kind: 'navigate', url: `http://localhost:9999${pathname}` }, { risk: 'read' }),
+      ).rejects.toMatchObject({ code: 'PATH_DENIED' });
+      expect(act).not.toHaveBeenCalled();
+    },
+  );
+
+  it('still allows a path that merely resembles a denied one', async () => {
+    // The normalisation must not turn the denylist into a substring match:
+    // `/__faultsomething` is a different route and stays reachable.
+    const { surface, act } = fakeSurface();
+    const gate = new ActionGate(policy, surface);
+    await gate.execute({ kind: 'navigate', url: 'http://localhost:9999/members/103001' }, { risk: 'read' });
+    expect(act).toHaveBeenCalledOnce();
+  });
+
   it('denies element actions whose target FRAME is off-origin, even on an allowed page', async () => {
     const { surface, act } = fakeSurface(); // page itself is on the allowed origin
     const gate = new ActionGate(policy, surface);

@@ -6,7 +6,7 @@
  *   cu replay --capability <file> --param k=v ...   deterministic replay (no LLM)
  *   cu approve <file> --by "name"                   mark a reviewed artifact approved (re-hashes)
  *   cu recompile <file> --trace <dir>               re-derive an artifact from its recorded trace
- *   cu validate <file>                              schema + integrity check
+ *   cu validate <file...>                           schema + integrity check (all files)
  *   cu hash <file>                                  (re)compute integrity.contentHash
  *
  * Exit codes for `replay`: 0 = success OR a named business outcome (both are
@@ -655,23 +655,53 @@ function diffJson(a: unknown, b: unknown, at: string): string[] {
       diffJson(a[k], b[k], at ? `${at}.${k}` : k),
     );
   }
-  const show = (v: unknown): string => {
-    const s = JSON.stringify(v) ?? 'undefined';
-    return s.length > 80 ? `${s.slice(0, 77)}...` : s;
+  // Window the two values around the point where they actually diverge. A
+  // fixed head-truncation prints two identical-looking strings whenever the
+  // difference falls past the cut — which is exactly what happens on a long
+  // prose field, the most common thing to differ in a recompile. A diff that
+  // shows no difference reads as a bug in the tool.
+  const sa = JSON.stringify(a) ?? 'undefined';
+  const sb = JSON.stringify(b) ?? 'undefined';
+  let i = 0;
+  while (i < sa.length && i < sb.length && sa[i] === sb[i]) i++;
+  const from = Math.max(0, i - 24);
+  const show = (s: string): string => {
+    const head = from > 0 ? '…' : '';
+    const body = s.slice(from, from + 96);
+    return `${head}${body}${from + 96 < s.length ? '…' : ''}`;
   };
-  return [`${at}: ${show(a)} → ${show(b)}`];
+  return [`${at}: ${show(sa)} → ${show(sb)}`];
 }
 
 function validateCmd(argv: string[]): void {
-  const file = argv[0];
-  if (!file) {
-    console.error('usage: cu validate <artifact.json>');
+  // Every argument is checked, not just the first: `cu validate capabilities-meridian/*.json`
+  // is the documented way to check a whole directory, and a validator that silently examines
+  // one file out of seven and exits 0 is worse than no validator at all.
+  const files = argv.filter((a) => !a.startsWith('-'));
+  if (files.length === 0) {
+    console.error('usage: cu validate <artifact.json> [artifact.json ...]');
     process.exit(64);
   }
-  const { artifact, verified } = loadCapability(file);
-  console.log(`schema: OK (${artifact.capability.id}@${artifact.capability.version})`);
-  console.log(`integrity: ${verified ? 'OK' : 'MISMATCH — run `cu hash` after deliberate edits'}`);
-  process.exit(verified ? 0 : 1);
+  let failed = 0;
+  for (const file of files) {
+    // One bad artifact must not hide the ones after it, so a load failure is reported
+    // against its own file and the sweep continues.
+    try {
+      const { artifact, verified } = loadCapability(file);
+      const id = `${artifact.capability.id}@${artifact.capability.version}`;
+      console.log(`${verified ? 'OK      ' : 'MISMATCH'}  ${id}  (${file})`);
+      if (!verified) failed++;
+    } catch (err) {
+      console.log(`INVALID   ${file}: ${err instanceof Error ? err.message.split('\n')[0] : String(err)}`);
+      failed++;
+    }
+  }
+  console.log(
+    failed === 0
+      ? `\n${files.length} artifact${files.length === 1 ? '' : 's'}: schema and integrity OK`
+      : `\n${failed} of ${files.length} failed — run \`cu hash\` after deliberate edits`,
+  );
+  process.exit(failed === 0 ? 0 : 1);
 }
 
 function hashCmd(argv: string[]): void {

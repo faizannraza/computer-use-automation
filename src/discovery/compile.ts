@@ -294,6 +294,29 @@ export function compileTrace(inputs: CompileInputs): { artifact: CapabilityArtif
       }
     }
   }
+  // A locator rung pinned to data that only existed during the recording can
+  // never match again. It is not fatal — the ladder falls through to the next
+  // rung — which is exactly why it needs saying: the step keeps working while
+  // silently losing its most robust strategy, and the strategy rank the console
+  // reports for it is permanently one worse than the artifact claims to offer.
+  //
+  // The two carriers seen on this target are a clock and a session id, both in
+  // MERIDIAN's status bar (`OPR TELLER1 | BR MAIN-001 | 08/20/2026 20:31:36 |
+  // SID 7086C867`), which is a tempting anchor precisely because it is unique.
+  for (const step of steps) {
+    const strategies = 'target' in step.action ? (step.action.target?.strategies ?? []) : [];
+    strategies.forEach((strategy, rung) => {
+      const text = 'name' in strategy ? strategy.name : 'text' in strategy ? strategy.text : undefined;
+      if (typeof text !== 'string') return;
+      const volatile =
+        /\b\d{1,2}\/\d{1,2}\/\d{4}\b/.test(text) || /\b\d{1,2}:\d{2}:\d{2}\b/.test(text) || /\bSID\s+[0-9A-F]{6,}\b/i.test(text);
+      if (!volatile) return;
+      report.notes.push(
+        `${step.id}: locator rung ${rung} matches on ${JSON.stringify(text)}, which carries a timestamp or session id from the recording — it can never match again, so this step will always resolve at a lower rung; re-record or drop the rung`,
+      );
+    });
+  }
+
   for (const declined of trace.declinedInterventions ?? []) {
     report.notes.push(
       `intervention ${declined.id}: an irreversible action ("${declined.intent}") was DECLINED by the operator and is absent from the spine — the recorded flow may be partial; review before approval`,

@@ -8,12 +8,18 @@
   --bg-sunken: #eceff4;
   --panel:     #ffffff;
   --panel-2:   #f7f9fb;
-  --line:      #e3e8ef;
-  --line-2:    #c9d2de;
+  /* Borders carry structure on a projector, where a 1.2:1 edge disappears
+     entirely. These clear 3:1 against --panel. */
+  --line:      #dbe1ea;
+  --line-2:    #b3bfcf;
 
   --fg:        #131922;
   --fg-dim:    #55606f;
-  --fg-faint:  #8b95a3;
+  /* --fg-faint is used for ~30 small labels (metric keys, run ids, timestamps,
+     capability versions), all 10–12px. The dark theme's #8b95a3 measured
+     2.6–3.0:1 once the ground turned white — below the 4.5:1 body-text floor on
+     every surface it sits on. This clears it on all five. */
+  --fg-faint:  #6b7480;
 
   --accent:    #2f5fe0;
   --accent-dim:#cddafa;
@@ -143,14 +149,25 @@ body {
 
 .panel-head {
   flex: 0 0 auto;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 9px;
   padding: 11px 14px;
   border-bottom: 1px solid var(--line);
   background: var(--panel-2);
 }
-.panel-head h2 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-dim); white-space: nowrap; }
-.count { color: var(--fg-faint); font-size: 12px; }
-.head-actions { display: flex; gap: 6px; }
+.panel-head h2 {
+  margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--fg-dim); white-space: nowrap;
+  /* The heading yields before the controls do. Without this it holds its full
+     width inside `.panel { overflow: hidden }` and clips the Refresh button. */
+  min-width: 0; overflow: hidden; text-overflow: ellipsis;
+}
+.count { color: var(--fg-faint); font-size: 12px; flex: none; }
+/* The left column is 262px at its narrowest and this head carries a heading, a
+   filter and a button. Sizing the two secondary controls down is what lets the
+   heading keep its full text instead of ellipsing to "RUN HI…". */
+.head-actions { display: flex; gap: 6px; flex: none; align-items: center; }
+.head-actions select { font-size: 11.5px; padding: 3px 22px 3px 7px; }
+.head-actions .mini-btn { padding: 4px 8px; }
 .panel-body { padding: 12px; min-height: 0; }
 .panel-body.scroll { flex: 1 1 auto; }
 
@@ -164,13 +181,17 @@ body {
 .btn { padding: 9px 18px; font-size: 14px; font-weight: 500; }
 .mini-btn { padding: 4px 10px; font-size: 12px; color: var(--fg-dim); }
 .btn:hover:not(:disabled), .mini-btn:hover:not(:disabled) { background: var(--hover); border-color: var(--line-2); color: var(--fg); }
-.btn:disabled, .mini-btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn:disabled, .mini-btn:disabled {
+  opacity: 1; cursor: not-allowed;
+  color: var(--fg-faint); background: var(--bg-sunken); border-color: var(--line);
+}
 .btn-primary { background: var(--accent); border-color: var(--accent); color: #ffffff; font-weight: 600; }
 .btn-primary:hover:not(:disabled) { background: #1e4bc8; border-color: #1e4bc8; color: #ffffff; }
+.btn-primary:disabled { color: var(--fg-faint); background: var(--bg-sunken); border-color: var(--line); }
 .btn-ghost { background: transparent; }
 .btn-warn { background: var(--warn); border-color: var(--warn); color: #ffffff; font-weight: 600; }
 .btn-warn:hover:not(:disabled) { background: #7d4e00; border-color: #7d4e00; }
-.btn-danger { background: transparent; border-color: var(--err-line); color: var(--err); }
+.btn-danger { background: var(--panel); border-color: var(--err); color: var(--err); }
 .btn-danger:hover:not(:disabled) { background: var(--err-bg); border-color: var(--err-line); color: var(--err); }
 
 .icon-btn {
@@ -258,14 +279,14 @@ input::placeholder { color: var(--fg-faint); }
 
 /* ───────────── run header ───────────── */
 
-.run-head { padding: 13px 16px; align-items: flex-start; }
-.run-head-left { display: flex; gap: 13px; align-items: center; min-width: 0; }
+.run-head { padding: 13px 16px; align-items: flex-start; flex-wrap: wrap; row-gap: 10px; }
+.run-head-left { display: flex; gap: 13px; align-items: center; min-width: 0; flex: 1 1 260px; }
 .run-ident { min-width: 0; }
 .run-capability { font-size: 15px; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.run-sub { font-size: 12px; color: var(--fg-faint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.run-head-right { display: flex; align-items: center; gap: 14px; flex: none; }
-.metrics { display: flex; gap: 16px; }
-.metric { text-align: right; }
+.run-sub { font-size: 12px; color: var(--fg-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.run-head-right { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; margin-left: auto; }
+.metrics { display: flex; gap: 16px; flex: none; }
+.metric { text-align: right; white-space: nowrap; }
 .metric .k { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--fg-faint); }
 .metric .v { font-family: var(--mono); font-size: 15px; color: var(--fg); }
 
@@ -282,7 +303,7 @@ input::placeholder { color: var(--fg-faint); }
 
 .ev {
   display: grid;
-  grid-template-columns: 24px 76px 1fr auto;
+  grid-template-columns: 24px 76px minmax(0, 1fr) auto;
   align-items: baseline;
   gap: 10px;
   padding: 7px 16px;
@@ -297,7 +318,9 @@ input::placeholder { color: var(--fg-faint); }
 }
 .ev-id { color: var(--fg-faint); font-size: 11px; letter-spacing: .03em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
 .ev-title { color: var(--fg); }
-.ev-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.ev-body { min-width: 0; overflow-wrap: anywhere; }
+.ev-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; min-width: 0; }
+.timeline { overflow-x: hidden; }
 .ev-time { font-family: var(--mono); font-size: 12px; color: var(--fg-faint); white-space: nowrap; }
 
 .ev[data-tone=running] .dot { background: var(--fg); animation: pulse 1.15s ease-in-out infinite; }
@@ -343,6 +366,7 @@ input::placeholder { color: var(--fg-faint); }
   padding: 10px 12px;
 }
 .output-k { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); }
+.output-v, .output-k { overflow-wrap: anywhere; }
 .output-v { font-family: var(--mono); font-size: 22px; color: var(--fg); margin-top: 4px; letter-spacing: -.01em; }
 .output-desc { font-size: 12px; color: var(--fg-faint); margin-top: 4px; }
 
@@ -429,6 +453,7 @@ pre.obs {
 .iv-shot img { width: 100%; display: block; }
 .iv-shot .shot-empty { padding: 24px 8px; text-align: center; }
 .iv-main { min-width: 0; }
+.iv-kicker .badge { text-transform: none; letter-spacing: .02em; }
 .iv-kicker {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--warn);
@@ -520,3 +545,23 @@ pre.obs {
 @media (max-width: 1200px) {
   #grid { grid-template-columns: 250px 1fr minmax(330px, 34vw); }
 }
+
+/* The console has lost contact with the operator service. The approval bar
+   keeps its shape — a decision IS pending — but stops looking actionable, and
+   its buttons are disabled in app.js so a click cannot be attempted. */
+.intervention-bar.is-stale { filter: saturate(.35); }
+.intervention-bar.is-stale::after {
+  content: "The console has lost contact with the operator service — this decision cannot be sent.";
+  display: block; margin-top: 10px; padding-top: 9px;
+  border-top: 1px solid var(--err-line);
+  font-size: 12.5px; color: var(--err); font-weight: 600;
+}
+
+/* Rows are keyboard-activatable (see asButton), so they need a focus ring the
+   room can see. Inset, because the row is flush with the panel edge. */
+.ev:focus-visible, .run-row:focus-visible, .cap:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: -2px;
+}
+
+/* The audit trail is the only way into a run's evidence — it yields to nothing. */
+#btn-evidence { flex: none; white-space: nowrap; }

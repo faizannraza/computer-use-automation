@@ -265,6 +265,47 @@ describe('compileTrace', () => {
     expect(report.notes.some((n) => n.includes('may be non-specific') && n.includes("'work'"))).toBe(true);
   });
 
+  it('lints a locator rung anchored on the recording session, which can never match again', () => {
+    // MERIDIAN's status bar reads `OPR TELLER1 | BR MAIN-001 | 08/20/2026
+    // 20:31:36 | SID 7086C867`. It is a tempting anchor precisely because it is
+    // unique — and unique to that session. The step keeps working, because the
+    // ladder falls through; what it loses, silently and permanently, is its
+    // most robust rung. `session.signOn` shipped with exactly this.
+    const stampedTrace: DiscoveryTrace = {
+      goal: 'lint test',
+      actions: [
+        act({ kind: 'navigate', intent: 'Open the app', risk: 'read', url: `${BASE}/login`, before: { location: 'about:blank', title: '', markers: [] }, after: loginDigest }),
+        act({
+          kind: 'activate', intent: 'Click the status bar', risk: 'reversible',
+          element: { role: 'cell', name: 'OPR TELLER1 | BR MAIN-001 | 08/20/2026 20:31:36 | SID 7086C867', framePath: [] },
+          before: searchDigest,
+          after: searchDigest,
+        }),
+      ],
+      outcomes: [],
+      done: { capabilityId: 'lint.stamped', title: 't', description: 'd' },
+    };
+    const { report } = compileTrace({
+      trace: stampedTrace,
+      paramSpecs: {},
+      callerParamValues: {},
+      outputHints: {},
+      baseUrl: BASE,
+      model: 'test',
+      discoveryRunId: 'lintrun',
+      app: { appId: 'mockcore-teller', vendor: 'MockCore' },
+      version: '1.0.0',
+    });
+    expect(report.notes.some((n) => n.includes('locator rung 0') && n.includes('can never match again'))).toBe(true);
+  });
+
+  it('does not lint an ordinary control name that merely contains digits', () => {
+    // The lint has to stay quiet on the normal case, or it becomes noise a
+    // reviewer learns to scroll past — which is the same as not having it.
+    const { report } = compiled();
+    expect(report.notes.every((n) => !n.includes('locator rung'))).toBe(true);
+  });
+
   it('builds table-cell targeting for reads (never keyed on the data itself)', () => {
     const { artifact } = compiled();
     const read = artifact.steps.find((s) => s.action.kind === 'read')!;

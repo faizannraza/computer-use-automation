@@ -86,7 +86,16 @@ async function boot() {
 
   // Deep link: /#run=<runId>[&kind=replay] opens straight into a run.
   const p = new URLSearchParams(location.hash.slice(1));
-  if (p.get('run')) openRun(p.get('run'), p.get('kind') || 'replay');
+  if (p.get('run')) {
+    openRun(p.get('run'), p.get('kind') || 'replay');
+  } else {
+    // Otherwise the timeline is the biggest thing on the first screen and it
+    // was rendering nothing at all — no heading, no hint, just white.
+    $('timeline').append(emptyState(
+      'No run open',
+      'Pick a capability on the left to invoke it, or open a past run from history.',
+    ));
+  }
 }
 
 async function loadProfile() {
@@ -317,10 +326,25 @@ const setRunStatus = (status) => { const el = $('run-status'); el.className = `p
 
 /** Open a run: the SSE endpoint replays a finished run's history and then ends
  *  with `event: done`, so one transport covers live AND historical. */
-function openRun(runId, kind) {
+async function openRun(runId, kind) {
   resetRunView(runId, kind);
   markHistoryActive(runId);
   history.replaceState(null, '', `#run=${encodeURIComponent(runId)}&kind=${encodeURIComponent(kind || 'replay')}`);
+  // A run id that does not resolve — a stale deep link, a run pruned from
+  // evidence — used to render as a permanently "running" run with an empty
+  // timeline, because EventSource only reports "closed", never "404". Ask the
+  // question that HAS an answer first.
+  try {
+    await api(`/api/runs/${encodeURIComponent(runId)}`);
+  } catch {
+    $('run-capability').textContent = 'Run not found';
+    $('run-sub').textContent = `${kind || 'replay'} · ${runId}`;
+    $('timeline').replaceChildren(emptyState(
+      'No such run',
+      'This run is not in evidence on disk. It may have been pruned, or the link may be from another machine.',
+    ));
+    return;
+  }
   connectStream(runId);
 }
 
@@ -420,7 +444,7 @@ function applyEvent(ev) {
       const time = h('span', { class: 'ev-time', text: '…' });
       row.append(h('span', { class: 'dot' }), h('span', { class: 'ev-id mono', text: ev.stepId || '—' }),
         h('span', { class: 'ev-body' }, h('span', { class: 'ev-title', text: ev.intent || '(no intent recorded)' }), meta), time);
-      row.addEventListener('click', () => showRaw(`step ${ev.stepId}`, ev));
+      asButton(row, `step ${ev.stepId} — open the raw record`, () => showRaw(`step ${ev.stepId}`, ev));
       timeline.append(row);
       run.stepRows.push({ stepId: ev.stepId, row, meta, time, open: true });
       break;
@@ -428,7 +452,9 @@ function applyEvent(ev) {
     case 'resolved': {
       const s = stepRow(ev.stepId);
       // The drift signal: which locator strategy fired, and how confident it was.
-      if (s) s.meta.append(badge(`strategy ${ev.strategyIndex} · ${ev.strategy} · ${Number(ev.score).toFixed(2)}`,
+      const rung = Number.isFinite(ev.strategyIndex) ? ev.strategyIndex : '—';
+      const score = Number.isFinite(Number(ev.score)) ? Number(ev.score).toFixed(2) : '—';
+      if (s) s.meta.append(badge(`strategy ${rung} · ${ev.strategy || '—'} · ${score}`,
         ev.strategyIndex === 0 ? 'ok' : 'warn'));
       break;
     }
@@ -522,12 +548,25 @@ function applyEvent(ev) {
 
 const stepRow = (id) => { for (let i = S.run.stepRows.length - 1; i >= 0; i--) if (S.run.stepRows[i].stepId === id) return S.run.stepRows[i]; return null; };
 
+/** Make a row that behaves like a button behave like one for the keyboard too:
+ *  focusable, announced as a button, and activated by Enter or Space. */
+function asButton(row, label, onActivate) {
+  row.tabIndex = 0;
+  row.setAttribute('role', 'button');
+  row.setAttribute('aria-label', label);
+  row.addEventListener('click', onActivate);
+  row.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); }
+  });
+  return row;
+}
+
 /** A non-step event row. */
 function note(ev, tone, label, body) {
   const row = h('div', { class: 'ev ev--note', 'data-tone': tone },
     h('span', { class: 'dot' }), h('span', { class: 'ev-id mono', text: label }),
     h('span', { class: 'ev-body' }, body), h('span', { class: 'ev-time', text: fmtClock(ev.ts) }));
-  row.addEventListener('click', () => showRaw(ev.type || 'event', ev));
+  asButton(row, `${label} event — open the raw record`, () => showRaw(ev.type || 'event', ev));
   $('timeline').append(row);
 }
 
@@ -540,7 +579,8 @@ function renderMetrics() {
   const m = (k, v) => h('div', { class: 'metric' }, h('span', { class: 'k', text: k }), h('span', { class: 'v', text: v }));
   box.append(m('steps ok', `${ok}/${run.stepRows.length}`));
   box.append(m('gate checks', `${run.gates.allowed}✓ ${run.gates.denied}✕`));
-  box.append(m('shots', String(run.shots.length)));
+  // No `shots` metric: the Live View panel already counts its own frames, and
+  // at 1280 this third column pushed the "Audit trail" button off the header.
 }
 
 // ───────────────────────────── screenshots ─────────────────────────────
@@ -831,7 +871,20 @@ function markHistoryActive(runId) {
  *  live banking session while a human decides. */
 async function pollInterventions() {
   let list = null;
-  try { list = await api('/api/interventions'); } catch { /* transient: keep the last render */ }
+  try {
+    list = await api('/api/interventions');
+    S.pollMisses = 0;
+  } catch {
+    // One miss is a hiccup and the last render still stands. A run of them is
+    // not: the amber bar keeps a working-looking "Approve — let it post" on
+    // screen indefinitely, over a session that is already gone. A control that
+    // gates a money movement must never look live when it cannot act.
+    S.pollMisses = (S.pollMisses || 0) + 1;
+  }
+  const bar = $('intervention-bar');
+  const stale = S.pollMisses >= 3;
+  bar.classList.toggle('is-stale', stale);
+  for (const b of bar.querySelectorAll('button')) b.disabled = stale;
   if (list) renderInterventions(list);
   clearTimeout(S.pollTimer);
   S.pollTimer = setTimeout(pollInterventions, (list && list.length) ? 1000 : 2000);

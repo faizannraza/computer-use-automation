@@ -86,7 +86,7 @@ production path never calls a model. The chatbot also ships a deterministic `scr
 behind the same interface, so even that surface is demonstrable without one.
 
 ```bash
-npm run typecheck && npm run lint && npm test    # 349 tests, ~26 s, fully offline
+npm run typecheck && npm run lint && npm test    # 379 tests, ~26 s, fully offline
 ```
 
 ---
@@ -101,13 +101,19 @@ npm run demo
 
 Then open **<http://127.0.0.1:4180/>** (dashboard) and **<http://127.0.0.1:4180/chat/>** (chatbot).
 
-That is the whole setup. `npm run demo` points the server at MERIDIAN CORE and turns on two
+That is the whole setup. `npm run demo` points the server at MERIDIAN CORE and turns on three
 **presentation** settings, which the startup banner names so they are never a surprise:
 
 | | |
 |---|---|
 | `CU_ALLOW_INJECT=1` | puts the app's own fault kinds on the invoke form, so you can force a 503 or a 440 from the UI. Off by default, because injection rewrites the request *beneath* the ActionGate — a recorded capability can never reach it; only the operator starting the process can. |
-| `CU_DEMO_SLOW_MO=700` | paces every run so a person can follow it, including runs the chatbot starts. Off by default: a production replay runs headless at full speed. |
+| `CU_DEMO_HEADED=1` | opens a real browser window for every run, so there is something to watch. |
+| `CU_DEMO_SLOW_MO=700` | paces that window — including per-keystroke typing — so a person can follow it. |
+
+The last two apply to **every** run the server drives, including the ones the chatbot starts: a
+planner chooses a capability and its parameters and nothing else, so pacing is the operator's
+decision, made once at startup. Both are off by default — a production replay runs headless at full
+speed — and both can be overridden per run from the dashboard's invoke form.
 
 Two other entry points, same server:
 
@@ -144,6 +150,9 @@ Click **`member.readBalances`** → `memberId` `103001` → tick **Watch headed 
 
 ![The member record as captured into evidence: name, e-mail, phone, address and every balance blacked out; share ids, types and statuses readable](docs/screenshots/redacted-capture.png)
 
+*A committed capture from an earlier run (member 100234, not the 103001 above) — the masking is the
+point, and it looks the same for any member.*
+
 That masking is not a filter over the image. The app profile declares which fields are regulated —
 by label, by label *pattern*, and by column header — and the mask is burned into the capture inside
 the same observation the classifier ran on. The caller still receives the real values: an invoke
@@ -158,16 +167,22 @@ Invoke these from the same form. Because `npm run demo` enabled it, there is a *
 |---|---|---|---|
 | `member.readBalances` | `memberId` `999999` | — | `business_outcome` · `MEMBER_NOT_FOUND` |
 | `member.readBalances` | `memberId` `103001` | `maintenance` | `success` · `recovered ×1` |
-| `member.placeHold` | `102777` / `102777-S0070-3` / `FRAUD` / `demo` | — | `escalated` |
+| `member.placeHold` | any member / share | — | **refused before a browser opens** · `requiresRole 'supervisor'` |
 
 Three different things, reported three different ways. "No such member" is a **result** the caller
 switches on — the CLI even exits zero. The maintenance interstitial is **recoverable**: it restarted
-and finished. The supervisor screen is a state only a **person** can clear, so it escalated with
-context rather than guessing.
+and finished. And `member.placeHold` never gets as far as the app: the dashboard's role selector
+defaults to `teller`, the capability was recorded as `supervisor`, and the API compares the two
+before it launches anything.
 
-Run history now shows all three side by side with different pills. Conflating those three is the
-most common failure in this problem, so the distinction is structural: separate schema sections,
-separate result types, one explicit priority order.
+For the **escalation** itself — the automation reaching MERIDIAN's supervisor-override screen and
+handing the decision to a person — open the committed run `20260820-141322-ad9v` in Run history. That
+one came through the CLI, which does not apply the pre-flight role check, so it reaches the screen
+and stops there.
+
+Run history shows all of them side by side with different pills. Conflating a business outcome, a
+recoverable condition and a hard failure is the failure this problem invites, so the distinction is
+structural: separate schema sections, separate result types, one explicit priority order.
 
 ### 4. The human gate — nothing irreversible happens without it
 
@@ -197,7 +212,7 @@ Three things make that gate real rather than decorative:
 
 **The API cannot post money unattended.** Structurally, not by policy document.
 
-### 5. Prove the artifacts were not hand-written
+### 5. The artifacts were compiled, not written
 
 ```bash
 npm run cu -- recompile capabilities-meridian/member.readBalances@1.0.0.json \
@@ -394,7 +409,7 @@ capabilities/       MockCore artifacts (readSavingsBalance LLM-discovered; openS
 tenants/            tenant overlays (demo-fcu recoveries; summit-fcu re-skin re-ranking)
 policies/           allowlist/risk policies: default, summit-fcu, meridian
 evidence/replay/    MockCore runs, reproducible offline (see evidence/README.md)
-tests/              349 tests (~26 s) incl. live end-to-end scenarios against the mock app;
+tests/              379 tests (~26 s) incl. live end-to-end scenarios against the mock app;
                     fixtures/ holds a hand-authored gold artifact used only as
                     test fixture and compiler diff baseline
 DEMO.md             a command-by-command walkthrough of the live system

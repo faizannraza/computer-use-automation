@@ -148,7 +148,14 @@ async function getJson(path) {
 async function boot() {
   // Both are optional decoration — a failure here must not break chatting.
   var profile = null;
-  try { profile = await getJson('/api/profile'); } catch { /* header stays generic */ }
+  // The header is seeded with "connecting…", so a silent catch leaves it
+  // claiming an in-progress connection for as long as the page is open. Say
+  // what actually happened instead.
+  try {
+    profile = await getJson('/api/profile');
+  } catch {
+    document.getElementById('app-base').textContent = 'target unavailable';
+  }
   try { capabilities = await getJson('/api/capabilities'); } catch { capabilities = []; }
 
   if (profile) {

@@ -5,11 +5,14 @@
   --bg:            #f7f8fa;
   --bg-raised:     #ffffff;
   --bg-sunken:     #eef1f5;
-  --line:          #e2e7ee;
+  --line:          #dbe1ea;
   --line-soft:     #edf0f5;
   --ink:           #131922;
   --ink-dim:       #55606f;
-  --ink-faint:     #8b95a3;
+  /* Was #8b95a3, tuned against a dark ground: 2.6-2.7:1 once the panels turned
+     white, on ~15 small labels (tool-call kickers, arg keys, run ids, table
+     headers). This clears 4.5:1 on every surface it is used on. */
+  --ink-faint:     #6b7480;
   --accent:        #2f5fe0;
   --accent-soft:   rgba(47, 95, 224, 0.09);
   --ok:            #1a7f37;
@@ -297,15 +300,15 @@ body {
   border: 1px solid currentColor;
   white-space: nowrap;
 }
-.pill.s-success          { color: var(--ok); }
-.pill.s-business_outcome { color: var(--accent); }
+.pill.s-success          { color: var(--ok);     background: #eaf6ed; border-color: #bfe0c8; }
+.pill.s-business_outcome { color: var(--accent); background: #eaf1fc; border-color: #c3d8f5; }
 .pill.s-escalated,
-.pill.s-awaiting_approval { color: var(--warn); }
+.pill.s-awaiting_approval,
+.pill.s-still_running    { color: var(--warn);   background: #fdf5e5; border-color: #ecd7a4; }
 .pill.s-failed,
 .pill.s-error,
-.pill.s-refused          { color: var(--danger); }
-.pill.s-still_running    { color: var(--warn); }
-.pill.s-unknown          { color: var(--ink-faint); }
+.pill.s-refused          { color: var(--danger); background: #fdecec; border-color: #f2c3c5; }
+.pill.s-unknown          { color: var(--ink-dim); background: var(--bg-sunken); border-color: var(--line); }
 
 .tc-body { padding: 12px 16px; display: grid; gap: 12px; }
 
@@ -449,7 +452,10 @@ body {
   font-size: 14.5px;
   color: var(--danger);
 }
-.notice b { color: #fff; }
+/* Was #fff — a dark-theme leftover that rendered the load-bearing words of
+   every error ("Could not reach the API", the HTTP status) as white text on a
+   white card, at 1.18:1. This is the state a server hiccup puts on screen. */
+.notice b { color: var(--danger); font-weight: 700; }
 /* This renders up to 300 characters of whatever the server said. */
 .notice { overflow-wrap: anywhere; }
 
@@ -485,7 +491,7 @@ body {
    run off the strip. */
 .chip { max-width: 100%; text-align: left; }
 .chip:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
-.chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.chip:disabled { opacity: 1; cursor: not-allowed; color: var(--ink-faint); border-color: var(--line); background: var(--bg-sunken); }
 .chip .risk { margin-left: 7px; font-size: 11px; }
 
 .risk-irreversible { color: var(--danger); }
@@ -517,7 +523,9 @@ body {
   font-size: 16px;
   line-height: 1.5;
 }
-#input:focus { outline: none; border-color: rgba(47, 95, 224, 0.5); }
+/* The composer is the one control this demo drives, and it had no visible focus
+   state: the rule removed the UA outline for a border tint measuring ~1.9:1. */
+#input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 #input:disabled { opacity: 0.55; }
 
 .send {
