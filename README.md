@@ -1,5 +1,7 @@
 # Computer-Use Automation System
 
+[![CI](https://github.com/faizannraza/computer-use-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/faizannraza/computer-use-automation/actions/workflows/ci.yml)
+
 **An AI agent operates a legacy banking application that has no API — safely, deterministically, and
 with an audit trail — by driving its UI the way a person would.**
 
