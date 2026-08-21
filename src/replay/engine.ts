@@ -30,7 +30,8 @@ import type { ResolvedCapability } from '../schema/overlay.js';
 import type { InterventionRequest, RecoveryUse, ReplayFailure, ReplayResult, StepTrace } from '../schema/result.js';
 import type { Surface } from '../surface/surface.js';
 import { PlaywrightWebSurface } from '../surface/web/playwrightSurface.js';
-import { evaluateAll, evaluateCondition, renderConditions, summarizeObservation } from './detectors.js';
+import { evaluateAll, evaluateCondition, renderConditions } from './detectors.js';
+import { summarizeObservation } from '../core/observation.js';
 
 export interface ReplayOptions {
   policy: Policy;

@@ -46,7 +46,10 @@ recorded `trace.json`, the `compile-report.json` listing every parameterisation
 and pruning decision the compiler made — including its own lint warnings about
 weak checkpoints and about locator rungs that could never match — and the
 compiled draft `artifact.json`. The shipped copies in `capabilities-meridian/`
-are those drafts after human review and `cu approve`, which flips the approval
+are those drafts after human review and `cu approve`, which prints every note
+the compiler made about the artifact, refuses outright on the ones describing
+output it *knows* is defective (a locator rung that can never match; a
+half-substituted identifier), and otherwise flips the approval
 state and re-hashes. `cu recompile <artifact> --trace <dir>` re-derives an
 artifact from its trace and prints the diff, so "the compiler wrote this, not a
 person" is checkable rather than asserted.
@@ -93,6 +96,35 @@ only copy. Supply them by hand with `--param` and it recompiles.
 That is the trade working exactly as designed, and it cuts both ways: the same
 property that makes this artifact unreproducible from its trace is the property
 that makes the trace safe to commit to a public repository. We chose the second.
+
+### A known defect in two shipped artifacts, and why it is still here
+
+Recompiling with **today's** compiler emits a note the compiler could not emit
+when these were recorded:
+
+```
+member.placeHold  s13: strategy 1 (textAnchor) anchors on redacted text and can
+                  never match at replay — it will always fall through to the next rung
+member.openShare  s12: the same
+```
+
+Both are the fallback rung of the *irreversible* confirm step. The recorded
+anchor text is the whole confirmation panel, which contains a member name — and
+the redactor masked that name to `***da` on its way to disk. A locator matching
+on `***da` cannot match a live screen.
+
+Neither step is broken today: rung 0 is a clean `roleName` match on the button
+(`Apply Hold`, `Open Share`) and resolves every time. What is broken is the
+*fallback* — the rung that exists to survive a renamed button cannot survive
+anything. The failure mode is not a wrong click; it is a `TARGET_NOT_FOUND`
+where a graceful recovery was advertised.
+
+They shipped because the lint postdates the recording, and nothing re-read the
+compile report after approval. That gap is now closed at the point it belongs:
+`cu approve` refuses this exact note. These two artifacts are left as they are,
+documented here rather than quietly re-recorded, because the honest version of
+"the compiler critiques its own output" includes the case where it caught
+something after the fact.
 
 ## Replay — the runtime-state taxonomy, one run per row
 

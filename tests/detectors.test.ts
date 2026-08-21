@@ -4,7 +4,8 @@ import type { Observation } from '../src/core/types.js';
 import { applyTemplate, substituteDeep } from '../src/core/template.js';
 import type { Condition } from '../src/schema/conditions.js';
 import { ConditionSchema } from '../src/schema/conditions.js';
-import { evaluateCondition, renderCondition, summarizeObservation } from '../src/replay/detectors.js';
+import { evaluateCondition, renderCondition } from '../src/replay/detectors.js';
+import { summarizeObservation } from '../src/core/observation.js';
 
 const obs: Observation = {
   seq: 1,

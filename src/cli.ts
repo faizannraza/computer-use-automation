@@ -4,7 +4,8 @@
  *
  *   cu discover --goal "..." --param k=v ...        LLM-driven discovery → compiled draft artifact
  *   cu replay --capability <file> --param k=v ...   deterministic replay (no LLM)
- *   cu approve <file> --by "name"                   mark a reviewed artifact approved (re-hashes)
+ *   cu approve <file> --by "name"                   mark a reviewed artifact approved (re-hashes);
+ *                                                   prints the compiler's notes and refuses on the fatal ones
  *   cu recompile <file> --trace <dir>               re-derive an artifact from its recorded trace
  *   cu validate <file...>                           schema + integrity check (all files)
  *   cu hash <file>                                  (re)compute integrity.contentHash
@@ -19,6 +20,7 @@ import { parseArgs } from 'node:util';
 import { findByName, loadCatalog } from './catalog/catalog.js';
 import { runDiscovery } from './discovery/agent.js';
 import { compileTrace, genericCallerParamDescription } from './discovery/compile.js';
+import { blockingLints } from './discovery/lintPolicy.js';
 import type { OutputHint } from './discovery/compile.js';
 import type { DiscoveryTrace } from './discovery/recorder.js';
 import { newRunId } from './evidence/runLog.js';
@@ -36,6 +38,20 @@ import type { ResolvedCapability } from './schema/overlay.js';
 
 /** What the redactor leaves behind: `***`, `***<2 chars>`, or `«secret:name»`. */
 const MASKED = /\*\*\*|«secret:/;
+
+
+/** Read the compile report that sits beside the trace this artifact came from. */
+function compileNotesFor(artifact: { provenance: { evidenceRef?: string | undefined } }): string[] | undefined {
+  const ref = artifact.provenance.evidenceRef;
+  if (ref === undefined || ref === '') return undefined;
+  try {
+    const report = JSON.parse(readFileSync(path.join(ref, 'compile-report.json'), 'utf8')) as { notes?: string[] };
+    return report.notes ?? [];
+  } catch {
+    return undefined;
+  }
+}
+
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -299,14 +315,43 @@ function approveCmd(argv: string[]): void {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: { by: { type: 'string' } },
+    options: { by: { type: 'string' }, 'acknowledge-lints': { type: 'boolean', default: false } },
   });
   const file = positionals[0];
   if (!file || !values.by) {
-    console.error('usage: cu approve <artifact.json> --by "reviewer name"');
+    console.error('usage: cu approve <artifact.json> --by "reviewer name" [--acknowledge-lints]');
     process.exit(64);
   }
   const artifact = CapabilityArtifactSchema.parse(JSON.parse(readFileSync(file, 'utf8')));
+
+  // Approval is the moment a human takes responsibility for this artifact, and
+  // until now it was the one step in the pipeline that did not show them what
+  // the compiler had already found. The notes were written to a JSON file next
+  // to the trace, printed once at discovery time, and never mentioned again —
+  // so the whole "the compiler lints its own output" argument rested on someone
+  // opening a file this command never named.
+  const notes = compileNotesFor(artifact);
+  if (notes === undefined) {
+    console.log('note: no compile report found for this artifact — approving without its lints.\n');
+  } else if (notes.length === 0) {
+    console.log('compiler reported no notes for this artifact.\n');
+  } else {
+    console.log(`the compiler made ${notes.length} note(s) about this artifact:\n`);
+    for (const n of notes) console.log(`  • ${n}`);
+    console.log('');
+  }
+
+  const blocking = blockingLints(notes ?? []);
+  if (blocking.length > 0 && !values['acknowledge-lints']) {
+    console.error(`REFUSING to approve: ${blocking.length} note(s) describe output the compiler knows is defective.\n`);
+    for (const b of blocking) console.error(`  ✕ ${b.note}\n    → ${b.why}\n`);
+    console.error('Re-record the flow, or approve deliberately with --acknowledge-lints.');
+    process.exit(65);
+  }
+  if (blocking.length > 0) {
+    console.log(`--acknowledge-lints: approving over ${blocking.length} blocking note(s).\n`);
+  }
+
   artifact.provenance.approval = { state: 'approved', by: values.by, at: new Date().toISOString() };
   artifact.integrity.contentHash = computeContentHash(artifact);
   writeFileSync(file, JSON.stringify(artifact, null, 2) + '\n');

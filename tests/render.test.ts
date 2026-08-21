@@ -109,7 +109,7 @@ describe('summarizing an observation for an operator', () => {
   });
 
   it('leaves no partial name behind when the snippet is cut', async () => {
-    const { summarizeObservation } = await import('../src/replay/detectors.js');
+    const { summarizeObservation } = await import('../src/core/observation.js');
     const redactor = new Redactor();
     redactor.register('memberName', NAME, 'pii');
     const summary = summarizeObservation(held(), (t) => redactor.apply(t));
@@ -119,7 +119,7 @@ describe('summarizing an observation for an operator', () => {
   });
 
   it('still says what screen the operator is looking at', async () => {
-    const { summarizeObservation } = await import('../src/replay/detectors.js');
+    const { summarizeObservation } = await import('../src/core/observation.js');
     const redactor = new Redactor();
     redactor.register('memberName', NAME, 'pii');
     const summary = summarizeObservation(held(), (t) => redactor.apply(t));

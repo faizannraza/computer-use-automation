@@ -7,10 +7,18 @@ at **MERIDIAN CORE** took, and what it exposed.
 
 ## What adaptation took
 
-**The core's load-bearing boundaries did not move.** Eight files are byte-identical to the commit
-before this project began — including `ActionGate`, the single choke point every action passes
-through on both paths, and the *entire* HITL controller. A new target, a new API, a dashboard, a
-chatbot and seven capabilities needed not one character of either.
+**The core's load-bearing boundaries did not move.** Seven files under `src/` are byte-identical to
+the commit before this project began, including the entire human-in-the-loop controller: a new
+target, a new API, a dashboard, a chatbot and seven capabilities needed not one character of it. The
+directory gained one new file — a `RecordingOperator`, 38 lines, so a discovery session can
+pre-authorise the irreversible clicks it needs to record.
+
+`ActionGate`, the single choke point every action passes through on both paths, was untouched by the
+adaptation as well — `git diff 16b9db8 <the last adaptation commit> -- src/policy/actionGate.ts` is
+empty. It is not in the seven because it changed a day later, for an unrelated reason: a review found
+that its denied-path check was case-sensitive while the target's router is not, so `/Settings`
+reached the one screen `/settings` denies. That is a security fix, not adaptation debt, and it is a
+different claim than this one.
 
 Two boundaries did change, and additively: the artifact schema gained a new action kind, a new
 output type and three fields — every one `.optional()`, never `.default()` — and the `Surface` seam
@@ -134,14 +142,34 @@ the system does is *assert* one is present before a posting step — the walker 
 by name, value deliberately never captured — so a form served without a token fails loudly instead of
 posting something the core will reject.
 
-Building that assertion corrected the brief's own premise, which is the sort of thing only recorded
-evidence settles. MERIDIAN does **not** put a token on every form: sign-on and member search post
-without one. So the compiler emits the assertion for a posting step only when the token field was
-actually observed in the state that step acts on — a flat "every posting step" rule would have put an
-unsatisfiable precondition on the Sign On step of all seven capabilities, which is worse than no
-assertion at all. The compile report names both sets: the steps that got it, and the steps that did
-not and why. The token is also per-*session* rather than strictly per-transaction; the profile says
-so now.
+The compiler emits that assertion for a posting step only when the token field was actually observed
+in the state the step acts on. A flat "every posting step" rule would put an unsatisfiable
+precondition on the Sign On step of all seven capabilities, which is worse than no assertion at all.
+
+**That mechanism has never fired, and the reason is worth stating rather than hiding.** Across all
+seven shipped artifacts there are zero token assertions. The compile report explains why in the
+compiler's own words — *"no such hidden field was observed in the state those steps act on"* — but
+that sentence is about the **recording**, not about MERIDIAN. The walker learned to observe hidden
+inputs, and the recorder learned to carry them into the trace, *after* these seven flows were
+recorded: `hiddenFields` appears on zero of the recorded actions in every committed `trace.json`, so
+the compiler was reading absence of instrumentation and concluding absence of a token.
+
+The replay evidence says the opposite. In `evidence/meridian/replay/20260820-141325-b1kn/`, the
+element map for the state `member.transferFunds` posts from contains:
+
+```json
+{ "ref": 4, "role": "hidden", "name": "_token", "interactive": false, "value": "(present:12)" }
+```
+
+So the token *is* on the form that moves money, and the capability that moves it asserts nothing
+about it. An earlier draft of this document read that compile-report line as evidence that MERIDIAN
+does not put a token on every form — a correction of the brief's premise. It is not evidence of that,
+and the claim is withdrawn. What the evidence does settle is narrower and still worth having: the
+token is per-*session* rather than per-transaction — the same value recurs across forms within one
+session and changes between sessions — and the profile records that with the runs that show it.
+
+Re-recording the four posting capabilities with today's recorder would close this. It is the largest
+single thing this project shipped incomplete.
 
 ## How the guarantees survive the new surface
 

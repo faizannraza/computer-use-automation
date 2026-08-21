@@ -1,0 +1,68 @@
+# Continuous verification of the claims this repo makes about itself.
+#
+# The interesting part is not that it runs the tests. It is WHERE it runs them:
+# a clean Ubuntu runner with no `.env`, no `ANTHROPIC_API_KEY`, and no access to
+# MERIDIAN CORE. The README claims deterministic replay, the capability API, the
+# dashboard, human-in-the-loop and the entire suite work with no key and no
+# network beyond localhost. This job is what keeps that claim from quietly
+# becoming false — if a test ever starts needing a secret or the live target, it
+# fails here rather than in front of someone.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A superseded push should not keep a runner busy proving a commit nobody will
+# look at again.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20 # package.json declares engines.node >= 20
+          cache: npm
+
+      # `ci`, not `install`: the lockfile is the input, so a transitive
+      # dependency cannot change under a green build.
+      - name: Install dependencies
+        run: npm ci
+
+      # Chromium only. The suite drives a real browser against a local mock —
+      # that is the point of it — but it never needs Firefox or WebKit.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # No `.env` is created anywhere in this job, deliberately. Tests that need
+      # mock credentials set them in-process; anything that reached for a real
+      # secret would fail here.
+      - name: Test
+        run: npm test
+
+      # The artifacts are the deliverable, and their content hash is the whole
+      # basis for "the file you reviewed is the file that runs". Re-verify every
+      # one on every push: a hand-edit without `cu hash`, or a schema field
+      # added with `.default()` instead of `.optional()`, invalidates them all
+      # at once and this is the step that says so.
+      - name: Verify shipped capability artifacts
+        run: npm run cu -- validate capabilities-meridian/*.json capabilities/*.json

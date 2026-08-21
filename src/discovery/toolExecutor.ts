@@ -16,7 +16,7 @@ import type { ActionGate } from '../policy/actionGate.js';
 import { PolicyViolation } from '../policy/actionGate.js';
 import type { Redactor } from '../policy/redact.js';
 import { maskValue } from '../policy/redact.js';
-import { summarizeObservation } from '../replay/detectors.js';
+import { summarizeObservation } from '../core/observation.js';
 import type { OutputHint } from './compile.js';
 import type { Recorder } from './recorder.js';
 import { digestOf, recordedElementOf } from './recorder.js';

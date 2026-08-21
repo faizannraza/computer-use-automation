@@ -410,6 +410,7 @@ export class PlaywrightWebSurface implements Surface {
   }
 
   private async tryScreenshot(): Promise<Buffer | undefined> {
+    let applied = false;
     try {
       if (this.maskRefs.length > 0) {
         // Fail CLOSED. If any frame refused the mask, the capture would be a
@@ -418,17 +419,23 @@ export class PlaywrightWebSurface implements Surface {
         // nothing downstream that could tell it apart from a masked one. No
         // screenshot is a gap in the audit trail; an unmasked screenshot is a
         // disclosure, and only one of those is recoverable.
-        const masked = await this.setMaskAttribute(true);
-        if (!masked) {
-          await this.setMaskAttribute(false);
-          return undefined;
-        }
+        applied = true;
+        if (!(await this.setMaskAttribute(true))) return undefined;
       }
-      const png = await this.page.screenshot({ timeout: 3000 });
-      if (this.maskRefs.length > 0) await this.setMaskAttribute(false);
-      return png;
+      return await this.page.screenshot({ timeout: 3000 });
     } catch {
       return undefined; // e.g. render blocked by a held dialog
+    } finally {
+      // Unmask in a `finally`, not after the screenshot. `page.screenshot` has
+      // a 3s timeout, and on a slow render it throws — which used to skip the
+      // cleanup and leave `data-cu-mask` (and the injected stylesheet) on the
+      // live page. Nothing recovers it: the next observe() unmasks only the
+      // refs of the NEW generation, and refMap has been rebuilt with different
+      // indices, so those elements stay blacked out for the rest of the run.
+      // On a headed run that is the session handed to a human for approval —
+      // they would be asked to authorise a transfer against a screen whose
+      // balances are painted over by our own audit tooling.
+      if (applied) await this.setMaskAttribute(false).catch(() => undefined);
     }
   }
 
