@@ -79,6 +79,20 @@ A browser opens and drives the real application. While it runs, the console show
 The mask is applied inside the same observation the classifier ran on, so no unmasked capture is ever
 written. The caller receives the real values; the evidence directory receives the masked ones.
 
+### A second capability, a different shape of answer
+
+**Console → `member.inquire` → `query` = `Lovelace`, `searchBy` = `name` → Invoke.** *(~12s)*
+
+The same engine, the same gate, a different recorded flow — this one drives the *other* search mode
+and returns `matches : table` with the member number, name and share count. The member's name is
+masked in the evidence channel and returned in full to the caller.
+
+Note the `searchBy` description on the form: *"Chosen in the 'Search by' field on screen. Offered at
+recording time: number, name."* The compiler recorded the options the field offered. It does not
+constrain the parameter to them, because the same code path handles share pickers whose options are
+one member's accounts — pinning those would produce a capability that works for one member and
+rejects everyone else.
+
 ---
 
 ## 3. The three ways a run can end
@@ -123,16 +137,32 @@ front of it.
 
 ---
 
-## 4. Run history
+## 4. Coverage — run history as the audit surface
 
-**Console → Run history.** Three pills from the runs above — `business_outcome`, `success ·
-recovered ×1`, `escalated` — plus every committed evidence run.
+**Console → Run history.**
+
+The runs from §2 and §3 are at the top, with distinct status pills. Below them sits the committed
+evidence set: **19 replay runs and 7 discovery runs**, all against the live target.
+
+| | |
+|---|---|
+| 9 `success` | every one of the seven capabilities completes at least once |
+| 6 `business_outcome` | member not found (by number and by name), transaction rejected, record not found, bad credentials |
+| 3 `escalated` | supervisor override required, and an unattended irreversible run that stopped |
+| 1 `failed` | an injected HTTP 500, failed fast against a declared anomaly |
+| 4 rows badged `recovered ×N` | reached success through a recovery rather than cleanly |
+
+All six of the target's fault kinds — `validation`, `notfound`, `permission`, `timeout`,
+`maintenance`, `server` — have a committed run. `evidence/meridian/README.md` indexes them one row
+per runtime state, with a paragraph on each.
+
+Switch the filter to **discovery** to see the seven recording runs the capabilities were compiled
+from. Each holds the model transcript, the recorded trace, the compile report, and the draft artifact
+before human approval.
 
 Business outcome, recoverable condition and hard failure are separate schema sections, separate
 result types, and one explicit priority order: postcondition → business outcome → recovery → anomaly
 → timeout.
-
-Filter by **discovery** to see the seven recording runs the capabilities were compiled from.
 
 ---
 
@@ -201,6 +231,60 @@ npm test                                                # 352 tests, ~26s, no ne
 
 Every artifact is content-hashed over canonical JSON. Approving re-hashes, so a post-approval edit is
 detectable.
+
+---
+
+# On demand
+
+The walkthrough shows the mechanism once and the coverage as evidence, rather than running the same
+engine seven times. If a specific capability or fault is asked for, these are the parameters.
+
+### Every capability, with parameters that work
+
+Read-only — safe to run at any point:
+
+| Capability | Parameters |
+|---|---|
+| `session.signOn` | `branch` = `MAIN-001` |
+| `member.readBalances` | `memberId` = `103001` |
+| `member.inquire` | `query` = `Lovelace`, `searchBy` = `name` — or `query` = `103001`, `searchBy` = `number` |
+
+Each of these changes the target permanently, and each pauses for approval first:
+
+| Capability | Parameters | What it changes |
+|---|---|---|
+| `member.transferFunds` | `103001` / `103001-S0070-7` / `103001-MMKT-8` / `1.00` / `Q3 rebalance` | moves $1.00 between two shares |
+| `member.openShare` | `103001` / `shareType` `MMKT` / `initialDeposit` `5.00` | adds a share, permanently |
+| `member.updateInfo` | `103001` / e-mail / phone / address | overwrites the member's contact record |
+| `member.placeHold` | `103001` / an **OPEN** share / `FRAUD` / a note — **role: supervisor** | locks a share |
+
+Before naming a share, read the member: shares move between `OPEN` and `HOLD` as the target is used.
+
+### Every fault kind
+
+From the invoke form's **fault** dropdown, against `member.readBalances` with `memberId` = `103001`.
+Leave *at step id* blank to arm it at the entrypoint, or name a step to arm it mid-flow.
+
+| Fault | HTTP | Result |
+|---|---|---|
+| `maintenance` | 503 | `success` · recovered — restarts from the entrypoint |
+| `timeout` | 440 | `success` · recovered — re-authenticates, re-minting the transaction token |
+| `notfound` | 404 | `business_outcome` · `RECORD_NOT_FOUND` |
+| `validation` | 400 | `business_outcome` · `TRANSACTION_REJECTED` |
+| `permission` | 403 | `escalated` — a state only a person can clear |
+| `server` | 500 | `failed` · fails fast against a declared anomaly rather than waiting out the clock |
+
+Each already has a committed run in `evidence/meridian/README.md`, so the classification can be shown
+without waiting for a live one.
+
+### Natural errors, no injection
+
+| | |
+|---|---|
+| No such member | `member.readBalances`, `memberId` = `999999` |
+| No such surname | `member.inquire`, `query` = `Zzzznomatch`, `searchBy` = `name` |
+| Bad credentials | committed run — `session.signOn` with an incorrect credential |
+| Overdraw | committed run — a transfer exceeding the from-share balance |
 
 ---
 
