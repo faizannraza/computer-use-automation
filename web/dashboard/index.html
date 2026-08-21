@@ -50,7 +50,11 @@
             <option value="replay">replay</option>
             <option value="discovery">discovery</option>
           </select>
-          <button id="history-refresh" class="mini-btn" type="button">Refresh</button>
+          <!-- Icon, not the word: this head carries a heading, a filter and a
+               button inside a 262px column, and the word "Refresh" was the ~40px
+               that forced the heading to ellipse to "RUN H…". -->
+          <button id="history-refresh" class="mini-btn icon-only" type="button"
+                  aria-label="Refresh run history" title="Refresh run history">↻</button>
         </div>
       </div>
       <div id="history" class="panel-body scroll"></div>

@@ -26,6 +26,7 @@ var $input = document.getElementById('input');
 var $send = document.getElementById('send');
 var $chips = document.getElementById('chips');
 var $modeState = document.getElementById('mode-state');
+var appName = 'the target application';   // set from the profile at boot
 
 // ------------------------------------------------------------- helpers
 
@@ -163,26 +164,26 @@ async function boot() {
     // is being driven at. The vendor, the marketing descriptor and the URL
     // scheme are not things anyone reads twice.
     var title = profile.title || 'Capability Console';
-    document.getElementById('app-title').textContent = title.split('\u2014')[0].trim() || title;
+    appName = title.split('\u2014')[0].trim() || title;
+    document.getElementById('app-title').textContent = appName;
     var host = profile.baseUrl || '';
     try { host = new URL(profile.baseUrl).host; } catch { /* keep whatever was given */ }
     document.getElementById('app-base').textContent = host;
-    document.getElementById('foot-base').textContent = profile.title || 'the target application';
+    document.getElementById('foot-base').textContent = appName;
     document.title = (profile.vendor || 'Capability') + ' — Chat';
   }
   document.getElementById('cap-count').textContent =
     capabilities.length + (capabilities.length === 1 ? ' capability' : ' capabilities');
 
-  renderIntro(profile);
+  renderIntro();
   renderChips();
 }
 
-function renderIntro(profile) {
+function renderIntro() {
   var intro = el('div', 'intro');
   intro.appendChild(el('h2', null, 'Ask for an outcome, not a click path.'));
   intro.appendChild(el('p', null,
-    'I work only through reviewed, recorded capabilities against ' +
-    esc(profile ? profile.title : 'the target application') +
+    'I work only through reviewed, recorded capabilities against ' + esc(appName) +
     '. Anything irreversible stops for a human before it posts.'));
 
   // The catalog as one wrapped line, not seven rows. A reader needs to know
