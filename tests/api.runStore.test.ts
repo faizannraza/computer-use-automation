@@ -422,3 +422,63 @@ describe('recoveries reach the run summary', () => {
     expect(summary?.recoveries).toBeUndefined();
   });
 });
+
+/**
+ * A live subscriber has to be TOLD the run ended. The event lines simply
+ * stopping is indistinguishable from a slow step, so without this signal the
+ * console never fetches the structured result — and the outputs panel stays
+ * empty for precisely the runs someone watched happen, while a page reload of
+ * the same run renders them fine.
+ */
+describe('a finished run announces itself to live subscribers', () => {
+  const started = (): RunStore => {
+    const store = new RunStore(mkdtempSync(path.join(os.tmpdir(), 'cu-done-')));
+    store.start('r1', 'replay', 'member.readBalances', '1.0.0');
+    return store;
+  };
+
+  it('calls the done callback when the run finishes', () => {
+    const store = started();
+    let done = 0;
+    store.subscribe('r1', () => undefined, () => { done += 1; });
+    expect(done).toBe(0);
+    store.finish('r1', replayResult('r1'));
+    expect(done).toBe(1);
+  });
+
+  it('calls it for a run that died outside the engine, too', () => {
+    const store = started();
+    let done = 0;
+    store.subscribe('r1', () => undefined, () => { done += 1; });
+    store.fail('r1', 'browser crashed');
+    expect(done).toBe(1);
+  });
+
+  it('delivers every event line before the done signal', () => {
+    const store = started();
+    const seen: string[] = [];
+    store.subscribe('r1', (line) => seen.push(line), () => seen.push('DONE'));
+    store.publish('r1', JSON.stringify({ type: 'step_ok', stepId: 's1' }));
+    store.finish('r1', replayResult('r1'));
+    expect(seen[seen.length - 1]).toBe('DONE');
+    expect(seen.length).toBe(2);
+  });
+
+  it('does not call it twice, and not at all after unsubscribing', () => {
+    const store = started();
+    let done = 0;
+    const { unsubscribe } = store.subscribe('r1', () => undefined, () => { done += 1; });
+    unsubscribe();
+    store.finish('r1', replayResult('r1'));
+    expect(done).toBe(0);
+  });
+
+  it('survives a subscriber that throws — a broken client is not the run’s problem', () => {
+    const store = started();
+    let second = 0;
+    store.subscribe('r1', () => undefined, () => { throw new Error('client blew up'); });
+    store.subscribe('r1', () => undefined, () => { second += 1; });
+    expect(() => store.finish('r1', replayResult('r1'))).not.toThrow();
+    expect(second).toBe(1);
+  });
+});

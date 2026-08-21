@@ -48,6 +48,11 @@ type Listener = (line: string) => void;
 
 interface LiveRun {
   summary: RunSummary;
+  /** Called once when the run reaches a terminal state, so a subscriber can
+   * close its stream. Without this a LIVE subscriber never learns the run
+   * ended — the event lines simply stop — and a viewer waits forever for a
+   * result it already has on disk. */
+  doneListeners: Set<() => void>;
   /** Redacted event lines already emitted, so a late subscriber gets the run
    * from its beginning rather than from whenever it happened to connect. */
   buffer: string[];
@@ -77,6 +82,7 @@ export class RunStore {
       },
       buffer: [],
       listeners: new Set(),
+      doneListeners: new Set(),
     });
   }
 
@@ -111,6 +117,7 @@ export class RunStore {
       recoveries: result.recoveriesUsed,
       live: false,
     };
+    this.announceDone(run);
   }
 
   /** Mark a run that died outside the engine's own failure handling. */
@@ -119,6 +126,22 @@ export class RunStore {
     if (!run) return;
     run.summary = { ...run.summary, status: 'error', finishedAt: new Date().toISOString(), live: false };
     this.publish(runId, JSON.stringify({ ts: new Date().toISOString(), type: 'run_error', reason }));
+    this.announceDone(run);
+  }
+
+  /** Terminal signal, delivered after the last event line so a subscriber sees
+   * the whole run before it is told the run is over. A throwing subscriber is
+   * ignored for the same reason `publish` ignores one: a broken client is not
+   * the run's problem. */
+  private announceDone(run: LiveRun): void {
+    for (const done of run.doneListeners) {
+      try {
+        done();
+      } catch {
+        /* ignore */
+      }
+    }
+    run.doneListeners.clear();
   }
 
   result(runId: string): ReplayResult | undefined {
@@ -129,11 +152,22 @@ export class RunStore {
    * Subscribe to a run's events. Replays what has already happened, then
    * streams the rest; returns an unsubscribe function.
    */
-  subscribe(runId: string, listener: Listener): { history: string[]; unsubscribe: () => void } {
+  subscribe(
+    runId: string,
+    listener: Listener,
+    onDone?: () => void,
+  ): { history: string[]; unsubscribe: () => void } {
     const run = this.live.get(runId);
     if (!run) return { history: [], unsubscribe: () => undefined };
     run.listeners.add(listener);
-    return { history: [...run.buffer], unsubscribe: () => run.listeners.delete(listener) };
+    if (onDone) run.doneListeners.add(onDone);
+    return {
+      history: [...run.buffer],
+      unsubscribe: () => {
+        run.listeners.delete(listener);
+        if (onDone) run.doneListeners.delete(onDone);
+      },
+    };
   }
 
   isLive(runId: string): boolean {

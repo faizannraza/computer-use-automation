@@ -325,11 +325,26 @@ export function createApiApp(opts: ServerOptions = {}): { app: express.Express; 
       res.end();
       return;
     }
-    const { history, unsubscribe } = ctx.store.subscribe(String(req.params.runId), send);
+    // A live run has to ANNOUNCE its end. Without the `done` event the lines
+    // simply stop arriving, the client never learns the run finished, and it
+    // never fetches the structured result — so the outputs panel stays empty
+    // for exactly the runs a person watched happen.
+    let closed = false;
+    const finish = (): void => {
+      if (closed) return;
+      closed = true;
+      clearInterval(keepAlive);
+      res.write('event: done\ndata: {}\n\n');
+      res.end();
+    };
+    const { history, unsubscribe } = ctx.store.subscribe(String(req.params.runId), send, finish);
     for (const line of history) send(line);
     const keepAlive = setInterval(() => res.write(': ping\n\n'), 15_000);
     keepAlive.unref?.();
+    // The run may have finished between isLive() above and subscribing here.
+    if (!ctx.store.isLive(String(req.params.runId))) finish();
     req.on('close', () => {
+      closed = true;
       clearInterval(keepAlive);
       unsubscribe();
     });
