@@ -25,9 +25,10 @@ The core idea, in four steps:
 Seven capabilities are recorded against MERIDIAN CORE, exposed as a **callable API**, driven by a
 **chatbot**, and watchable on a **dashboard** where a human approves anything irreversible.
 
-**Start here:** [Run the console](#run-the-console) · [`ADAPTATION.md`](ADAPTATION.md) for what
-adapting to this target took and what it cost · [`evidence/meridian/`](evidence/meridian/README.md)
-for 19 committed runs against the live target, indexed one row per runtime state.
+**Start here:** [Run the console](#run-the-console) · [`DEMO.md`](DEMO.md) for a command-by-command
+walkthrough · [`ADAPTATION.md`](ADAPTATION.md) for what adapting to this target took and what it
+cost · [`evidence/meridian/`](evidence/meridian/README.md) for 19 committed runs against the live
+target, indexed one row per runtime state.
 
 ![The operations console mid-run: policy fence in the header, per-step locator strategy, live masked screenshot, typed table output](docs/screenshots/dashboard-run.jpg)
 
@@ -396,6 +397,7 @@ evidence/replay/    MockCore runs, reproducible offline (see evidence/README.md)
 tests/              349 tests (~26 s) incl. live end-to-end scenarios against the mock app;
                     fixtures/ holds a hand-authored gold artifact used only as
                     test fixture and compiler diff baseline
+DEMO.md             a command-by-command walkthrough of the live system
 ADAPTATION.md       what pointing the core at MERIDIAN CORE took, and what it exposed
 REPORT.md           the original core's design write-up
 ```

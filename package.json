@@ -20,7 +20,7 @@
     "lint": "eslint .",
     "api": "tsx src/api/server.ts",
     "api:meridian": "CU_APP_PROFILE=profiles/meridian-core.profile.json CU_CAPABILITIES_DIR=capabilities-meridian CU_EVIDENCE_DIR=evidence/meridian tsx src/api/server.ts",
-    "demo": "CU_ALLOW_INJECT=1 CU_DEMO_SLOW_MO=700 npm run api:meridian",
+    "demo": "CU_ALLOW_INJECT=1 CU_DEMO_SLOW_MO=700 CU_DEMO_HEADED=1 npm run api:meridian",
     "api:mock": "CU_APP_PROFILE=profiles/mockcore-teller.profile.json CU_CAPABILITIES_DIR=capabilities CU_EVIDENCE_DIR=evidence tsx src/api/server.ts"
   },
   "dependencies": {
